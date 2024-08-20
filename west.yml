@@ -33,9 +33,12 @@ manifest:
     remote: bacnet-stack
 
   self:
-    path: bacnet-stack
+    path: bacnet
 
   projects:
+    - name: bacnet-stack
+      path: bacnet/stack   # Hidden by bacnet/.gitignore
+      revision: master
     - name: zephyr
       path: zephyr
       revision: v3.6.0
