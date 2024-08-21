@@ -10,7 +10,7 @@ if(NOT ZEPHYR_CURRENT_MODULE_DIR)
 endif()
 
 set(SOURCES
-  ${ZEPHYR_CURRENT_MODULE_DIR}/test/unit/bacnet/bits/src/main.c
+  ${ZEPHYR_CURRENT_MODULE_DIR}/stack/test/unit/bacnet/bits/src/main.c
   )
 
 project(bacnet_bits)
@@ -22,7 +22,7 @@ find_package(Zephyr COMPONENTS unittest REQUIRED HINTS $ENV{ZEPHYR_BASE})
 # So we have to use relative paths to get to the source.
 
 target_include_directories(testbinary PRIVATE
-  ${ZEPHYR_CURRENT_MODULE_DIR}/src
+  ${ZEPHYR_CURRENT_MODULE_DIR}/stack/src
   )
 
   add_compile_definitions(

@@ -4,18 +4,18 @@ cmake_minimum_required(VERSION 3.13.1)
 
 # Extract module path and names
 string(REGEX REPLACE
-  "/zephyr/tests/[a-zA-Z_/-]*$" ""
+  "/zephyr/tests/[a-zA-Z_/-]*$" "/stack"
   BACNET_BASE
   ${CMAKE_CURRENT_SOURCE_DIR})
 string(REGEX REPLACE
-  "/zephyr/tests/" "/src/"
+  "/zephyr/tests/" "/stack/src/"
   BACNET_SRC_PATH
   ${CMAKE_CURRENT_SOURCE_DIR})
 string(REGEX REPLACE
-  "/zephyr/tests/" "/test/"
+  "/zephyr/tests/" "/stack/test/"
   BACNET_TEST_PATH
   ${CMAKE_CURRENT_SOURCE_DIR})
-get_filename_component(BACNET_NAME ${BACNET_BASE} NAME)
+get_filename_component(BACNET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 add_definitions(-DMAX_APDU=1476)
 get_filename_component(BACNET_DATALINK_SRC ${BACNET_SRC_PATH} PATH)

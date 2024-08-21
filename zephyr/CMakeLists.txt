@@ -44,7 +44,7 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 #
 # sources
 #
-set(BACNETSTACK_SRC ../src)
+set(BACNETSTACK_SRC ../stack/src)
 
 set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/abort.c
@@ -424,10 +424,8 @@ set(BACNETSTACK_BASIC_SRCS
 # add ports
 #
 
-set(BACNETSTACK_PORT_DIRECTORY_PATH "")
-
 message(STATUS "BACNETSTACK: building for Zephyr")
-set(BACNETSTACK_PORT ${CMAKE_CURRENT_LIST_DIR}/../ports/zephyr)
+set(BACNETSTACK_PORT ${CMAKE_CURRENT_LIST_DIR}/../stack/ports/zephyr)
 
 list(
   APPEND BACNETSTACK_SRCS
