@@ -2,6 +2,10 @@
 # SPDX-License-Identifier: MIT
 zephyr_sources(bacnet_shell.c)
 
+add_subdirectory(
+  bacnet_datalink
+  bacnet_osif
+  )
 add_subdirectory_ifdef(CONFIG_BACNETSTACK_BACNET_SETTINGS bacnet_settings)
 add_subdirectory_ifdef(CONFIG_BACNETSTACK_BACNET_BASIC bacnet_basic)
 add_subdirectory_ifdef(CONFIG_BACNETSTACK_BACNET_SERVER server)
