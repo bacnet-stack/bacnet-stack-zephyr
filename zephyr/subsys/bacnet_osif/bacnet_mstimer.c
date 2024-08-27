@@ -1,11 +1,10 @@
-/**************************************************************************
-*
-* Copyright (C) 2009 Steve Karg <skarg@users.sourceforge.net>
-* Multimedia Timer contribution by Cameron Crothers, 2008
-*
-* SPDX-License-Identifier: MIT
-*
-*********************************************************************/
+/**
+ * @file
+ * @brief operating system interface for millisecond timer
+ * @author Steve Karg <skarg@users.sourceforge.net>
+ * @date August 2024
+ * @copyright SPDX-License-Identifier: MIT
+ */
 #include <zephyr/kernel.h>
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"

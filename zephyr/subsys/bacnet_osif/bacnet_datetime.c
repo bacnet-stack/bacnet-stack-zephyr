@@ -1,12 +1,9 @@
 /**
  * @file
+ * @brief Operating system interface for calendar time
  * @author Steve Karg
- * @date 2009
- * @brief System time library header file.
- *
- * @section DESCRIPTION
- *
- * This library provides functions for getting and setting the system time.
+ * @date August 2024
+ * @copyright SPDX-License-Identifier: MIT
  */
 #include <stdbool.h>
 #include <stdint.h>

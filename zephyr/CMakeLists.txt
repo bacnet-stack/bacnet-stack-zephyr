@@ -442,23 +442,13 @@ set(BACNETSTACK_BASIC_SRCS
 
 message(STATUS "BACNETSTACK: building for Zephyr")
 
+list(
+  APPEND BACNETSTACK_SRCS
+      ${BACNETSTACK_BASIC_SRCS}
+)
 
-#set(BACNETSTACK_PORT ${CMAKE_CURRENT_LIST_DIR}/../stack/ports/zephyr)
-
-#list(
-#  APPEND BACNETSTACK_SRCS
-#      ${BACNETSTACK_BASIC_SRCS}
-#      ${BACNETSTACK_PORT}/datetime-init.c
-#      $<$<BOOL:${CONFIG_BACDL_BIP}>:${BACNETSTACK_PORT}/bip-init.c>
-#      $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_PORT}/bip6-init.c>
-#      $<$<BOOL:${CONFIG_BACDL_BIP}>:${BACNETSTACK_PORT}/datalink/bvlc.c>
-#      $<$<BOOL:${CONFIG_BACDL_ETHERNET}>:${BACNETSTACK_PORT}/ethernet.c>
-#      ${BACNETSTACK_PORT}/main.c
-#      ${BACNETSTACK_PORT}/mstimer-init.c
-#  )
-
-  zephyr_include_directories(include)
-  add_subdirectory(subsys)
+zephyr_include_directories(include)
+add_subdirectory(subsys)
 
 #
 # library
