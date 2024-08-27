@@ -16,8 +16,8 @@ zephyr_library_sources(
   server.c
   )
 
-  zephyr_library_sources_ifdef(CONFIG_BACNET_BASIC_DEVICE_SHELL
-    bacnet_shell_objects.c
-    bacnet_shell_packets.c
-    bacnet_shell_uptime.c
-  )
+zephyr_library_sources_ifdef(CONFIG_BACNET_BASIC_DEVICE_SHELL
+  bacnet_shell_objects.c
+  bacnet_shell_packets.c
+  bacnet_shell_uptime.c
+)

@@ -82,6 +82,10 @@ config BACDL_BIP
 
 config BACDL_BIP6
 	bool "BACnet BIP6"
+	select NETWORKING
+	select NET_SOCKETS
+	select NET_UDP
+	select NET_IPV6
 	help
 	  Enable BACnet BIP6
 
