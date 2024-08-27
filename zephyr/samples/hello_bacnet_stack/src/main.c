@@ -7,7 +7,9 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 
-void main(void)
+int main(void)
 {
     printk("Hello BACnet-Stack! %s\n", CONFIG_BOARD);
+
+    return 0;
 }

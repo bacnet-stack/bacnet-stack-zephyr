@@ -1,8 +1,7 @@
-# TODO: Copyright
-# TODO: Licensing
+# Copyright (c) 2024 Legrand North America, LLC.
+# SPDX-License-Identifier: MIT
 
 zephyr_sources(
-  bip6-init.c
-  bip-init.c
-  bvlc.c
-  )
+  $<$<BOOL:${CONFIG_BACDL_BIP}>:bip-init.c>
+  $<$<BOOL:${CONFIG_BACDL_BIP6}>:bip6-init.c>
+)
