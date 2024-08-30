@@ -1,9 +1,10 @@
-/*
- * Copyright (c) 2022 Legrand North America, LLC.
- *
- * SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief BACnet Objects as Zephyr OS Iteratable Lists
+ * @date 2022
+ * @author Legrand North America, LLC.
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
-
 #ifndef ZTEST_UNITTEST
   #include <zephyr/kernel.h>
 #else

@@ -1,12 +1,10 @@
-/*
- * Copyright (c) 2022 Legrand North America, LLC.
- *
- * SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief BACnet Load Control Objects
+ * @date 2022
+ * @author Legrand North America, LLC.
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
-
-/* Load Control Objects - customize for your use */
-/* from 135-2004-Addendum e */
-
 #include "object.h"
 #include "bacnet/basic/object/lc.h"
 

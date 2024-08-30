@@ -1,9 +1,10 @@
-/*
- * Copyright (c) 2020 Legrand North America, LLC.
- *
- * SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief BACnet Server Instance
+ * @date 2020
+ * @author Legrand North America, LLC.
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
-
 #include <stdalign.h> /*TODO: Not std until C11! */
 #include <device.h>
 #include <init.h>

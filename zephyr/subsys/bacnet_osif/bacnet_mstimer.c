@@ -3,7 +3,7 @@
  * @brief operating system interface for millisecond timer
  * @author Steve Karg <skarg@users.sourceforge.net>
  * @date August 2024
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <zephyr/kernel.h>
 /* BACnet Stack defines - first */
