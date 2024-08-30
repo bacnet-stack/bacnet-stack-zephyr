@@ -1,11 +1,10 @@
-/*
- * Copyright (c) 2022 Legrand North America, LLC.
- *
- * SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief BACnet Device Object - Zephyr specific
+ * @date 2022
+ * @author Legrand North America, LLC.
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
-
-/** @file device.c Zephyr specific part of the Base "class". */
-
 #ifdef CONFIG_BACNET_USE_SECTION_ITERABLE_OBJECT_TABLE
 #include <zephyr/kernel.h>
 #endif
@@ -36,7 +35,7 @@ static object_functions Routing_object = {
 };
 static bool routing_Device = false;
 
-/* In Zephyr port the object_functions table is saved in ROM and 
+/* In Zephyr port the object_functions table is saved in ROM and
    can't change fields value.
    Instead this Device_Objects_Get_First(Next)_Object() returns the "Routing"
    object when asked "Device" object, see static filter functions. */
@@ -86,7 +85,7 @@ struct object_functions *Device_Objects_Get_Next_Object(
 {
     if (object == NULL)
         return NULL;
-    
+
     object = Device_Object_Filter_In(object);
     ++object;
 

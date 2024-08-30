@@ -3,7 +3,7 @@
  * @brief Handle Get/Set of BACnet application encoded settings
  * @date May 2024
  * @author Steve Karg <skarg@users.sourceforge.net>
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <stdbool.h>
 #include <stdint.h>

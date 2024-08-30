@@ -3,7 +3,7 @@
  * @brief The BACnet shell commands for debugging and testing
  * @author Greg Shue <greg.shue@outlook.com>
  * @date May 2024
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <zephyr/shell/shell.h>
 

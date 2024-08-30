@@ -3,7 +3,7 @@
  * @brief BACnet Stack server initialization and task handler
  * @author Steve Karg <skarg@users.sourceforge.net>
  * @date March 2024
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <stdlib.h>
 #include <stdalign.h> /*TODO: Not std until C11! */

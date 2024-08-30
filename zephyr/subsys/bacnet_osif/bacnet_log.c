@@ -3,7 +3,7 @@
  * @brief operating system interface for logging
  * @author Steve Karg <skarg@users.sourceforge.net>
  * @date August 2024
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 /* Standard includes */
 #include <stdint.h>
