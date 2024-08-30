@@ -1,0 +1,42 @@
+name: Zephyr OS CMake
+
+on:
+  push:
+    branches: [ "default" ]
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:latest
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: bacnet
+
+      - name: Initialize
+        working-directory: bacnet
+        run: |
+          west init -l .
+          west update
+          
+      - name: Twister Tests unit_testing
+        working-directory: bacnet
+        run: |
+          rm -rf twister-out.unit_testing &&
+          ../zephyr/scripts/twister -O twister-out.unit_testing -p unit_testing -T zephyr/tests &&
+          for file in CMakeFiles CMakeCache.txt cmake_install.cmake Makefile
+            do 
+              find twister-out.unit_testing -name $file -exec rm -rf {} \; || true 
+            done
+
+      - name: Archive firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: bacnet/twister-out.unit_testing
