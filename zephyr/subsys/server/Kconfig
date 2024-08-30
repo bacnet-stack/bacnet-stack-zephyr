@@ -1,12 +1,11 @@
 # Copyright (c) 2020 Legrand North America, LLC.
-# SPDX-License-Identifier: MIT
-
+# SPDX-License-Identifier: Apache-2.0
 
 # Kconfig -
 
 menuconfig BACNETSTACK_BACNET_SERVER
     bool "BACNETSTACK_BACNET_SERVER"
-    help 
+    help
       This option enables BACnet Server services
 
 if BACNETSTACK_BACNET_SERVER
@@ -17,19 +16,19 @@ if BACNETSTACK_BACNET_SERVER
     config BACNETSTACK_BACNET_SERVER_APP_PRIORITY
         int "App init priority"
         default 0
-        help 
+        help
           This sets the starting priority of the thread.
 
     config BACNETSTACK_BACNET_SERVER_PRIO
         int "BACnet server thread priority"
         default 50
-        help 
+        help
           This sets the execution priority of the thread.
 
     config BACNETSTACK_BACNET_SERVER_STACK_SIZE
         int "BACnet server stack size"
         default 4096
-        help 
+        help
           This sets the stack size of the thread.
 
 endif # BACNETSTACK_BACNET_SERVER

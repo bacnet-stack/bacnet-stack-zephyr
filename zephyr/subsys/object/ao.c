@@ -1,11 +1,10 @@
-/*
- * Copyright (c) 2022 Legrand North America, LLC.
- *
- * SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief BACnet Analog Output Objects
+ * @date 2022
+ * @author Legrand North America, LLC.
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
-
-/* Analog Output Objects - customize for your use */
-
 #include "object.h"
 #include "bacnet/basic/object/ao.h"
 

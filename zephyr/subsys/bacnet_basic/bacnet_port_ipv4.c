@@ -1,10 +1,10 @@
 /**
  * @file
- * @brief The BACnet/IPv4 datalink tasks for handling the device specific 
+ * @brief The BACnet/IPv4 datalink tasks for handling the device specific
  *  data link layer
  * @author Steve Karg <skarg@users.sourceforge.net>
  * @date April 2024
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <stdint.h>
 #include <stdbool.h>

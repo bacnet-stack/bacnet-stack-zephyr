@@ -1,11 +1,10 @@
-/*
- * Copyright (c) 2022 Legrand North America, LLC.
- *
- * SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief BACnet Analog Input Objects
+ * @date 2022
+ * @author Legrand North America, LLC.
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
-
-/* Analog Input Objects - Zephyr specific part */
-
 #include "object.h"
 #include "bacnet/basic/object/ai.h"
 
@@ -15,7 +14,7 @@ void Analog_Input_Init(void)
 {
     if (!Object_List) {
         Object_List = Keylist_Create();
- 
+
 #if defined(INTRINSIC_REPORTING)
         /* Set handler for GetEventInformation function */
         handler_get_event_information_set(

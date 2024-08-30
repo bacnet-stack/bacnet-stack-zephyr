@@ -1,4 +1,5 @@
-# SPDX-License-Identifier: MIT
+# Copyright (c) 2022 Legrand North America, LLC.
+# SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.13.1)
 
@@ -70,7 +71,7 @@ else()
   find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
   project(${BACNET_NAME})
 
-  target_include_directories(app PRIVATE 
+  target_include_directories(app PRIVATE
     ${BACNET_INCLUDE}
     ${TEST_OBJECT_INCLUDE})
   target_sources(app PRIVATE

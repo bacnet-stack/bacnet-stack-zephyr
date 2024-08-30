@@ -1,11 +1,10 @@
-/*
- * Copyright (c) 2022 Legrand North America, LLC.
- *
- * SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief BACnet Life Safety Point Objects
+ * @date 2022
+ * @author Legrand North America, LLC.
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
-
-/* Life Safety Point Objects - customize for your use */
-
 #include "object.h"
 #include "bacnet/basic/object/lsp.h"
 

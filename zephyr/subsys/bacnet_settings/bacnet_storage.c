@@ -3,7 +3,7 @@
  * @brief The BACnet storage tasks for handling the device specific object data
  * @author Steve Karg <skarg@users.sourceforge.net>
  * @date April 2024
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <stdint.h>
 #include <stdbool.h>
@@ -159,7 +159,7 @@ int bacnet_storage_set(BACNET_STORAGE_KEY *key, const void *data,
 	return rc;
 }
 
-/** 
+/**
  * @brief Structure to hold immediate values
  */
 struct direct_immediate_value {

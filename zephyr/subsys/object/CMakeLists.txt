@@ -1,9 +1,7 @@
 #
 # Copyright (c) 2022 Legrand North America, LLC.
+# SPDX-License-Identifier: Apache-2.0
 #
-# SPDX-License-Identifier: MIT
-#
-
 zephyr_compile_definitions(
   BACNET_STACK_DEPRECATED_DISABLE
   )
