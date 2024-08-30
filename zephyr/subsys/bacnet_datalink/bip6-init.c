@@ -1,10 +1,10 @@
-/**************************************************************************
- *
- * Copyright (C) 2005-2020 Steve Karg
- *
- * SPDX-License-Identifier: GPL-2.0-or-later WITH GCC-exception-2.0
- *
- *********************************************************************/
+/**
+ * @file
+ * @brief Operating system interface for calendar time
+ * @author Steve Karg
+ * @date August 2024
+ * @copyright SPDX-License-Identifier: Apache-2.0
+ */
 #include <stdint.h>
 #include <stdbool.h>
 #include <zephyr/device.h>

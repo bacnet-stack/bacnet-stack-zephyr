@@ -3,7 +3,7 @@
  * @brief Operating system interface for calendar time
  * @author Steve Karg
  * @date August 2024
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <stdbool.h>
 #include <stdint.h>

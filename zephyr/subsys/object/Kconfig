@@ -1,7 +1,6 @@
 # Feature configuration options for BACnet-Stack
-
 # Copyright (c) 2022 Legrand North America, LLC.
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: Apache-2.0
 
 if BACNETSTACK
 

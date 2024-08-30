@@ -1,5 +1,5 @@
 # Copyright (c) 2020 Legrand North America, LLC.
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: Apache-2.0
 zephyr_sources(bacnet_shell.c)
 
 message(STATUS "BACNETSTACK: CONFIG_BACNETSTACK_BACNET_SETTINGS \"${CONFIG_BACNETSTACK_BACNET_SETTINGS}\"")

@@ -2,7 +2,7 @@
 #
 # @author Steve Karg <skarg@users.sourceforge.net>
 # @date May 2024
-# @copyright SPDX-License-Identifier: MIT
+# @copyright SPDX-License-Identifier: Apache-2.0
 zephyr_library(bacnet_settings)
 
 zephyr_library_include_directories(include)
