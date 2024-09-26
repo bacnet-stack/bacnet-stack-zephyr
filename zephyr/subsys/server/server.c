@@ -37,7 +37,7 @@
 #include "bacnet/basic/object/device.h"
 
 /* Logging module registration is already done in ports/zephyr/main.c */
-#include <logging/log.h>
+#include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 enum bacnet_server_msg_type {

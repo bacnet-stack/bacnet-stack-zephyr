@@ -24,13 +24,18 @@
 #include "bacnet_basic/bacnet_basic.h"
 
 /* Logging module registration is already done in ports/zephyr/main.c */
-#include <zephyr/logging/log.h>
+#include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 static const uint32_t Device_Instance = 260123;
 static const uint32_t Sensor_Instance = 1;
 /* timer for Sensor Update Interval */
 static struct mstimer Sensor_Update_Timer;
+
+static void BACnet_Smart_Sensor_Datalink_Init(void)
+{
+
+}
 
 /**
  * @brief BACnet Project Initialization Handler
@@ -41,6 +46,7 @@ static void BACnet_Smart_Sensor_Init_Handler(void *context)
 {
     (void)context;
     LOG_INF("BACnet Stack Initialized");
+    BACnet_Smart_Sensor_Datalink_Init();
     /* initialize objects for this basic sample */
     Device_Init(NULL);
     Device_Set_Object_Instance_Number(Device_Instance);
@@ -78,7 +84,7 @@ static void BACnet_Smart_Sensor_Task_Handler(void *context)
 
 int main(void)
 {
-	LOG_INF("\n*** BACnet Profile B-SS Sample ***\n");
+	LOG_INF("*** BACnet Profile B-SS Sample ***");
 	LOG_INF("BACnet Stack Version " BACNET_VERSION_TEXT);
 	LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
     bacnet_basic_init_callback_set(BACnet_Smart_Sensor_Init_Handler, NULL);
