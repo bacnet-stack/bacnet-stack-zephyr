@@ -25,9 +25,7 @@
 #include "bacnet/basic/bbmd6/h_bbmd6.h"
 
 /* Logging module registration is already done in ports/zephyr/main.c */
-#include <zephyr/logging/log.h>
-#include <zephyr/logging/log_ctrl.h>
-
+#include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 #define THIS_FILE "bip6-init.c"

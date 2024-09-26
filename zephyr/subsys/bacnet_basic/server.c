@@ -33,12 +33,8 @@
 #define CONFIG_BACNETSTACK_BACNET_SERVER_APP_PRIORITY 90
 #endif
 
-#ifndef CONFIG_BACNETSTACK_LOG_LEVEL
-#define CONFIG_BACNETSTACK_LOG_LEVEL LOG_LEVEL_INF
-#endif
-
-/* Logging module registration is already done in ports/zephyr/main.c */
-#include <zephyr/logging/log.h>
+/* Logging module registration is done in OSIF */
+#include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 static struct k_thread server_thread_data;

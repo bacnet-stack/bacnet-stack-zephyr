@@ -75,15 +75,17 @@ config BACDL_BIP
 	bool "BACnet BIP datalink"
 	select NETWORKING
 	select NET_SOCKETS
+	select NET_SOCKETS_POSIX_NAMES
 	select NET_UDP
 	select NET_IPV4
 	help
 	  Enable BACnet BIP datalink
 
 config BACDL_BIP6
-	bool "BACnet BIP6"
+	bool "BACnet BIP6 datalink"
 	select NETWORKING
 	select NET_SOCKETS
+	select NET_SOCKETS_POSIX_NAMES
 	select NET_UDP
 	select NET_IPV6
 	help
