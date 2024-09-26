@@ -4,7 +4,7 @@
  *  non-volatile object data
  * @author Steve Karg <skarg@users.sourceforge.net>
  * @date May 2024
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #ifndef BACNET_STORAGE_H
 #define BACNET_STORAGE_H

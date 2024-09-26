@@ -1,13 +1,9 @@
 /**
  * @file
  * @brief Port specific configuration for BACnet Stack for Zephyr OS
- * @author Steve Karg
+ * @author Steve Karg <skarg@users.sourceforge.net>
  * @date 2024
- * @section LICENSE
- *
- * Copyright (C) 2024 Steve Karg <skarg@users.sourceforge.net>
- *
- * SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #ifndef BACNET_PORTS_ZEPHYR_BACNET_CONFIG_H
 #define BACNET_PORTS_ZEPHYR_BACNET_CONFIG_H
@@ -18,5 +14,4 @@
 
 /* provides platform specific define for ARRAY_SIZE */
 #include <zephyr/sys/util.h>
-
 #endif

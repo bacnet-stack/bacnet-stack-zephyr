@@ -11,6 +11,7 @@
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/net/net_if.h>
 #include <zephyr/net/net_ip.h>
 #include <zephyr/net/socket.h>
 #include <zephyr/net/socket_select.h>
@@ -24,9 +25,7 @@
 #include "bacnet/basic/bbmd/h_bbmd.h"
 
 /* Logging module registration is already done in ports/zephyr/main.c */
-#include <zephyr/logging/log.h>
-#include <zephyr/logging/log_ctrl.h>
-
+#include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 #define THIS_FILE "bip-init.c"
@@ -150,7 +149,7 @@ void bip_get_broadcast_address(BACNET_ADDRESS *dest)
  * @param addr - network IPv4 address
  * @return true if the address was set
  */
-bool bip_set_addr(BACNET_IP_ADDRESS *addr)
+bool bip_set_addr(const BACNET_IP_ADDRESS *addr)
 {
     if (addr) {
         memcpy(&BIP_Address.s_addr, &addr->address[0], IP_ADDRESS_MAX);
@@ -180,7 +179,7 @@ bool bip_get_addr(BACNET_IP_ADDRESS *addr)
  * @param addr - network IPv4 address
  * @return true if the address was set
  */
-bool bip_set_broadcast_addr(BACNET_IP_ADDRESS *addr)
+bool bip_set_broadcast_addr(const BACNET_IP_ADDRESS *addr)
 {
     if (addr) {
         memcpy(&BIP_Broadcast_Addr.s_addr, &addr->address[0], IP_ADDRESS_MAX);
@@ -249,7 +248,8 @@ uint8_t bip_get_subnet_prefix(void)
  * @return Upon successful completion, returns the number of bytes sent.
  *  Otherwise, -1 shall be returned and errno set to indicate the error.
  */
-int bip_send_mpdu(BACNET_IP_ADDRESS *dest, uint8_t *mtu, uint16_t mtu_len)
+int bip_send_mpdu(const BACNET_IP_ADDRESS *dest, const uint8_t *mtu,
+    uint16_t mtu_len)
 {
     struct sockaddr_in bip_dest = { 0 };
 
@@ -404,7 +404,7 @@ int bip_send_pdu(BACNET_ADDRESS *dest,
  * @param ifname [in] The named interface to use for the network layer.
  *        Eg, for Linux, ifname is eth0, ath0, arc0, and others.
  */
-void bip_set_interface(char *ifname)
+void bip_set_interface(const char *ifname)
 {
     struct net_if *iface = 0;
     int index = -1;
@@ -474,11 +474,11 @@ void bip_set_interface(char *ifname)
         }
         LOG_INF("Using IPv4 address at index %d", index);
         /* Build the broadcast address from the unicast and netmask */
-        struct net_if_addr *if_addr = &iface->config.ip.ipv4->unicast[index];
+        struct net_if_addr_ipv4 *if_addr = &iface->config.ip.ipv4->unicast[index];
         for (x = 0; x < IP_ADDRESS_MAX; x++) {
-            unicast.address[x] = if_addr->address.in_addr.s4_addr[x];
-            broadcast.address[x] = if_addr->address.in_addr.s4_addr[x] |
-                ~iface->config.ip.ipv4->netmask.s4_addr[x];
+            unicast.address[x] = if_addr->ipv4.address.in_addr.s4_addr[x];
+            broadcast.address[x] = if_addr->ipv4.address.in_addr.s4_addr[x] |
+                ~if_addr->netmask.s4_addr[x];
         }
         bip_set_addr(&unicast);
         bip_set_broadcast_addr(&broadcast);
