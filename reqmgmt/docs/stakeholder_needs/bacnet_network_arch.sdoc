@@ -1,0 +1,32 @@
+[DOCUMENT]
+TITLE: BACnet Stack Network Architecture
+REQ_PREFIX: BKSTK-STRS-NWK-ARCH
+
+[GRAMMAR]
+IMPORT_FROM_FILE: bacnet_stakeholder_needs.sgra
+
+[TEXT]
+STATEMENT: >>>
+SPDX-LICENSE-IDENTIFIER: Apache-2.0
+<<<
+
+[SECTION]
+TITLE: Physical View
+
+[/SECTION]
+
+[SECTION]
+TITLE: Logical View
+
+[/SECTION]
+
+[SECTION]
+TITLE: Concurrency View
+
+[/SECTION]
+
+[SECTION]
+TITLE: Scenarios
+
+[/SECTION]
+

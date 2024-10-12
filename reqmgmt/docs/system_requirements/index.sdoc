@@ -1,0 +1,12 @@
+[DOCUMENT]
+TITLE: BACnet Stack System Requirements
+REQ_PREFIX: BKSTK-SYRS
+
+[GRAMMAR]
+IMPORT_FROM_FILE: system_requirements.sgra
+
+[TEXT]
+STATEMENT: >>>
+SPDX-LICENSE-IDENTIFIER: Apache-2.0
+<<<
+

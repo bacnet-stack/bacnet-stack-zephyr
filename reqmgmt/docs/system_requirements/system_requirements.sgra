@@ -1,0 +1,24 @@
+[GRAMMAR]
+ELEMENTS:
+- TAG: REQUIREMENT
+  FIELDS:
+  - TITLE: UID
+    TYPE: String
+    REQUIRED: False
+  - TITLE: STATUS
+    TYPE: String
+    REQUIRED: True
+  - TITLE: TYPE
+    TYPE: SingleChoice(Functional, Non-Functional)
+    REQUIRED: True
+  - TITLE: COMPONENT
+    TYPE: String
+    REQUIRED: True
+  - TITLE: TITLE
+    TYPE: String
+    REQUIRED: True
+  - TITLE: STATEMENT
+    TYPE: String
+    REQUIRED: True
+  RELATIONS:
+  - TYPE: Parent
