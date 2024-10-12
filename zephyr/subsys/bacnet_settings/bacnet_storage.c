@@ -29,7 +29,7 @@
 #endif
 
 /* Logging module registration is already done in bacnet/ports/zephyr/main.c */
-#include <zephyr/logging/log.h>
+#include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 #define FAIL_MSG "fail (err %d)"
 

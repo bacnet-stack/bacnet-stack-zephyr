@@ -3,7 +3,7 @@
  * @brief API for Get/Set of BACnet application encoded settings handlers
  * @author Steve Karg <skarg@users.sourceforge.net>
  * @date May 2024
- * @copyright SPDX-License-Identifier: MIT
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #ifndef BACNET_SETTINGS_H
 #define BACNET_SETTINGS_H

@@ -14,6 +14,7 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/kernel.h>
+#include "bacnet_osif/bacnet_log.h"
 
 #define LOG_LEVEL CONFIG_BACNETSTACK_LOG_LEVEL
 #include <zephyr/logging/log.h>
