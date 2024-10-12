@@ -1,0 +1,113 @@
+[DOCUMENT]
+TITLE: BACnet Stack Concept of Operation
+REQ_PREFIX: BKSTK-STRS-CONOPS
+
+[GRAMMAR]
+IMPORT_FROM_FILE: bacnet_stakeholder_needs.sgra
+
+[TEXT]
+STATEMENT: >>>
+SPDX-LICENSE-IDENTIFIER: Apache-2.0
+<<<
+
+[SECTION]
+TITLE: Deployment Context
+
+[TEXT]
+STATEMENT: >>>
+Building Automation and Control networks may span multiple structures
+and run on intranets that may span multiple continents.
+<<<
+
+[SECTION]
+TITLE: Physical View
+
+[/SECTION]
+
+[SECTION]
+TITLE: Logical View
+
+[TEXT]
+STATEMENT: >>>
+.. raw:: html
+
+    <pre class="mermaid">
+    ---
+    title: Entity Relationship Diagram (draft)
+    ---
+    erDiagram
+        Cloud-Client }o--|| BACnet : Requests
+        Desk-Mobile-App }o--|| BACnet : Manages
+        User }o--|| BACnet : Adjusts
+        BACnet ||--o{ Physical-Environment : Senses
+        BACnet ||--o{ Physical-Controls : Directs
+        BACnet ||--o{ Cloud-Services : Reports-to
+    </pre>
+<<<
+
+[/SECTION]
+
+[SECTION]
+TITLE: Concurrency View
+
+[TEXT]
+STATEMENT: >>>
+Each entity in the Entity Relationship Diagram operates concurrently.
+
+Every device in a BACnet network operates concurrently.
+<<<
+
+[/SECTION]
+
+[SECTION]
+TITLE: Scenarios
+
+[TEXT]
+STATEMENT: >>>
+.. raw:: html
+
+    <pre class="mermaid">
+    ---
+    title: Turn off Lights (conceptual - draft)
+    ---
+    sequenceDiagram
+        participant CloudClient as Cloud <br/> Client
+        participant DeskMobileApp as Desktop/Mobile <br/> Application
+        actor       User
+        participant BACnet as BACnet <br/> Network
+        participant PhysEnv as Physical <br/> Environment
+        participant PhysControl as Physical <br/> Controls
+        participant CloudServices as Cloud <br/> Services
+
+        User -->> BACnet : Flip Switch to OFF
+        BACnet ->> PhysControl : Turn off Lighting
+        PhysControl -->> BACnet : Request Started
+
+        BACnet ->> User : Indicate request in progress
+        BACnet ->> DeskMobileApp : Publish updated status <br/> - lights going off
+        BACnet ->> CloudClient : Publish updated status <br/> - lights going off
+        BACnet ->> CloudServices : Log change request started
+
+        PhysEnv -->> BACnet : Lighting "OFF"
+        PhysControl -->> BACnet : Request concluded
+
+        BACnet ->> User : Indicate request concluded
+        BACnet ->> DeskMobileApp : Publish updated status <br/> - lights off
+        BACnet ->> CloudClient : Publish updated status <br/> - lights off
+        BACnet ->> CloudServices : Log change request completed
+    </pre>
+<<<
+
+[/SECTION]
+
+[/SECTION]
+
+[DOCUMENT_FROM_FILE]
+FILE: bacnet_network_arch.sdoc
+
+[DOCUMENT_FROM_FILE]
+FILE: bacnet_device_arch.sdoc
+
+[DOCUMENT_FROM_FILE]
+FILE: bacnet_fw-app_arch.sdoc
+

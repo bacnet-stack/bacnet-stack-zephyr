@@ -1,0 +1,102 @@
+[DOCUMENT]
+TITLE: BACNet Stack FW/Application Executable Architecture
+REQ_PREFIX: BKSTK-STRS-FWAPP-ARCH
+
+[GRAMMAR]
+IMPORT_FROM_FILE: bacnet_stakeholder_needs.sgra
+
+[TEXT]
+STATEMENT: >>>
+SPDX-LICENSE-IDENTIFIER: Apache-2.0
+<<<
+
+[SECTION]
+TITLE: Physical View
+
+[TEXT]
+STATEMENT: >>>
+.. raw:: html
+
+    <pre class="mermaid">
+    ---
+    title: Physical Model Layering/Dependencies
+    ---
+    stateDiagram-v2
+        state IndustrialDesign {
+            FrontPanel
+            Mechanics
+        }
+
+        state Interfaces {
+            CommPorts
+            Sensors
+            LoadControls
+            WallClockTime
+        }
+
+        state Security {
+            Crypto
+            Keys
+        }
+
+        state Core {
+            CPU
+            PersistentStorage
+            RAM
+            HwWatchdog
+            Timers
+        }
+
+        IndustrialDesign --> Interfaces
+        Interfaces --> Security
+        Security --> Core
+        Core --> Power
+    </pre>
+<<<
+
+[/SECTION]
+
+[SECTION]
+TITLE: Logical View
+
+[TEXT]
+STATEMENT: >>>
+.. raw:: html
+
+    <pre class="mermaid">
+    ---
+    title: Logical Model Layering/Dependencies
+    ---
+    stateDiagram-v2
+        state OSServices {
+            CommDrivers
+            Storage
+            Timing
+            NonCommDrivers
+            FrontPanelDrivers
+        }
+
+        UI --> DeviceMgmt
+        DeviceMgmt --> EmbeddedApps
+        EmbeddedApps --> CommServices
+        CommServices --> CommDrivers
+        EmbeddedApps --> Engines
+        Engines --> NonCommDrivers
+        UI --> EmbeddedApps
+        UI --> Engines
+        UI --> FrontPanelDrivers
+    </pre>
+<<<
+
+[/SECTION]
+
+[SECTION]
+TITLE: Concurrency View
+
+[/SECTION]
+
+[SECTION]
+TITLE: Scenarios
+
+[/SECTION]
+

@@ -1,0 +1,57 @@
+[DOCUMENT]
+TITLE: BACnet Stack Device Architecture
+REQ_PREFIX: BKSTK-STRS-ARCH-DEV
+
+[GRAMMAR]
+IMPORT_FROM_FILE: bacnet_stakeholder_needs.sgra
+
+[TEXT]
+STATEMENT: >>>
+SPDX-LICENSE-IDENTIFIER: Apache-2.0
+<<<
+
+[SECTION]
+TITLE: Physical View
+
+[/SECTION]
+
+[SECTION]
+TITLE: Logical View
+
+[TEXT]
+STATEMENT: >>>
+.. raw:: html
+
+    <pre class="mermaid">
+    ---
+    title: HW Execution Lifetime
+    ---
+    stateDiagram-v2
+        [*] --> ImmutableBootloader
+        ImmutableBootloader --> MutableBootloader     
+        ImmutableBootloader --> HwWatchdog : Starts/Feeds
+
+        MutableBootloader --> [*]
+
+        MutableBootloader --> FwApplication
+        FwApplication --> [*]
+
+        FwApplication --> HwWatchdog : Feeds
+        MutableBootloader --> HwWatchdog : Feeds
+        ImmutableBootloader --> [*]
+        HwWatchdog --> [*]
+    </pre>
+<<<
+
+[/SECTION]
+
+[SECTION]
+TITLE: Concurrency View
+
+[/SECTION]
+
+[SECTION]
+TITLE: Scenarios
+
+[/SECTION]
+

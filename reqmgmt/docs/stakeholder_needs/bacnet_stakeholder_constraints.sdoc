@@ -1,0 +1,17 @@
+[DOCUMENT]
+TITLE: BACnet Stack Stakeholder Constraints
+REQ_PREFIX: BKSTK-STRS-CONSTRAINTS
+
+[GRAMMAR]
+IMPORT_FROM_FILE: bacnet_stakeholder_needs.sgra
+
+[TEXT]
+STATEMENT: >>>
+SPDX-LICENSE-IDENTIFIER: Apache-2.0
+<<<
+
+[SECTION]
+TITLE: Standards & Regulations
+
+[/SECTION]
+
