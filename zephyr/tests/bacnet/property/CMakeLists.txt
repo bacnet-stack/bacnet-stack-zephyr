@@ -43,7 +43,6 @@ if(BOARD STREQUAL unit_testing)
 
   add_definitions(
     -DBACNET_PROPERTY_LISTS=1
-    -DBACNET_PROPERTY_ARRAY_LISTS=1
   )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
