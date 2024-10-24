@@ -16,11 +16,12 @@ This integration uses automated continuous integration services to assist in aut
 # What the code does
 
 The Zephyr OS integration offers a collection of samples in the zephyr/samples
-folder that highlight the features of this BACnet integration, include some
-BACnet Basic objects and services that can be used to quickly create a BACnet
-device on a variety of existing boards.
+folder that highlight the features of this BACnet integration, including some
+BACnet Basic dynamically created objects and services that can be used to
+quickly create a custom BACnet device on a variety of existing boards.
 
-These samples are crafted to be simple and easy to understand, serving as a starting point for your own projects.
+These samples are crafted to be simple and easy to understand, serving as a
+starting point for your own projects.
 
 ## Hello BACnet Stack
 
