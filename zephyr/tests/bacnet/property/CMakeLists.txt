@@ -36,6 +36,8 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/bacstr.c
     ${BACNET_SRC}/bacint.c
     ${BACNET_SRC}/bacreal.c
+    ${BACNET_SRC}/bactext.c
+    ${BACNET_SRC}/indtext.c
     ${BACNET_SRC}/datetime.c
     ${BACNET_SRC}/timestamp.c
     ${BACNET_SRC}/basic/sys/days.c
@@ -43,7 +45,6 @@ if(BOARD STREQUAL unit_testing)
 
   add_definitions(
     -DBACNET_PROPERTY_LISTS=1
-    -DBACNET_PROPERTY_ARRAY_LISTS=1
   )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
