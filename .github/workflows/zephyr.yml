@@ -28,7 +28,7 @@ jobs:
       - name: Twister Tests unit_testing
         working-directory: bacnet
         run: |
-          ls -tal
+          pwd
           ./unittest.sh
 
       - name: Archive firmware
