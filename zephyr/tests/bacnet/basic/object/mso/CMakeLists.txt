@@ -47,6 +47,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/bacstr.c
     ${BACNET_SRC}/bacint.c
     ${BACNET_SRC}/bacreal.c
+    ${BACNET_SRC}/channel_value.c
     ${BACNET_SRC}/datetime.c
     ${BACNET_SRC}/bacdevobjpropref.c
     ${BACNET_SRC}/bactext.c

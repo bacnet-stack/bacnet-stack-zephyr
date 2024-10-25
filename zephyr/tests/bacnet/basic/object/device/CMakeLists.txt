@@ -46,6 +46,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/bacstr.c
     ${BACNET_SRC}/bactimevalue.c
     ${BACNET_SRC}/calendar.c
+    ${BACNET_SRC}/channel_value.c
     ${BACNET_SRC}/datetime.c
     ${BACNET_SRC}/timestamp.c
     ${BACNET_SRC}/basic/sys/days.c

@@ -50,6 +50,7 @@ if(BOARD STREQUAL unit_testing)
   ${BACNET_SRC}/datetime.c
   ${BACNET_SRC}/bacdevobjpropref.c
   ${BACNET_SRC}/bactext.c
+  ${BACNET_SRC}/channel_value.c
   ${BACNET_SRC}/cov.c
   ${BACNET_SRC}/indtext.c
   ${BACNET_SRC}/lighting.c
