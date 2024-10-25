@@ -24,16 +24,11 @@ jobs:
         run: |
           west init -l .
           west update
-          
+
       - name: Twister Tests unit_testing
         working-directory: bacnet
         run: |
-          rm -rf twister-out.unit_testing &&
-          ../zephyr/scripts/twister -O twister-out.unit_testing -p unit_testing -T zephyr/tests &&
-          for file in CMakeFiles CMakeCache.txt cmake_install.cmake Makefile
-            do 
-              find twister-out.unit_testing -name $file -exec rm -rf {} \; || true 
-            done
+          unittest.sh
 
       - name: Archive firmware
         uses: actions/upload-artifact@v4
