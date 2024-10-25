@@ -27,10 +27,17 @@ starting point for your own projects.
 
 A simple "Hello World" sample that can be used with any supported board boards and prints ["Hello BACnet-Stack"](./zephyr/samples/hello_bacnet_stack/README.rst) to the console.
 
-## BACnet Application Profile Simple Sensor (B-SS)
+## BACnet Standardized Device Profiles
+
+### Device Profile - BACnet Smart Actuator (B-SA)
 
 A device application demonstrating configuration of a
-[BACnet B-SS (simple sensor) device profile](./zephyr/samples/profiles/b-ss/README.rst) that can be used with any supported board boards.
+[BACnet Smart Actuator (B-SA) device profile](./zephyr/samples/profiles/b-sa/README.rst) that can be used with any supported board boards.
+
+### Device Profile - BACnet Smart Sensor (B-SS)
+
+A device application demonstrating configuration of a
+[BACnet Smart Sensor (B-SS) device profile](./zephyr/samples/profiles/b-ss/README.rst) that can be used with any supported board boards.
 
 # Coding Style and Guidelines
 

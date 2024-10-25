@@ -84,7 +84,7 @@ static void BACnet_Smart_Sensor_Task_Handler(void *context)
 
 int main(void)
 {
-	LOG_INF("*** BACnet Profile B-SS Sample ***");
+	LOG_INF("*** BACnet Smart Sensor (B-SS) ***");
 	LOG_INF("BACnet Stack Version " BACNET_VERSION_TEXT);
 	LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
     bacnet_basic_init_callback_set(BACnet_Smart_Sensor_Init_Handler, NULL);

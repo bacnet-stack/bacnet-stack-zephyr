@@ -1,5 +1,5 @@
 sample:
-  name: BACnet Profile B-SS Sample
+  name: BACnet Smart Sensor (B-SS) Sample
 
 tests:
   bacnet-stack.sample.profile.b-ss.bacdl_none:
