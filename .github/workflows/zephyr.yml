@@ -28,7 +28,7 @@ jobs:
       - name: Twister Tests unit_testing
         working-directory: bacnet
         run: |
-          unittest.sh
+          bacnet/unittest.sh
 
       - name: Archive firmware
         uses: actions/upload-artifact@v4
