@@ -9,9 +9,11 @@ C library hosted on Sourceforge and Github sites.
 
 # Continuous Integration
 
-This integration uses automated continuous integration services to assist in automated compilation, validation, linting, security scanning, and unit testing to produce robust C code.
+This integration uses automated continuous integration services to assist
+in automated compilation, validation, linting, security scanning, and unit
+testing to produce robust C code.
 
-[![Actions Status](https://github.com/bacnet-stack/bacnet-stack/workflows/CMake/badge.svg)](https://github.com/bacnet-stack/bacnet-stack/actions/workflows/zephyr.yml) GitHub Workflow: BACnet Stack Zephyr Twister Unit Tests
+[![Actions Status](https://github.com/bacnet-stack/bacnet-stack-zephyr/actions/workflows/zephyr.yml/badge.svg)](https://github.com/bacnet-stack/bacnet-stack-zephyr/actions/workflows/zephyr.yml) GitHub Workflow: BACnet Stack Zephyr Twister Unit Tests
 
 # What the code does
 
@@ -25,19 +27,23 @@ starting point for your own projects.
 
 ## Hello BACnet Stack
 
-A simple "Hello World" sample that can be used with any supported board boards and prints ["Hello BACnet-Stack"](./zephyr/samples/hello_bacnet_stack/README.rst) to the console.
+A simple "Hello World" sample that can be used with any supported board boards
+and prints ["Hello BACnet-Stack"](./zephyr/samples/hello_bacnet_stack/README.rst)
+to the console.
 
 ## BACnet Standardized Device Profiles
 
 ### Device Profile - BACnet Smart Actuator (B-SA)
 
 A device application demonstrating configuration of a
-[BACnet Smart Actuator (B-SA) device profile](./zephyr/samples/profiles/b-sa/README.rst) that can be used with any supported board boards.
+[BACnet Smart Actuator (B-SA) device profile](./zephyr/samples/profiles/b-sa/README.rst)
+that can be used with any supported board boards.
 
 ### Device Profile - BACnet Smart Sensor (B-SS)
 
 A device application demonstrating configuration of a
-[BACnet Smart Sensor (B-SS) device profile](./zephyr/samples/profiles/b-ss/README.rst) that can be used with any supported board boards.
+[BACnet Smart Sensor (B-SS) device profile](./zephyr/samples/profiles/b-ss/README.rst)
+that can be used with any supported board boards.
 
 # Coding Style and Guidelines
 
