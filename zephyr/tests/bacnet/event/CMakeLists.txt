@@ -58,6 +58,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/lighting.c
     ${BACNET_SRC}/timestamp.c
     ${BACNET_SRC}/hostnport.c
+    ${BACNET_SRC}/secure_connect.c
   )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")

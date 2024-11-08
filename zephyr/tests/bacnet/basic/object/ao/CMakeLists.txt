@@ -67,7 +67,8 @@ if(BOARD STREQUAL unit_testing)
   ${BACNET_SRC}/basic/sys/days.c
   ${BACNET_SRC}/basic/sys/debug.c
   ${BACNET_SRC}/basic/sys/keylist.c
-)
+  ${BACNET_SRC}/secure_connect.c
+  )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
   find_package(Zephyr COMPONENTS unittest REQUIRED HINTS $ENV{ZEPHYR_BASE})
