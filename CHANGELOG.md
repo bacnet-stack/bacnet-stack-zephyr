@@ -17,3 +17,6 @@ The git repository is hosted at the following site:
 ### Changed
 ### Fixed
 ### Removed
+
+## [1.4.0] - 2024-11-11
+* Initial release of BACnet Stack v1.4 on Zephyr v3.7.0
