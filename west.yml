@@ -38,7 +38,7 @@ manifest:
   projects:
     - name: bacnet-stack
       path: bacnet/stack   # Hidden by bacnet/.gitignore
-      revision: master
+      revision: bacnet-stack-1.4  # Long-lived release branch
     - name: zephyr
       path: zephyr
       revision: v3.7.0
