@@ -398,6 +398,39 @@ int bip_send_pdu(BACNET_ADDRESS *dest,
     return bvlc_send_pdu(dest, npdu_data, pdu, pdu_len);
 }
 
+struct wait_data
+{
+    struct k_sem sem;
+    struct net_mgmt_event_callback cb;
+};
+
+static void event_cb_handler(struct net_mgmt_event_callback *cb,
+                             uint32_t mgmt_event,
+                             struct net_if *iface)
+{
+    struct wait_data *wait = CONTAINER_OF(cb, struct wait_data, cb);
+
+    if (mgmt_event == cb->event_mask)
+    {
+        k_sem_give(&wait->sem);
+    }
+}
+
+static void wait_for_net_event(struct net_if *iface, uint32_t event)
+{
+    struct wait_data wait;
+
+    wait.cb.handler = event_cb_handler;
+    wait.cb.event_mask = event;
+
+    k_sem_init(&wait.sem, 0, 1);
+    net_mgmt_add_event_callback(&wait.cb);
+
+    k_sem_take(&wait.sem, K_FOREVER);
+
+    net_mgmt_del_event_callback(&wait.cb);
+}
+
 /** Gets the local IP address and local broadcast address from the system,
  *  and saves it into the BACnet/IP data structures.
  *
@@ -406,6 +439,7 @@ int bip_send_pdu(BACNET_ADDRESS *dest,
  */
 void bip_set_interface(const char *ifname)
 {
+	char hr_addr[NET_IPV4_ADDR_LEN];
     struct net_if *iface = 0;
     int index = -1;
     uint8_t x = 0;
@@ -434,15 +468,46 @@ void bip_set_interface(const char *ifname)
         }
     }
     if (index == -1) {
-        LOG_WRN("%s:%d - No valid interface specified - using default ",
+        LOG_INF("%s:%d - No valid interface specified - using default ",
             THIS_FILE, __LINE__);
         iface = net_if_get_default();
     }
     if (iface) {
         LOG_INF("Interface set.");
+        if (!net_if_is_up(iface))
+        {
+            LOG_INF("Bringing up network interface");
+            int ret = net_if_up(iface);
+            if ((ret < 0) && (ret != -EALREADY))
+            {
+                LOG_ERR("Failed to bring up network interface: %d", ret);
+                return;
+            }
+        }
+        if (BIP_Address.s_addr != 0)
+        {
+        	net_if_ipv4_addr_add(iface, &BIP_Address, NET_ADDR_MANUAL, 0);
+            LOG_INF("static IPv4 address: %s",
+                net_addr_ntop(AF_INET, &BIP_Address, hr_addr,
+                        NET_IPV4_ADDR_LEN));
+
+			net_if_ipv4_set_netmask_by_addr(iface, &BIP_Address, &BIP_Broadcast_Addr);
+            LOG_INF("static IPv4 netmask: %s",
+                net_addr_ntop(AF_INET, &BIP_Broadcast_Addr, hr_addr,
+                        NET_IPV4_ADDR_LEN));
+            return;
+        }
+#if defined(CONFIG_NET_DHCPV4)
+        LOG_INF("Starting DHCP to obtain IP address");
+        net_dhcpv4_start(iface);
+#endif
+
+        LOG_INF("Waiting to obtain IP address");
+        wait_for_net_event(iface, NET_EVENT_IPV4_ADDR_ADD);
+
 #if defined(CONFIG_BACDL_BIP_ADDRESS_INDEX)
         LOG_INF("Config unicast address %d/%d",
-            CONFIG_BACDL_BIP_ADDRESS_INDEX, NET_IF_MAX_IPV4_ADDR);
+            CONFIG_BACDL_BIP_ADDRESS_INDEX, NET_IF_MAX_IPV4_ADDR-1);
         index = CONFIG_BACDL_BIP_ADDRESS_INDEX;
 #else
         int i;
@@ -454,6 +519,11 @@ void bip_set_interface(const char *ifname)
             if (!if_addr->is_used) {
                 continue;
             }
+#if defined(CONFIG_NET_DHCPV4)
+            if (if_addr->addr_type != NET_ADDR_DHCP) {
+                continue;
+            }
+#endif
             index = i;
             LOG_INF("IPv4 address: %s",
                 net_addr_ntop(AF_INET, &if_addr->address.in_addr, hr_addr,
