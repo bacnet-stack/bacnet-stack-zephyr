@@ -399,8 +399,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/rp.h
     ${BACNETSTACK_SRC}/bacnet/rpm.c
     ${BACNETSTACK_SRC}/bacnet/rpm.h
-    ${BACNETSTACK_SRC}/bacnet/sc_status.c
-    ${BACNETSTACK_SRC}/bacnet/sc_status.h
+    ${BACNETSTACK_SRC}/bacnet/secure_connect.c
+    ${BACNETSTACK_SRC}/bacnet/secure_connect.h
     ${BACNETSTACK_SRC}/bacnet/timestamp.c
     ${BACNETSTACK_SRC}/bacnet/timestamp.h
     ${BACNETSTACK_SRC}/bacnet/timesync.c
