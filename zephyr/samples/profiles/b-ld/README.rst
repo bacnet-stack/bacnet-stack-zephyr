@@ -9,6 +9,24 @@ Overview
 This is a simple application demonstrating configuration of a
 BACnet Lighting Device (B-LD) device profile.
 
+L.11.2 BACnet Lighting Device (B-LD)
+*************************************
+
+A B-LD is any device that implements Binary Lighting Output and/or Lighting Output objects
+
+Data Sharing
+************
+
+* Ability to provide values for any of its BACnet objects upon request
+* Ability to allow modification of some or all of its BACnet objects by another device
+
+Device and Network Management
+*****************************
+
+* Ability to respond to queries about its status
+* Ability to respond to requests for information about any of its objects
+* Ability to respond to communication control messages
+
 Requirements
 ************
 

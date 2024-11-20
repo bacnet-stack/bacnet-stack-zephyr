@@ -203,6 +203,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_wp.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_wpm.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_wpm.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_write_group.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_write_group.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_abort.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_ack_alarm.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_arfs.h
@@ -355,6 +357,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/wp.h
     ${BACNETSTACK_SRC}/bacnet/wpm.c
     ${BACNETSTACK_SRC}/bacnet/wpm.h
+    ${BACNETSTACK_SRC}/bacnet/write_group.c
+    ${BACNETSTACK_SRC}/bacnet/write_group.h
     )
 
 message(STATUS "BACNETSTACK: CONFIG_BACNET_BASIC_OBJECT_DEVICE_SERVER \"${CONFIG_BACNET_BASIC_OBJECT_DEVICE_SERVER}\"")
@@ -393,6 +397,7 @@ set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_INTEGER_VALUE}>:${BACNETSTACK_SRC}/bacnet/basic/object/iv.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_LOAD_CONTROL}>:${BACNETSTACK_SRC}/bacnet/basic/object/lc.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/lo.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_BINARY_LIGHTING_OUTPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/blo.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_LIFE_SAFETY_POINT}>:${BACNETSTACK_SRC}/bacnet/basic/object/lsp.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_MULTISTATE_INPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/ms-input.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_MULTISTATE_OUTPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/mso.c>

@@ -135,6 +135,8 @@ void bacnet_basic_init(void)
         SERVICE_CONFIRMED_WRITE_PROPERTY, handler_write_property);
     apdu_set_confirmed_handler(
         SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, handler_write_property_multiple);
+    apdu_set_unconfirmed_handler(
+        SERVICE_UNCONFIRMED_WRITE_GROUP, handler_write_group);
     apdu_set_confirmed_handler(
         SERVICE_CONFIRMED_SUBSCRIBE_COV, handler_cov_subscribe);
     /* handle communication so we can shutup when asked, or restart */

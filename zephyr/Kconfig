@@ -546,6 +546,12 @@ config BACNET_BASIC_OBJECT_LIGHTING_OUTPUT
 	help
 		Use the BACnet basic lighting output object
 
+config BACNET_BASIC_OBJECT_BINARY_LIGHTING_OUTPUT
+	bool "Use the BACnet basic binary lighting output object"
+	default false
+	help
+		Use the BACnet basic binary lighting output object
+
 config BACNET_BASIC_OBJECT_LIFE_SAFETY_POINT
 	bool "Use the BACnet basic life-safety point object"
 	default false
