@@ -250,6 +250,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/sys/keylist.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/linear.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/linear.h
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/lighting_command.c
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/lighting_command.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/mstimer.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/mstimer.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/ringbuf.c
@@ -260,11 +262,17 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/tsm/tsm.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bits.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bytes.h
+    ${BACNETSTACK_SRC}/bacnet/calendar_entry.c
+    ${BACNETSTACK_SRC}/bacnet/calendar_entry.h
+    ${BACNETSTACK_SRC}/bacnet/channel_value.c
+    ${BACNETSTACK_SRC}/bacnet/channel_value.h
     ${BACNETSTACK_SRC}/bacnet/config.h
     ${BACNETSTACK_SRC}/bacnet/cov.c
     ${BACNETSTACK_SRC}/bacnet/cov.h
     ${BACNETSTACK_SRC}/bacnet/credential_authentication_factor.c
     ${BACNETSTACK_SRC}/bacnet/credential_authentication_factor.h
+    ${BACNETSTACK_SRC}/bacnet/dailyschedule.c
+    ${BACNETSTACK_SRC}/bacnet/dailyschedule.h
     ${BACNETSTACK_SRC}/bacnet/datalink/arcnet.h
     ${BACNETSTACK_SRC}/bacnet/datalink/bacsec.c
     ${BACNETSTACK_SRC}/bacnet/datalink/bacsec.h
@@ -320,6 +328,10 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/ptransfer.h
     ${BACNETSTACK_SRC}/bacnet/rd.c
     ${BACNETSTACK_SRC}/bacnet/rd.h
+    ${BACNETSTACK_SRC}/bacnet/secure_connect.c
+    ${BACNETSTACK_SRC}/bacnet/secure_connect.h
+    ${BACNETSTACK_SRC}/bacnet/special_event.c
+    ${BACNETSTACK_SRC}/bacnet/special_event.h
     ${BACNETSTACK_SRC}/bacnet/readrange.c
     ${BACNETSTACK_SRC}/bacnet/readrange.h
     ${BACNETSTACK_SRC}/bacnet/reject.c
@@ -333,6 +345,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/timesync.c
     ${BACNETSTACK_SRC}/bacnet/timesync.h
     ${BACNETSTACK_SRC}/bacnet/version.h
+    ${BACNETSTACK_SRC}/bacnet/weeklyschedule.c
+    ${BACNETSTACK_SRC}/bacnet/weeklyschedule.h
     ${BACNETSTACK_SRC}/bacnet/whohas.c
     ${BACNETSTACK_SRC}/bacnet/whohas.h
     ${BACNETSTACK_SRC}/bacnet/whois.c
@@ -341,14 +355,6 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/wp.h
     ${BACNETSTACK_SRC}/bacnet/wpm.c
     ${BACNETSTACK_SRC}/bacnet/wpm.h
-    ${BACNETSTACK_SRC}/bacnet/weeklyschedule.c
-    ${BACNETSTACK_SRC}/bacnet/weeklyschedule.h
-    ${BACNETSTACK_SRC}/bacnet/dailyschedule.c
-    ${BACNETSTACK_SRC}/bacnet/dailyschedule.h
-    ${BACNETSTACK_SRC}/bacnet/calendar_entry.c
-    ${BACNETSTACK_SRC}/bacnet/calendar_entry.h
-    ${BACNETSTACK_SRC}/bacnet/special_event.c
-    ${BACNETSTACK_SRC}/bacnet/special_event.h
     )
 
 message(STATUS "BACNETSTACK: CONFIG_BACNET_BASIC_OBJECT_DEVICE_SERVER \"${CONFIG_BACNET_BASIC_OBJECT_DEVICE_SERVER}\"")
@@ -539,5 +545,12 @@ zephyr_compile_definitions(
   $<$<BOOL:${CONFIG_BACAPP_ACTION_COMMAND}>:BACAPP_ACTION_COMMAND>
   $<$<BOOL:${CONFIG_BACAPP_SCALE}>:BACAPP_SCALE>
   $<$<BOOL:${CONFIG_BACAPP_SHED_LEVEL}>:BACAPP_SHED_LEVEL>
+  $<$<BOOL:${CONFIG_BACAPP_ACCESS_RULE}>:BACAPP_ACCESS_RULE>
+  $<$<BOOL:${CONFIG_BACAPP_CHANNEL_VALUE}>:BACAPP_CHANNEL_VALUE>
+
+
+
+
+
   )
 
