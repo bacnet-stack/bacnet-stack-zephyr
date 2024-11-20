@@ -33,6 +33,10 @@
 #define CONFIG_BACNETSTACK_BACNET_SERVER_APP_PRIORITY 90
 #endif
 
+#ifndef CONFIG_BACNET_BASIC_SERVER_KSLEEP
+#define CONFIG_BACNET_BASIC_SERVER_KSLEEP 10
+#endif
+
 /* Logging module registration is done in OSIF */
 #include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
@@ -62,7 +66,7 @@ static void server_thread(void)
     }
     LOG_INF("BACnet Server: initialized");
     for (;;) {
-        k_sleep(K_MSEC(10));
+        k_sleep(K_MSEC(CONFIG_BACNET_BASIC_SERVER_KSLEEP));
         bacnet_basic_task();
         bacnet_port_task();
     }
