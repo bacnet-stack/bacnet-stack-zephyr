@@ -191,8 +191,8 @@ void bacnet_basic_task(void)
     }
     /* object specific cyclic tasks */
     if (mstimer_expired(&BACnet_Object_Timer)) {
-        mstimer_reset(&BACnet_Object_Timer);
-        elapsed_milliseconds = mstimer_interval(&BACnet_Object_Timer);
+        elapsed_milliseconds = mstimer_elapsed(&BACnet_Object_Timer);
+        mstimer_restart(&BACnet_Object_Timer);
         Device_Timer(elapsed_milliseconds);
     }
     /* handle the messaging */
