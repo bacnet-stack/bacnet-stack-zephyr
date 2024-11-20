@@ -519,7 +519,16 @@ void bip_set_interface(const char *ifname)
             if (!if_addr->is_used) {
                 continue;
             }
-#if defined(CONFIG_NET_DHCPV4)
+#if defined (CONFIG_NET_IPV4_AUTO) && defined (CONFIG_NET_DHCPV4)
+            if (if_addr->addr_type != NET_ADDR_AUTOCONF &&
+                if_addr->addr_type != NET_ADDR_DHCP) {
+                continue;
+            }
+elif defined (CONFIG_NET_IPV4_AUTO)
+            if (if_addr->addr_type != NET_ADDR_AUTOCONF) {
+                continue;
+            }
+#elif defined(CONFIG_NET_DHCPV4)
             if (if_addr->addr_type != NET_ADDR_DHCP) {
                 continue;
             }
