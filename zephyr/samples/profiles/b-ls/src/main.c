@@ -13,6 +13,7 @@
 #include "bacnet/bacdef.h"
 /* BACnet Stack core API */
 #include "bacnet/version.h"
+#include "bacnet/datetime.h"
 #include "bacnet/basic/services.h"
 #include "bacnet/basic/sys/mstimer.h"
 #include "bacnet/basic/sys/linear.h"
@@ -140,6 +141,10 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
 	/* link WriteGroup service to our channel object  */
     Write_Group_Notification.callback = Channel_Write_Group;
     handler_write_group_notification_add(&Write_Group_Notification);
+    apdu_set_unconfirmed_handler(
+        SERVICE_UNCONFIRMED_WRITE_GROUP, handler_write_group);
+    /* initialize timesync callback function. */
+    handler_timesync_set_callback_set(&datetime_timesync);
 	/* done */
 	LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
 	/* set the BACnet Basic Task device object timer for lighting output use */
