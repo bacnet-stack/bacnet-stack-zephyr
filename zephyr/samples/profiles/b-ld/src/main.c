@@ -1,14 +1,14 @@
-/*
- * Copyright (C) 2020 Legrand North America, Inc.
- *
- * SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief BACnet Stack sample Lighting Device (B-LD) main file
+ * @author Steve Karg <skarg@users.sourceforge.net>
+ * @date November 2024
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
-
 #include <zephyr/kernel.h>
 #include <zephyr/random/random.h>
 #include <stdint.h>
 #include <stdlib.h>
-
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
 /* BACnet Stack core API */
