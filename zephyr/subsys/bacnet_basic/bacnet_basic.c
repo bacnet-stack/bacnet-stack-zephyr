@@ -107,6 +107,15 @@ unsigned long bacnet_basic_packet_count(void)
 }
 
 /**
+ * @brief Set the BACnet task device object timer interval
+ * @param milliseconds [in] The number of milliseconds for the timer interval
+ */
+void bacnet_basic_task_object_timer_set(unsigned long milliseconds)
+{
+    mstimer_set(&BACnet_Object_Timer, milliseconds);
+}
+
+/**
  * @brief Initialize the BACnet device object, the service handlers, and timers
  */
 void bacnet_basic_init(void)
@@ -136,7 +145,9 @@ void bacnet_basic_init(void)
     /* start the 1 second timer for non-critical cyclic tasks */
     mstimer_set(&BACnet_Task_Timer, 1000L);
     /* start the timer for more time sensitive object specific cyclic tasks */
-    mstimer_set(&BACnet_Object_Timer, 100UL);
+    if (mstimer_interval(&BACnet_Object_Timer) == 0) {
+        mstimer_set(&BACnet_Object_Timer, 100UL);
+    }
     /* initialize user data in this thread */
     bacnet_init_callback_handler();
 }
@@ -180,8 +191,8 @@ void bacnet_basic_task(void)
     }
     /* object specific cyclic tasks */
     if (mstimer_expired(&BACnet_Object_Timer)) {
-        mstimer_reset(&BACnet_Object_Timer);
-        elapsed_milliseconds = mstimer_interval(&BACnet_Object_Timer);
+        elapsed_milliseconds = mstimer_elapsed(&BACnet_Object_Timer);
+        mstimer_restart(&BACnet_Object_Timer);
         Device_Timer(elapsed_milliseconds);
     }
     /* handle the messaging */

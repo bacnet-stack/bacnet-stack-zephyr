@@ -43,4 +43,11 @@ if BACNETSTACK_BACNET_BASIC
 		depends on BACNETSTACK
 		default y if SHELL
 
+	config BACNET_BASIC_SERVER_KSLEEP
+		int "Minimum ksleep time for BACnet Basic Server task"
+		default 10
+		help
+			BACnet Stack KSLEEP time in milliseconds
+
+
 endif # BACNETSTACK_BACNET_SETTINGS

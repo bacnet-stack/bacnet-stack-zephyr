@@ -312,6 +312,18 @@ config BACAPP_SHED_LEVEL
 	help
 	   BACnet data types supported for WriteProperty: BACAPP_SHED_LEVEL
 
+config BACAPP_ACCESS_RULE
+	bool "BACnet data types supported for WriteProperty: BACAPP_ACCESS_RULE"
+	default false
+	help
+	   BACnet data types supported for WriteProperty: BACAPP_ACCESS_RULE
+
+config BACAPP_CHANNEL_VALUE
+	bool "BACnet data types supported for WriteProperty: BACAPP_CHANNEL_VALUE"
+	default false
+	help
+	   BACnet data types supported for WriteProperty: BACAPP_CHANNEL_VALUE
+
 config BACAPP_PRINT_ENABLED
 	bool "BACnet app print"
 	default false
