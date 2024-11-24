@@ -145,7 +145,12 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
     apdu_set_unconfirmed_handler(
         SERVICE_UNCONFIRMED_WRITE_GROUP, handler_write_group);
     /* initialize timesync callback function. */
-    handler_timesync_set_callback_set(&datetime_timesync);
+    /* local time and date */
+    apdu_set_unconfirmed_handler(
+        SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION,
+        handler_timesync);
+    handler_timesync_set_callback_set(datetime_timesync);
+    datetime_init();
 	/* done */
 	LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
 	/* set the BACnet Basic Task device object timer for lighting output use */
