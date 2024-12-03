@@ -48,6 +48,8 @@ void BACnet_Lighting_Output_Tracking_Value_Handler(uint32_t object_instance,
 	/* Tracking value are 0.0 and 1.0-100.0 normalized */
 	if (isgreaterequal(value, 1.0) && islessequal(value, 100.0)) {
 		steps = linear_interpolate(1.0, value, 100.0, 1, UINT16_MAX);
+	} else if (isgreater(value, 100.0)) {
+		steps = UINT16_MAX;
 	} else {
 		steps = 0;
 	}
