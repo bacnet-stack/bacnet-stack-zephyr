@@ -882,6 +882,16 @@ bool Device_Object_Name(uint32_t object_instance,
 	return status;
 }
 
+/**
+ * @brief Initialize the Device Object Name with an ANSI C string
+ * @param value [in] The object name as a null-terminated string
+ * @return True on success, else False
+ */
+bool Device_Object_Name_ANSI_Init(const char *value)
+{
+    return characterstring_init_ansi(&My_Object_Name, value);
+}
+
 bool Device_Set_Object_Name(const BACNET_CHARACTER_STRING *object_name)
 {
 	bool status = false; /*return value */

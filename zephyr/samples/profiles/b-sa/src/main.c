@@ -28,7 +28,10 @@
 #include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
-static const uint32_t Device_Instance = 260123;
+/* FIXME: get the device instance and name from settings! */
+static const uint32_t Device_Instance = 260124;
+static const char *Device_Name = "BACnet Smart Actuator (B-SA)";
+/* object instances */
 static const uint32_t Actuator_Instance = 1;
 /* timer for Actuator Update Interval */
 static struct mstimer Actuator_Update_Timer;
@@ -50,6 +53,7 @@ static void BACnet_Smart_Actuator_Init_Handler(void *context)
 	/* initialize objects for this basic sample */
 	Device_Init(NULL);
 	Device_Set_Object_Instance_Number(Device_Instance);
+	Device_Object_Name_ANSI_Init(Device_Name);
 	Analog_Output_Create(Actuator_Instance);
 	Analog_Output_Name_Set(Actuator_Instance, "Actuator");
 	Analog_Output_Units_Set(Actuator_Instance, UNITS_PERCENT);
@@ -88,7 +92,7 @@ static void BACnet_Smart_Actuator_Task_Handler(void *context)
 
 int main(void)
 {
-	LOG_INF("*** BACnet Smart Actuator (B-SA) ***");
+	LOG_INF("BACnet Device: %s", Device_Name);
 	LOG_INF("BACnet Stack Version " BACNET_VERSION_TEXT);
 	LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
 	bacnet_basic_init_callback_set(BACnet_Smart_Actuator_Init_Handler,

@@ -49,5 +49,24 @@ if BACNETSTACK_BACNET_BASIC
 		help
 			BACnet Stack KSLEEP time in milliseconds
 
+    config BACNET_BASIC_SERVER_APP_PRIORITY
+        int "App init priority"
+        default 0
+        help
+          This sets the starting priority of the thread.
+
+    config BACNET_BASIC_SERVER_PRIORITY
+        int "BACnet server thread priority"
+        default 50
+        help
+          This sets the execution priority of the thread.
+
+    config BACNET_BASIC_SERVER_STACK_SIZE
+        int "BACnet server stack size"
+        default 8192
+        help
+          This sets the stack size of the thread.
+
+
 
 endif # BACNETSTACK_BACNET_SETTINGS
