@@ -100,6 +100,11 @@ config BACDL_ALL
 	help
 	  Enable BACnet with all datalinks enabled
 
+config BACDL_MULTIPLE
+	bool "BACnet with multiple datalinks enabled"
+	help
+	  Enable BACnet with multiple datalinks enabled
+
 config BACAPP_ALL
 	bool "BACnet data types supported for WriteProperty: all = minimal + extra"
 	default false
