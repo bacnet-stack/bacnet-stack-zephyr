@@ -20,17 +20,17 @@
 #include "bacnet_settings/bacnet_storage.h"
 #endif
 
-/* note: stack is minimally 2x to 3x of MAX_APDU */
-#ifndef CONFIG_BACNETSTACK_BACNET_SERVER_STACK_SIZE
-#define CONFIG_BACNETSTACK_BACNET_SERVER_STACK_SIZE 4096
+/* note: stack is minimally 3x of MAX_APDU */
+#ifndef CONFIG_BACNET_BASIC_SERVER_STACK_SIZE
+#define CONFIG_BACNET_BASIC_SERVER_STACK_SIZE 8192
 #endif
 
-#ifndef CONFIG_BACNETSTACK_BACNET_SERVER_PRIO
-#define CONFIG_BACNETSTACK_BACNET_SERVER_PRIO 10
+#ifndef CONFIG_BACNET_BASIC_SERVER_PRIORITY
+#define CONFIG_BACNET_BASIC_SERVER_PRIORITY 10
 #endif
 
-#ifndef CONFIG_BACNETSTACK_BACNET_SERVER_APP_PRIORITY
-#define CONFIG_BACNETSTACK_BACNET_SERVER_APP_PRIORITY 90
+#ifndef CONFIG_BACNET_BASIC_SERVER_APP_PRIORITY
+#define CONFIG_BACNET_BASIC_SERVER_APP_PRIORITY 90
 #endif
 
 #ifndef CONFIG_BACNET_BASIC_SERVER_KSLEEP
@@ -43,7 +43,7 @@ LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 static struct k_thread server_thread_data;
 static K_THREAD_STACK_DEFINE(server_thread_stack,
-                             CONFIG_BACNETSTACK_BACNET_SERVER_STACK_SIZE);
+                             CONFIG_BACNET_BASIC_SERVER_STACK_SIZE);
 
 /**
  * @brief BACnet Server Thread
@@ -60,11 +60,17 @@ static void server_thread(void)
         if (bacnet_port_init()) {
             break;
         } else {
-            LOG_ERR("BACnet Server: port initialization failed");
+            LOG_ERR("Server: port initialization failed");
             k_sleep(K_MSEC(1000));
         }
     }
-    LOG_INF("BACnet Server: initialized");
+    LOG_INF("Server: thread stack=%u bytes",
+        CONFIG_BACNET_BASIC_SERVER_STACK_SIZE);
+    LOG_INF("Server: thread priority=%u",
+        CONFIG_BACNET_BASIC_SERVER_PRIORITY);
+    LOG_INF("Server: thread sleep=%u milliseconds",
+        CONFIG_BACNET_BASIC_SERVER_KSLEEP);
+    LOG_INF("Server: initialized");
     for (;;) {
         k_sleep(K_MSEC(CONFIG_BACNET_BASIC_SERVER_KSLEEP));
         bacnet_basic_task();
@@ -80,7 +86,7 @@ static int server_init(void)
     k_thread_create(&server_thread_data, server_thread_stack,
                     K_THREAD_STACK_SIZEOF(server_thread_stack),
                     (k_thread_entry_t)server_thread, NULL, NULL, NULL,
-                    K_PRIO_PREEMPT(CONFIG_BACNETSTACK_BACNET_SERVER_PRIO), 0,
+                    K_PRIO_PREEMPT(CONFIG_BACNET_BASIC_SERVER_PRIORITY), 0,
                     K_NO_WAIT);
     k_thread_name_set(&server_thread_data, "bacnet_server");
 
@@ -88,4 +94,4 @@ static int server_init(void)
 }
 
 SYS_INIT(server_init, APPLICATION,
-         CONFIG_BACNETSTACK_BACNET_SERVER_APP_PRIORITY);
+         CONFIG_BACNET_BASIC_SERVER_APP_PRIORITY);
