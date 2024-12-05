@@ -25,14 +25,17 @@
 #define CONFIG_BACNET_BASIC_SERVER_STACK_SIZE 8192
 #endif
 
-#ifndef CONFIG_BACNET_BASIC_SERVER_PRIORITY
-#define CONFIG_BACNET_BASIC_SERVER_PRIORITY 10
+/* note: init runs in main thread with sub-priority of 0..99 */
+#ifndef CONFIG_BACNET_BASIC_SERVER_INIT_PRIORITY
+#define CONFIG_BACNET_BASIC_SERVER_INIT_PRIORITY 50
 #endif
 
-#ifndef CONFIG_BACNET_BASIC_SERVER_APP_PRIORITY
-#define CONFIG_BACNET_BASIC_SERVER_APP_PRIORITY 90
+/* note: thread preemptive priority 0..15 */
+#ifndef CONFIG_BACNET_BASIC_SERVER_THREAD_PRIORITY
+#define CONFIG_BACNET_BASIC_SERVER_THREAD_PRIORITY 10
 #endif
 
+/* note: sleep time in main loop in milliseconds */
 #ifndef CONFIG_BACNET_BASIC_SERVER_KSLEEP
 #define CONFIG_BACNET_BASIC_SERVER_KSLEEP 10
 #endif
@@ -67,7 +70,7 @@ static void server_thread(void)
     LOG_INF("Server: thread stack=%u bytes",
         CONFIG_BACNET_BASIC_SERVER_STACK_SIZE);
     LOG_INF("Server: thread priority=%u",
-        CONFIG_BACNET_BASIC_SERVER_PRIORITY);
+        CONFIG_BACNET_BASIC_SERVER_THREAD_PRIORITY);
     LOG_INF("Server: thread sleep=%u milliseconds",
         CONFIG_BACNET_BASIC_SERVER_KSLEEP);
     LOG_INF("Server: initialized");
@@ -86,7 +89,7 @@ static int server_init(void)
     k_thread_create(&server_thread_data, server_thread_stack,
                     K_THREAD_STACK_SIZEOF(server_thread_stack),
                     (k_thread_entry_t)server_thread, NULL, NULL, NULL,
-                    K_PRIO_PREEMPT(CONFIG_BACNET_BASIC_SERVER_PRIORITY), 0,
+                    K_PRIO_PREEMPT(CONFIG_BACNET_BASIC_SERVER_THREAD_PRIORITY), 0,
                     K_NO_WAIT);
     k_thread_name_set(&server_thread_data, "bacnet_server");
 
@@ -94,4 +97,4 @@ static int server_init(void)
 }
 
 SYS_INIT(server_init, APPLICATION,
-         CONFIG_BACNET_BASIC_SERVER_APP_PRIORITY);
+         CONFIG_BACNET_BASIC_SERVER_INIT_PRIORITY);
