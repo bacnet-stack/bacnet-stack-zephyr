@@ -16,9 +16,6 @@
 #include "bacnet/datalink/datalink.h"
 #include "bacnet_basic/bacnet_basic.h"
 #include "bacnet_basic/bacnet_port.h"
-#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
-#include "bacnet_settings/bacnet_storage.h"
-#endif
 
 /* note: stack is minimally 3x of MAX_APDU */
 #ifndef CONFIG_BACNET_BASIC_SERVER_STACK_SIZE
@@ -55,9 +52,6 @@ static void server_thread(void)
 {
     LOG_INF("BACnet Server: started");
 
-#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
-    bacnet_storage_init();
-#endif
     bacnet_basic_init();
     for (;;) {
         if (bacnet_port_init()) {

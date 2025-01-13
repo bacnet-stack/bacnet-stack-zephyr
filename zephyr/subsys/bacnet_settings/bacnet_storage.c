@@ -68,7 +68,7 @@ void bacnet_storage_init(void)
 #endif
 	rc = settings_subsys_init();
 	if (rc) {
-		LOG_INF("settings subsys initialization: fail (err %d)", rc);
+		LOG_ERR("settings subsys initialization: fail (err %d)", rc);
 		return;
 	}
 

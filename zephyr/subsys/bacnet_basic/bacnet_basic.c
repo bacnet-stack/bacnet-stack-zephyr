@@ -25,8 +25,16 @@
 #include "bacnet/basic/object/netport.h"
 #endif
 #include "bacnet/basic/object/device.h"
+#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
+#include "bacnet_settings/bacnet_settings.h"
+#include "bacnet_settings/bacnet_storage.h"
+#endif
 /* me */
 #include "bacnet_basic/bacnet_basic.h"
+
+/* Logging module registration is done in OSIF */
+#include "bacnet_osif/bacnet_log.h"
+LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 /* 1s timer for basic non-critical timed tasks */
 static struct mstimer BACnet_Task_Timer;
@@ -50,10 +58,10 @@ static void *BACnet_Task_Context;
  * @param context [in] The context to pass to the callback function
  */
 void bacnet_basic_init_callback_set(bacnet_basic_callback callback,
-    void *context)
+				    void *context)
 {
-    BACnet_Init_Callback = callback;
-    BACnet_Init_Context = context;
+	BACnet_Init_Callback = callback;
+	BACnet_Init_Context = context;
 }
 
 /**
@@ -61,9 +69,9 @@ void bacnet_basic_init_callback_set(bacnet_basic_callback callback,
  */
 static void bacnet_init_callback_handler(void)
 {
-    if (BACnet_Init_Callback) {
-        BACnet_Init_Callback(BACnet_Init_Context);
-    }
+	if (BACnet_Init_Callback) {
+		BACnet_Init_Callback(BACnet_Init_Context);
+	}
 }
 
 /**
@@ -72,10 +80,10 @@ static void bacnet_init_callback_handler(void)
  * @param context [in] The context to pass to the callback function
  */
 void bacnet_basic_task_callback_set(bacnet_basic_callback callback,
-    void *context)
+				    void *context)
 {
-    BACnet_Task_Callback = callback;
-    BACnet_Task_Context = context;
+	BACnet_Task_Callback = callback;
+	BACnet_Task_Context = context;
 }
 
 /**
@@ -83,9 +91,9 @@ void bacnet_basic_task_callback_set(bacnet_basic_callback callback,
  */
 static void bacnet_task_callback_handler(void)
 {
-    if (BACnet_Task_Callback) {
-        BACnet_Task_Callback(BACnet_Task_Context);
-    }
+	if (BACnet_Task_Callback) {
+		BACnet_Task_Callback(BACnet_Task_Context);
+	}
 }
 
 /**
@@ -94,7 +102,7 @@ static void bacnet_task_callback_handler(void)
  */
 unsigned long bacnet_basic_uptime_seconds(void)
 {
-    return BACnet_Uptime_Seconds;
+	return BACnet_Uptime_Seconds;
 }
 
 /**
@@ -103,7 +111,7 @@ unsigned long bacnet_basic_uptime_seconds(void)
  */
 unsigned long bacnet_basic_packet_count(void)
 {
-    return BACnet_Packet_Count;
+	return BACnet_Packet_Count;
 }
 
 /**
@@ -112,44 +120,185 @@ unsigned long bacnet_basic_packet_count(void)
  */
 void bacnet_basic_task_object_timer_set(unsigned long milliseconds)
 {
-    mstimer_set(&BACnet_Object_Timer, milliseconds);
+	mstimer_set(&BACnet_Object_Timer, milliseconds);
 }
+
+#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
+void bacnet_basic_settings_restore(void)
+{
+    /* use MAX_INSTANCE for our internal device data location */
+    const uint32_t object_instance = BACNET_MAX_INSTANCE;
+    const BACNET_OBJECT_TYPE object_type = OBJECT_DEVICE;
+    BACNET_CHARACTER_STRING char_string = { 0 };
+    char name[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = { 0 };
+    BACNET_UNSIGNED_INTEGER value_unsigned = 0;
+    BACNET_UNSIGNED_INTEGER default_unsigned = 0;
+    const char *default_name;
+    const char *default_reinit_password = "";
+    uint32_t array_index = BACNET_ARRAY_ALL;
+    int rc;
+
+    /* Set the device object name from non-volatile or default */
+    default_name = Device_Object_Name_ANSI();
+    rc = bacnet_settings_characterstring_get(object_type, object_instance,
+                                             PROP_OBJECT_NAME, array_index,
+                                             default_name, &char_string);
+    if (rc < 1) {
+        LOG_INF("The Device object-name was not stored."
+                " Using default \"%s\"",
+                default_name);
+    }
+    Device_Set_Object_Name(&char_string);
+    /* Set the device reinitialize password from non-volatile or default */
+    /* Note: doesn't have a standard property enumeration, use vendor range */
+    rc = bacnet_settings_string_get(object_type, object_instance, 512,
+                                    array_index, default_reinit_password, name,
+                                    sizeof(name));
+    if (rc < 0) {
+        LOG_INF("The ReinitializeDevice Password was not stored."
+                " Using default \"%s\"",
+                name);
+    }
+    Device_Reinitialize_Password_Set(name);
+    /* Set the device object instance from non-volatile or use a default */
+    rc = bacnet_settings_unsigned_get(object_type, object_instance,
+                                      PROP_OBJECT_IDENTIFIER, array_index,
+                                      BACNET_MAX_INSTANCE, &value_unsigned);
+    if (rc < 0) {
+        LOG_INF("The device instance was not stored. Using default %lu.",
+                (unsigned long)value_unsigned);
+    }
+    Device_Set_Object_Instance_Number(value_unsigned);
+    /* Set the device object instance from non-volatile or use a default */
+    default_unsigned = Device_Database_Revision();
+    rc = bacnet_settings_unsigned_get(object_type, object_instance,
+                                      PROP_DATABASE_REVISION, array_index, 0UL,
+                                      &value_unsigned);
+    if (rc < 0) {
+        LOG_INF(
+            "The device database-revision is not readable. Using default %lu.",
+            (unsigned long)value_unsigned);
+    }
+    Device_Set_Database_Revision(value_unsigned);
+}
+#endif
+
+#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
+/**
+ * @brief Store the BACnet data after a WriteProperty for object property
+ * @param object_type - BACnet object type
+ * @param object_instance - BACnet object instance
+ * @param object_property - BACnet object property
+ * @param array_index - BACnet array index
+ * @param application_data - pointer to the data
+ * @param application_data_len - length of the data
+*/
+void bacnet_basic_settings_store(BACNET_OBJECT_TYPE object_type, uint32_t object_instance,
+                       BACNET_PROPERTY_ID object_property,
+                       BACNET_ARRAY_INDEX array_index,
+                       uint8_t *application_data, int application_data_len)
+{
+    BACNET_STORAGE_KEY key = { 0 };
+
+    LOG_INF("WriteProperty data store");
+    /* create the key */
+    bacnet_storage_key_init(&key, object_type, object_instance, object_property,
+                            array_index);
+    /* store the data */
+    (void)bacnet_storage_set(&key, application_data, application_data_len);
+}
+#endif
+
+#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
+/**
+ * @brief Store the BACnet data after a successful WriteProperty for
+ * an object property
+ * @param wp_data - pointer to the write property data
+ */
+bool bacnet_basic_write_property_store(BACNET_WRITE_PROPERTY_DATA *wp_data)
+{
+	BACNET_ARRAY_INDEX array_index = BACNET_ARRAY_ALL;
+
+	if (property_list_bacnet_array_member(wp_data->object_type,
+					      wp_data->object_property)) {
+		array_index = wp_data->array_index;
+	} else if (wp_data->object_property == PROP_PRESENT_VALUE) {
+		/* indirect Priority_Array write */
+		if (Device_Objects_Property_List_Member(
+			    wp_data->object_type, wp_data->object_instance,
+			    PROP_PRIORITY_ARRAY)) {
+			/* store the priority as an array index to be used on restore */
+			array_index = wp_data->priority;
+		}
+	} else {
+		array_index = wp_data->array_index;
+	}
+	bacnet_basic_settings_store(wp_data->object_type, wp_data->object_instance,
+			  wp_data->object_property, array_index,
+			  wp_data->application_data,
+			  wp_data->application_data_len);
+
+	return true;
+}
+#endif
+
+#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
+void bacnet_basic_settings_init(void)
+{
+	bacnet_storage_init();
+	/* This callback enables storing any successful write property */
+	Device_Write_Property_Store_Callback_Set(
+		bacnet_basic_write_property_store);
+}
+#endif
 
 /**
  * @brief Initialize the BACnet device object, the service handlers, and timers
  */
 void bacnet_basic_init(void)
 {
-    /* set up our confirmed service unrecognized service handler - required! */
-    apdu_set_unrecognized_service_handler_handler(handler_unrecognized_service);
-    /* we need to handle who-is to support dynamic device binding */
-    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS, handler_who_is);
-    apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_HAS, handler_who_has);
-    /* Set the handlers for any confirmed services that we support. */
-    /* We must implement read property - it's required! */
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_READ_PROPERTY, handler_read_property);
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_READ_PROP_MULTIPLE, handler_read_property_multiple);
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_WRITE_PROPERTY, handler_write_property);
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, handler_write_property_multiple);
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_SUBSCRIBE_COV, handler_cov_subscribe);
-    /* handle communication so we can shutup when asked, or restart */
-    apdu_set_confirmed_handler(SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
-        handler_device_communication_control);
-    apdu_set_confirmed_handler(
-        SERVICE_CONFIRMED_REINITIALIZE_DEVICE, handler_reinitialize_device);
-    /* start the 1 second timer for non-critical cyclic tasks */
-    mstimer_set(&BACnet_Task_Timer, 1000L);
-    /* start the timer for more time sensitive object specific cyclic tasks */
-    if (mstimer_interval(&BACnet_Object_Timer) == 0) {
-        mstimer_set(&BACnet_Object_Timer, 100UL);
-    }
-    /* initialize user data in this thread */
-    bacnet_init_callback_handler();
+	/* set up our confirmed service unrecognized service handler - required! */
+	apdu_set_unrecognized_service_handler_handler(
+		handler_unrecognized_service);
+	/* we need to handle who-is to support dynamic device binding */
+	apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS,
+				     handler_who_is);
+	apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_HAS,
+				     handler_who_has);
+	/* Set the handlers for any confirmed services that we support. */
+	/* We must implement read property - it's required! */
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROPERTY,
+				   handler_read_property);
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROP_MULTIPLE,
+				   handler_read_property_multiple);
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_WRITE_PROPERTY,
+				   handler_write_property);
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE,
+				   handler_write_property_multiple);
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_SUBSCRIBE_COV,
+				   handler_cov_subscribe);
+	/* handle communication so we can shutup when asked, or restart */
+	apdu_set_confirmed_handler(
+		SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
+		handler_device_communication_control);
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_REINITIALIZE_DEVICE,
+				   handler_reinitialize_device);
+	/* start the 1 second timer for non-critical cyclic tasks */
+	mstimer_set(&BACnet_Task_Timer, 1000L);
+	/* start the timer for more time sensitive object specific cyclic tasks */
+	if (mstimer_interval(&BACnet_Object_Timer) == 0) {
+		mstimer_set(&BACnet_Object_Timer, 100UL);
+	}
+#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
+	bacnet_basic_settings_init();
+#endif
+	Device_Init(NULL);
+	/* initialize user data in this thread */
+	bacnet_init_callback_handler();
+#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
+	bacnet_basic_settings_restore();
+#endif
+
 }
 
 /* local buffer for incoming PDUs to process */
@@ -160,47 +309,47 @@ static uint8_t PDUBuffer[MAX_MPDU];
  */
 void bacnet_basic_task(void)
 {
-    bool hello_world = false;
-    uint16_t pdu_len = 0;
-    BACNET_ADDRESS src = { 0 };
-    uint32_t elapsed_milliseconds = 0;
-    uint32_t elapsed_seconds = 0;
+	bool hello_world = false;
+	uint16_t pdu_len = 0;
+	BACNET_ADDRESS src = { 0 };
+	uint32_t elapsed_milliseconds = 0;
+	uint32_t elapsed_seconds = 0;
 
-    /* hello, World! */
-    if (Device_ID != Device_Object_Instance_Number()) {
-        Device_ID = Device_Object_Instance_Number();
-        hello_world = true;
-    }
-    if (hello_world) {
-        Send_I_Am(&Handler_Transmit_Buffer[0]);
-    }
-    /* handle non-time-critical cyclic tasks */
-    if (mstimer_expired(&BACnet_Task_Timer)) {
-        /* 1 second tasks */
-        mstimer_reset(&BACnet_Task_Timer);
-        /* presume that the elapsed time is the interval time */
-        elapsed_milliseconds = mstimer_interval(&BACnet_Task_Timer);
-        elapsed_seconds = elapsed_milliseconds/1000;
-        BACnet_Uptime_Seconds += elapsed_seconds;
-        dcc_timer_seconds(elapsed_seconds);
-        datalink_maintenance_timer(elapsed_seconds);
-        handler_cov_timer_seconds(elapsed_seconds);
-    }
-    while (!handler_cov_fsm()) {
-        /* waiting for COV processing to be IDLE */
-    }
-    /* object specific cyclic tasks */
-    if (mstimer_expired(&BACnet_Object_Timer)) {
-        elapsed_milliseconds = mstimer_elapsed(&BACnet_Object_Timer);
-        mstimer_restart(&BACnet_Object_Timer);
-        Device_Timer(elapsed_milliseconds);
-    }
-    /* handle the messaging */
-    pdu_len = datalink_receive(&src, &PDUBuffer[0], sizeof(PDUBuffer), 0);
-    if (pdu_len) {
-        npdu_handler(&src, &PDUBuffer[0], pdu_len);
-        BACnet_Packet_Count++;
-    }
-    /* call user task in this thread */
-    bacnet_task_callback_handler();
+	/* hello, World! */
+	if (Device_ID != Device_Object_Instance_Number()) {
+		Device_ID = Device_Object_Instance_Number();
+		hello_world = true;
+	}
+	if (hello_world) {
+		Send_I_Am(&Handler_Transmit_Buffer[0]);
+	}
+	/* handle non-time-critical cyclic tasks */
+	if (mstimer_expired(&BACnet_Task_Timer)) {
+		/* 1 second tasks */
+		mstimer_reset(&BACnet_Task_Timer);
+		/* presume that the elapsed time is the interval time */
+		elapsed_milliseconds = mstimer_interval(&BACnet_Task_Timer);
+		elapsed_seconds = elapsed_milliseconds / 1000;
+		BACnet_Uptime_Seconds += elapsed_seconds;
+		dcc_timer_seconds(elapsed_seconds);
+		datalink_maintenance_timer(elapsed_seconds);
+		handler_cov_timer_seconds(elapsed_seconds);
+	}
+	while (!handler_cov_fsm()) {
+		/* waiting for COV processing to be IDLE */
+	}
+	/* object specific cyclic tasks */
+	if (mstimer_expired(&BACnet_Object_Timer)) {
+		elapsed_milliseconds = mstimer_elapsed(&BACnet_Object_Timer);
+		mstimer_restart(&BACnet_Object_Timer);
+		Device_Timer(elapsed_milliseconds);
+	}
+	/* handle the messaging */
+	pdu_len = datalink_receive(&src, &PDUBuffer[0], sizeof(PDUBuffer), 0);
+	if (pdu_len) {
+		npdu_handler(&src, &PDUBuffer[0], pdu_len);
+		BACnet_Packet_Count++;
+	}
+	/* call user task in this thread */
+	bacnet_task_callback_handler();
 }

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Operating system interface for calendar time
+ * @brief Datalink for BACnet/IPv4
  * @author Steve Karg
  * @date August 2024
  * @copyright SPDX-License-Identifier: Apache-2.0

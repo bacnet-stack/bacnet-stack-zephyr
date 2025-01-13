@@ -28,18 +28,11 @@
 #include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
-/* FIXME: get the device instance and name from settings! */
-static const uint32_t Device_Instance = 260123;
 static const char *Device_Name = "BACnet Smart Sensor (B-SS)";
 /* object instances */
 static const uint32_t Sensor_Instance = 1;
 /* timer for Sensor Update Interval */
 static struct mstimer Sensor_Update_Timer;
-
-static void BACnet_Smart_Sensor_Datalink_Init(void)
-{
-
-}
 
 /**
  * @brief BACnet Project Initialization Handler
@@ -50,10 +43,7 @@ static void BACnet_Smart_Sensor_Init_Handler(void *context)
 {
     (void)context;
     LOG_INF("BACnet Stack Initialized");
-    BACnet_Smart_Sensor_Datalink_Init();
-    /* initialize objects for this basic sample */
-    Device_Init(NULL);
-    Device_Set_Object_Instance_Number(Device_Instance);
+    /* initialize child objects for this basic sample */
     Device_Object_Name_ANSI_Init(Device_Name);
     Analog_Input_Create(Sensor_Instance);
     Analog_Input_Name_Set(Sensor_Instance, "Sensor");

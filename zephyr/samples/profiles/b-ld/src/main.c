@@ -71,8 +71,6 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
 	(void)context;
 	LOG_INF("BACnet Stack Initialized");
 	/* initialize objects for this basic sample */
-	Device_Init(NULL);
-	Device_Set_Object_Instance_Number(Device_Instance);
 	Device_Object_Name_ANSI_Init(Device_Name);
 	Lighting_Output_Create(Lighting_Instance);
 	Lighting_Output_Name_Set(Lighting_Instance, "Light-1");

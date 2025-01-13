@@ -892,6 +892,15 @@ bool Device_Object_Name_ANSI_Init(const char *value)
     return characterstring_init_ansi(&My_Object_Name, value);
 }
 
+/**
+ * @brief Get the Device Object Name as a C string
+ * @return The object name as a null-terminated string
+ */
+char *Device_Object_Name_ANSI(void)
+{
+	return (char *)characterstring_value(&My_Object_Name);
+}
+
 bool Device_Set_Object_Name(const BACNET_CHARACTER_STRING *object_name)
 {
 	bool status = false; /*return value */
