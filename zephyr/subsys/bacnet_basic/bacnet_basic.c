@@ -126,60 +126,59 @@ void bacnet_basic_task_object_timer_set(unsigned long milliseconds)
 #if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
 void bacnet_basic_settings_restore(void)
 {
-    /* use MAX_INSTANCE for our internal device data location */
-    const uint32_t object_instance = BACNET_MAX_INSTANCE;
-    const BACNET_OBJECT_TYPE object_type = OBJECT_DEVICE;
-    BACNET_CHARACTER_STRING char_string = { 0 };
-    char name[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = { 0 };
-    BACNET_UNSIGNED_INTEGER value_unsigned = 0;
-    BACNET_UNSIGNED_INTEGER default_unsigned = 0;
-    const char *default_name;
-    const char *default_reinit_password = "";
-    uint32_t array_index = BACNET_ARRAY_ALL;
-    int rc;
+	/* use MAX_INSTANCE for our internal device data location */
+	const uint32_t object_instance = BACNET_MAX_INSTANCE;
+	const BACNET_OBJECT_TYPE object_type = OBJECT_DEVICE;
+	BACNET_CHARACTER_STRING char_string = { 0 };
+	char name[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = { 0 };
+	BACNET_UNSIGNED_INTEGER value_unsigned = 0;
+	BACNET_UNSIGNED_INTEGER default_unsigned = 0;
+	const char *default_name;
+	const char *default_reinit_password = "";
+	uint32_t array_index = BACNET_ARRAY_ALL;
+	int rc;
 
-    /* Set the device object name from non-volatile or default */
-    default_name = Device_Object_Name_ANSI();
-    rc = bacnet_settings_characterstring_get(object_type, object_instance,
-                                             PROP_OBJECT_NAME, array_index,
-                                             default_name, &char_string);
-    if (rc < 1) {
-        LOG_INF("The Device object-name was not stored."
-                " Using default \"%s\"",
-                default_name);
-    }
-    Device_Set_Object_Name(&char_string);
-    /* Set the device reinitialize password from non-volatile or default */
-    /* Note: doesn't have a standard property enumeration, use vendor range */
-    rc = bacnet_settings_string_get(object_type, object_instance, 512,
-                                    array_index, default_reinit_password, name,
-                                    sizeof(name));
-    if (rc < 0) {
-        LOG_INF("The ReinitializeDevice Password was not stored."
-                " Using default \"%s\"",
-                name);
-    }
-    Device_Reinitialize_Password_Set(name);
-    /* Set the device object instance from non-volatile or use a default */
-    rc = bacnet_settings_unsigned_get(object_type, object_instance,
-                                      PROP_OBJECT_IDENTIFIER, array_index,
-                                      BACNET_MAX_INSTANCE, &value_unsigned);
-    if (rc < 0) {
-        LOG_INF("The device instance was not stored. Using default %lu.",
-                (unsigned long)value_unsigned);
-    }
-    Device_Set_Object_Instance_Number(value_unsigned);
-    /* Set the device object instance from non-volatile or use a default */
-    default_unsigned = Device_Database_Revision();
-    rc = bacnet_settings_unsigned_get(object_type, object_instance,
-                                      PROP_DATABASE_REVISION, array_index, 0UL,
-                                      &value_unsigned);
-    if (rc < 0) {
-        LOG_INF(
-            "The device database-revision is not readable. Using default %lu.",
-            (unsigned long)value_unsigned);
-    }
-    Device_Set_Database_Revision(value_unsigned);
+	/* Set the device object name from non-volatile or default */
+	default_name = Device_Object_Name_ANSI();
+	rc = bacnet_settings_characterstring_get(object_type, object_instance,
+						 PROP_OBJECT_NAME, array_index,
+						 default_name, &char_string);
+	if (rc < 1) {
+		LOG_INF("The Device object-name was not stored."
+			" Using default \"%s\"",
+			default_name);
+	}
+	Device_Set_Object_Name(&char_string);
+	/* Set the device reinitialize password from non-volatile or default */
+	/* Note: doesn't have a standard property enumeration, use vendor range */
+	rc = bacnet_settings_string_get(object_type, object_instance, 512,
+					array_index, default_reinit_password,
+					name, sizeof(name));
+	if (rc < 0) {
+		LOG_INF("The ReinitializeDevice Password was not stored."
+			" Using default \"%s\"",
+			name);
+	}
+	Device_Reinitialize_Password_Set(name);
+	/* Set the device object instance from non-volatile or use a default */
+	rc = bacnet_settings_unsigned_get(object_type, object_instance,
+					  PROP_OBJECT_IDENTIFIER, array_index,
+					  BACNET_MAX_INSTANCE, &value_unsigned);
+	if (rc < 0) {
+		LOG_INF("The device instance was not stored. Using default %lu.",
+			(unsigned long)value_unsigned);
+	}
+	Device_Set_Object_Instance_Number(value_unsigned);
+	/* Set the device object instance from non-volatile or use a default */
+	default_unsigned = Device_Database_Revision();
+	rc = bacnet_settings_unsigned_get(object_type, object_instance,
+					  PROP_DATABASE_REVISION, array_index,
+					  0UL, &value_unsigned);
+	if (rc < 0) {
+		LOG_INF("The device database-revision is not readable. Using default %lu.",
+			(unsigned long)value_unsigned);
+	}
+	Device_Set_Database_Revision(value_unsigned);
 }
 #endif
 
@@ -193,19 +192,21 @@ void bacnet_basic_settings_restore(void)
  * @param application_data - pointer to the data
  * @param application_data_len - length of the data
 */
-void bacnet_basic_settings_store(BACNET_OBJECT_TYPE object_type, uint32_t object_instance,
-                       BACNET_PROPERTY_ID object_property,
-                       BACNET_ARRAY_INDEX array_index,
-                       uint8_t *application_data, int application_data_len)
+void bacnet_basic_settings_store(BACNET_OBJECT_TYPE object_type,
+				 uint32_t object_instance,
+				 BACNET_PROPERTY_ID object_property,
+				 BACNET_ARRAY_INDEX array_index,
+				 uint8_t *application_data,
+				 int application_data_len)
 {
-    BACNET_STORAGE_KEY key = { 0 };
+	BACNET_STORAGE_KEY key = { 0 };
 
-    LOG_INF("WriteProperty data store");
-    /* create the key */
-    bacnet_storage_key_init(&key, object_type, object_instance, object_property,
-                            array_index);
-    /* store the data */
-    (void)bacnet_storage_set(&key, application_data, application_data_len);
+	LOG_INF("WriteProperty data store");
+	/* create the key */
+	bacnet_storage_key_init(&key, object_type, object_instance,
+				object_property, array_index);
+	/* store the data */
+	(void)bacnet_storage_set(&key, application_data, application_data_len);
 }
 #endif
 
@@ -233,10 +234,11 @@ bool bacnet_basic_write_property_store(BACNET_WRITE_PROPERTY_DATA *wp_data)
 	} else {
 		array_index = wp_data->array_index;
 	}
-	bacnet_basic_settings_store(wp_data->object_type, wp_data->object_instance,
-			  wp_data->object_property, array_index,
-			  wp_data->application_data,
-			  wp_data->application_data_len);
+	bacnet_basic_settings_store(wp_data->object_type,
+				    wp_data->object_instance,
+				    wp_data->object_property, array_index,
+				    wp_data->application_data,
+				    wp_data->application_data_len);
 
 	return true;
 }
@@ -298,7 +300,6 @@ void bacnet_basic_init(void)
 #if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
 	bacnet_basic_settings_restore();
 #endif
-
 }
 
 /* local buffer for incoming PDUs to process */
