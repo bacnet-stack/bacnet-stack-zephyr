@@ -29,7 +29,6 @@
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 /* FIXME: get the device instance and name from settings! */
-static const uint32_t Device_Instance = 260125;
 static const char *Device_Name = "BACnet Lighting Device (B-LD)";
 /* object instances */
 static const uint32_t Lighting_Instance = 1;
