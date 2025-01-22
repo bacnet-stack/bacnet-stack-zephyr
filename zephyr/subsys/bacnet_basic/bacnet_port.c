@@ -32,35 +32,35 @@ static struct mstimer BACnet_Task_Timer;
  */
 void bacnet_port_task(void)
 {
-    uint32_t elapsed_milliseconds = 0;
-    uint32_t elapsed_seconds = 0;
+	uint32_t elapsed_milliseconds = 0;
+	uint32_t elapsed_seconds = 0;
 
-    if (mstimer_expired(&BACnet_Task_Timer)) {
-        /* 1 second tasks */
-        mstimer_reset(&BACnet_Task_Timer);
-        /* presume that the elapsed time is the interval time */
-        elapsed_milliseconds = mstimer_interval(&BACnet_Task_Timer);
-        elapsed_seconds = elapsed_milliseconds / 1000;
+	if (mstimer_expired(&BACnet_Task_Timer)) {
+		/* 1 second tasks */
+		mstimer_reset(&BACnet_Task_Timer);
+		/* presume that the elapsed time is the interval time */
+		elapsed_milliseconds = mstimer_interval(&BACnet_Task_Timer);
+		elapsed_seconds = elapsed_milliseconds / 1000;
 #if defined(BACDL_BIP)
-        bacnet_port_ipv4_task(elapsed_seconds);
+		bacnet_port_ipv4_task(elapsed_seconds);
 #elif defined(BACDL_BIP6)
-        bacnet_port_ipv6_task(elapsed_seconds);
+		bacnet_port_ipv6_task(elapsed_seconds);
 #endif
-    }
+	}
 }
 
 /**
  * @brief Initialize the datalink network port
-*/
+ */
 bool bacnet_port_init(void)
 {
-    bool status = false;
-    /* start the 1 second timer for non-critical cyclic tasks */
-    mstimer_set(&BACnet_Task_Timer, 1000L);
+	bool status = false;
+	/* start the 1 second timer for non-critical cyclic tasks */
+	mstimer_set(&BACnet_Task_Timer, 1000L);
 #if defined(BACDL_BIP)
-    status = bacnet_port_ipv4_init();
+	status = bacnet_port_ipv4_init();
 #elif defined(BACDL_BIP6)
-    status = bacnet_port_ipv6_init();
+	status = bacnet_port_ipv6_init();
 #endif
-    return status;
+	return status;
 }
