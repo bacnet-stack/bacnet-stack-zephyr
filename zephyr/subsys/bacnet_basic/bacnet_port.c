@@ -51,7 +51,7 @@ void bacnet_port_task(void)
 
 /**
  * @brief Initialize the datalink network port
-*/
+ */
 bool bacnet_port_init(void)
 {
 	bool status = false;

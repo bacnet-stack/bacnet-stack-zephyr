@@ -32,7 +32,7 @@ static BACNET_IP_ADDRESS BBMD_Address;
  * @brief Initialize the datalink network port
  * @param ttl_seconds [in] The time-to-live in seconds for the Foreign Device Registration
  * @param bbmd_address [in] The address of the BBMD
-  */
+ */
 void bacnet_port_ipv4_foreign_device_init(const uint16_t ttl_seconds,
 					  const BACNET_IP_ADDRESS *bbmd_address)
 {
@@ -55,8 +55,7 @@ void bacnet_port_ipv4_task(uint16_t elapsed_seconds)
 		}
 		if (BBMD_Timer_Seconds == 0) {
 			if (BBMD_Address.port > 0) {
-				(void)bvlc_register_with_bbmd(&BBMD_Address,
-							      BBMD_TTL_Seconds);
+				(void)bvlc_register_with_bbmd(&BBMD_Address, BBMD_TTL_Seconds);
 			}
 			BBMD_Timer_Seconds = (uint16_t)BBMD_TTL_Seconds;
 		}
@@ -65,11 +64,11 @@ void bacnet_port_ipv4_task(uint16_t elapsed_seconds)
 
 /**
  * Initialize the network port object.
-*/
+ */
 bool bacnet_port_ipv4_init(void)
 {
 	const uint32_t instance = 1;
-	BACNET_IP_ADDRESS addr = { 0 };
+	BACNET_IP_ADDRESS addr = {0};
 	uint8_t prefix = 0;
 
 	if (!bip_init(NULL)) {
@@ -81,8 +80,8 @@ bool bacnet_port_ipv4_init(void)
 	bip_get_addr(&addr);
 	prefix = bip_get_subnet_prefix();
 	Network_Port_BIP_Port_Set(instance, addr.port);
-	Network_Port_IP_Address_Set(instance, addr.address[0], addr.address[1],
-				    addr.address[2], addr.address[3]);
+	Network_Port_IP_Address_Set(instance, addr.address[0], addr.address[1], addr.address[2],
+				    addr.address[3]);
 	Network_Port_IP_Subnet_Prefix_Set(instance, prefix);
 	Network_Port_Link_Speed_Set(instance, 0.0);
 	/* common NP data */

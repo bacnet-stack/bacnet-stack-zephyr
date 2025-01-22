@@ -32,9 +32,9 @@ static BACNET_IP6_ADDRESS BBMD_Address;
  * @brief Initialize the datalink network port
  * @param ttl_seconds [in] The time-to-live in seconds for the Foreign Device Registration
  * @param bbmd_address [in] The address of the BBMD
-  */
-void bacnet_port_ipv6_foreign_device_init(
-	const uint16_t ttl_seconds, const BACNET_IP6_ADDRESS *bbmd_address)
+ */
+void bacnet_port_ipv6_foreign_device_init(const uint16_t ttl_seconds,
+					  const BACNET_IP6_ADDRESS *bbmd_address)
 {
 	BBMD_TTL_Seconds = ttl_seconds;
 	if (bbmd_address) {
@@ -55,8 +55,7 @@ void bacnet_port_ipv6_task(uint16_t elapsed_seconds)
 		}
 		if (BBMD_Timer_Seconds == 0) {
 			if (BBMD_Address.port > 0) {
-				(void)bvlc6_register_with_bbmd(
-					&BBMD_Address, BBMD_TTL_Seconds);
+				(void)bvlc6_register_with_bbmd(&BBMD_Address, BBMD_TTL_Seconds);
 			}
 			BBMD_Timer_Seconds = BBMD_TTL_Seconds;
 		}
@@ -66,13 +65,13 @@ void bacnet_port_ipv6_task(uint16_t elapsed_seconds)
 /**
  * Initialize the network port object.
  * @return true if successful
-*/
+ */
 bool bacnet_port_ipv6_init(void)
 {
 	uint32_t instance = 1;
 	uint8_t prefix = 0;
-	BACNET_ADDRESS addr = { 0 };
-	BACNET_IP6_ADDRESS addr6 = { 0 };
+	BACNET_ADDRESS addr = {0};
+	BACNET_IP6_ADDRESS addr6 = {0};
 
 	if (!bip6_init(NULL)) {
 		return false;

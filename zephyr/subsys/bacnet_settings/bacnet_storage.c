@@ -33,12 +33,12 @@
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 #define FAIL_MSG "fail (err %d)"
 
-#define STORAGE_PARTITION storage_partition
+#define STORAGE_PARTITION    storage_partition
 #define STORAGE_PARTITION_ID FIXED_PARTITION_ID(STORAGE_PARTITION)
 
 /**
  * @brief Initialize the non-volatile data
-*/
+ */
 void bacnet_storage_init(void)
 {
 	int rc;
@@ -47,12 +47,10 @@ void bacnet_storage_init(void)
 	FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(cstorage);
 
 	/* mounting info */
-	static struct fs_mount_t littlefs_mnt = {
-		.type = FS_LITTLEFS,
-		.fs_data = &cstorage,
-		.storage_dev = (void *)STORAGE_PARTITION_ID,
-		.mnt_point = "/ff"
-	};
+	static struct fs_mount_t littlefs_mnt = {.type = FS_LITTLEFS,
+						 .fs_data = &cstorage,
+						 .storage_dev = (void *)STORAGE_PARTITION_ID,
+						 .mnt_point = "/ff"};
 
 	rc = fs_mount(&littlefs_mnt);
 	if (rc != 0) {
@@ -84,8 +82,7 @@ void bacnet_storage_init(void)
  * @param array_index BACnet array index
  */
 void bacnet_storage_key_init(BACNET_STORAGE_KEY *key, uint16_t object_type,
-			     uint32_t object_instance, uint32_t property_id,
-			     uint32_t array_index)
+			     uint32_t object_instance, uint32_t property_id, uint32_t array_index)
 {
 	if (key) {
 		key->object_type = object_type;
@@ -102,8 +99,7 @@ void bacnet_storage_key_init(BACNET_STORAGE_KEY *key, uint16_t object_type,
  * @param key BACnet key (type, instance, property, array index)
  * @return length of the string
  */
-int bacnet_storage_key_encode(char *buffer, size_t buffer_size,
-			      BACNET_STORAGE_KEY *key)
+int bacnet_storage_key_encode(char *buffer, size_t buffer_size, BACNET_STORAGE_KEY *key)
 {
 	int rc = 0;
 	const char base_name[] = CONFIG_BACNET_STORAGE_BASE_NAME;
@@ -112,23 +108,16 @@ int bacnet_storage_key_encode(char *buffer, size_t buffer_size,
 		memset(buffer, 0, buffer_size);
 	}
 	if (key->array_index == BACNET_STORAGE_ARRAY_INDEX_NONE) {
-		rc = snprintf(buffer, buffer_size, "%s%c%u%c%lu%c%lu",
-			      base_name, SETTINGS_NAME_SEPARATOR,
-			      (unsigned short)key->object_type,
-			      SETTINGS_NAME_SEPARATOR,
-			      (unsigned long)key->object_instance,
-			      SETTINGS_NAME_SEPARATOR,
-			      (unsigned long)key->property_id);
+		rc = snprintf(buffer, buffer_size, "%s%c%u%c%lu%c%lu", base_name,
+			      SETTINGS_NAME_SEPARATOR, (unsigned short)key->object_type,
+			      SETTINGS_NAME_SEPARATOR, (unsigned long)key->object_instance,
+			      SETTINGS_NAME_SEPARATOR, (unsigned long)key->property_id);
 	} else {
-		rc = snprintf(buffer, buffer_size, "%s%c%u%c%lu%c%lu%c%lu",
-			      base_name, SETTINGS_NAME_SEPARATOR,
-			      (unsigned short)key->object_type,
-			      SETTINGS_NAME_SEPARATOR,
-			      (unsigned long)key->object_instance,
-			      SETTINGS_NAME_SEPARATOR,
-			      (unsigned long)key->property_id,
-			      SETTINGS_NAME_SEPARATOR,
-			      (unsigned long)key->array_index);
+		rc = snprintf(buffer, buffer_size, "%s%c%u%c%lu%c%lu%c%lu", base_name,
+			      SETTINGS_NAME_SEPARATOR, (unsigned short)key->object_type,
+			      SETTINGS_NAME_SEPARATOR, (unsigned long)key->object_instance,
+			      SETTINGS_NAME_SEPARATOR, (unsigned long)key->property_id,
+			      SETTINGS_NAME_SEPARATOR, (unsigned long)key->array_index);
 	}
 
 	return rc;
@@ -141,10 +130,9 @@ int bacnet_storage_key_encode(char *buffer, size_t buffer_size,
  * @param data_len [in] Value length in bytes.
  * @return 0 on success, non-zero on failure.
  */
-int bacnet_storage_set(BACNET_STORAGE_KEY *key, const void *data,
-		       size_t data_len)
+int bacnet_storage_set(BACNET_STORAGE_KEY *key, const void *data, size_t data_len)
 {
-	char name[SETTINGS_MAX_NAME_LEN + 1] = { 0 };
+	char name[SETTINGS_MAX_NAME_LEN + 1] = {0};
 	int rc;
 
 	rc = bacnet_storage_key_encode(name, sizeof(name), key);
@@ -178,15 +166,13 @@ struct direct_immediate_value {
  * @param param [in] Callback parameter
  * @return 0 on success, non-zero on failure.
  */
-static int direct_loader_immediate_value(const char *name, size_t len,
-					 settings_read_cb read_cb, void *cb_arg,
-					 void *param)
+static int direct_loader_immediate_value(const char *name, size_t len, settings_read_cb read_cb,
+					 void *cb_arg, void *param)
 {
 	const char *next;
 	size_t name_len;
 	int rc;
-	struct direct_immediate_value *context =
-		(struct direct_immediate_value *)param;
+	struct direct_immediate_value *context = (struct direct_immediate_value *)param;
 
 	/* only the exact match and ignore descendants of the searched name */
 	name_len = settings_name_next(name, &next);
@@ -215,8 +201,7 @@ static int direct_loader_immediate_value(const char *name, size_t len,
  * @param value_size [in] size of the buffer
  * @return value length in bytes on success 0..N, negative on failure.
  */
-static int load_immediate_value(const char *name, void *value,
-				size_t value_size)
+static int load_immediate_value(const char *name, void *value, size_t value_size)
 {
 	int rc;
 	struct direct_immediate_value context;
@@ -226,8 +211,7 @@ static int load_immediate_value(const char *name, void *value,
 	context.value_len = 0;
 	context.value = value;
 
-	rc = settings_load_subtree_direct(name, direct_loader_immediate_value,
-					  (void *)&context);
+	rc = settings_load_subtree_direct(name, direct_loader_immediate_value, (void *)&context);
 	if (rc == 0) {
 		if (!context.fetched) {
 			rc = -ENOENT;
@@ -246,7 +230,7 @@ static int load_immediate_value(const char *name, void *value,
  */
 int bacnet_storage_get(BACNET_STORAGE_KEY *key, void *data, size_t data_size)
 {
-	char name[SETTINGS_MAX_NAME_LEN + 1] = { 0 };
+	char name[SETTINGS_MAX_NAME_LEN + 1] = {0};
 	int rc;
 
 	rc = bacnet_storage_key_encode(name, sizeof(name), key);

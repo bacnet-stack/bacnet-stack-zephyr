@@ -57,8 +57,7 @@ static void *BACnet_Task_Context;
  * @param callback [in] The callback function called after initialization
  * @param context [in] The context to pass to the callback function
  */
-void bacnet_basic_init_callback_set(bacnet_basic_callback callback,
-				    void *context)
+void bacnet_basic_init_callback_set(bacnet_basic_callback callback, void *context)
 {
 	BACnet_Init_Callback = callback;
 	BACnet_Init_Context = context;
@@ -79,8 +78,7 @@ static void bacnet_init_callback_handler(void)
  * @param callback [in] The callback function to call during the task
  * @param context [in] The context to pass to the callback function
  */
-void bacnet_basic_task_callback_set(bacnet_basic_callback callback,
-				    void *context)
+void bacnet_basic_task_callback_set(bacnet_basic_callback callback, void *context)
 {
 	BACnet_Task_Callback = callback;
 	BACnet_Task_Context = context;
@@ -129,8 +127,8 @@ void bacnet_basic_settings_restore(void)
 	/* use MAX_INSTANCE for our internal device data location */
 	const uint32_t object_instance = BACNET_MAX_INSTANCE;
 	const BACNET_OBJECT_TYPE object_type = OBJECT_DEVICE;
-	BACNET_CHARACTER_STRING char_string = { 0 };
-	char name[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = { 0 };
+	BACNET_CHARACTER_STRING char_string = {0};
+	char name[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = {0};
 	BACNET_UNSIGNED_INTEGER value_unsigned = 0;
 	BACNET_UNSIGNED_INTEGER default_unsigned = 0;
 	const char *default_name;
@@ -140,9 +138,8 @@ void bacnet_basic_settings_restore(void)
 
 	/* Set the device object name from non-volatile or default */
 	default_name = Device_Object_Name_ANSI();
-	rc = bacnet_settings_characterstring_get(object_type, object_instance,
-						 PROP_OBJECT_NAME, array_index,
-						 default_name, &char_string);
+	rc = bacnet_settings_characterstring_get(object_type, object_instance, PROP_OBJECT_NAME,
+						 array_index, default_name, &char_string);
 	if (rc < 1) {
 		LOG_INF("The Device object-name was not stored."
 			" Using default \"%s\"",
@@ -151,9 +148,8 @@ void bacnet_basic_settings_restore(void)
 	Device_Set_Object_Name(&char_string);
 	/* Set the device reinitialize password from non-volatile or default */
 	/* Note: doesn't have a standard property enumeration, use vendor range */
-	rc = bacnet_settings_string_get(object_type, object_instance, 512,
-					array_index, default_reinit_password,
-					name, sizeof(name));
+	rc = bacnet_settings_string_get(object_type, object_instance, 512, array_index,
+					default_reinit_password, name, sizeof(name));
 	if (rc < 0) {
 		LOG_INF("The ReinitializeDevice Password was not stored."
 			" Using default \"%s\"",
@@ -161,9 +157,8 @@ void bacnet_basic_settings_restore(void)
 	}
 	Device_Reinitialize_Password_Set(name);
 	/* Set the device object instance from non-volatile or use a default */
-	rc = bacnet_settings_unsigned_get(object_type, object_instance,
-					  PROP_OBJECT_IDENTIFIER, array_index,
-					  BACNET_MAX_INSTANCE, &value_unsigned);
+	rc = bacnet_settings_unsigned_get(object_type, object_instance, PROP_OBJECT_IDENTIFIER,
+					  array_index, BACNET_MAX_INSTANCE, &value_unsigned);
 	if (rc < 0) {
 		LOG_INF("The device instance was not stored. Using default %lu.",
 			(unsigned long)value_unsigned);
@@ -171,9 +166,8 @@ void bacnet_basic_settings_restore(void)
 	Device_Set_Object_Instance_Number(value_unsigned);
 	/* Set the device object instance from non-volatile or use a default */
 	default_unsigned = Device_Database_Revision();
-	rc = bacnet_settings_unsigned_get(object_type, object_instance,
-					  PROP_DATABASE_REVISION, array_index,
-					  0UL, &value_unsigned);
+	rc = bacnet_settings_unsigned_get(object_type, object_instance, PROP_DATABASE_REVISION,
+					  array_index, 0UL, &value_unsigned);
 	if (rc < 0) {
 		LOG_INF("The device database-revision is not readable. Using default %lu.",
 			(unsigned long)value_unsigned);
@@ -191,20 +185,16 @@ void bacnet_basic_settings_restore(void)
  * @param array_index - BACnet array index
  * @param application_data - pointer to the data
  * @param application_data_len - length of the data
-*/
-void bacnet_basic_settings_store(BACNET_OBJECT_TYPE object_type,
-				 uint32_t object_instance,
-				 BACNET_PROPERTY_ID object_property,
-				 BACNET_ARRAY_INDEX array_index,
-				 uint8_t *application_data,
-				 int application_data_len)
+ */
+void bacnet_basic_settings_store(BACNET_OBJECT_TYPE object_type, uint32_t object_instance,
+				 BACNET_PROPERTY_ID object_property, BACNET_ARRAY_INDEX array_index,
+				 uint8_t *application_data, int application_data_len)
 {
-	BACNET_STORAGE_KEY key = { 0 };
+	BACNET_STORAGE_KEY key = {0};
 
 	LOG_INF("WriteProperty data store");
 	/* create the key */
-	bacnet_storage_key_init(&key, object_type, object_instance,
-				object_property, array_index);
+	bacnet_storage_key_init(&key, object_type, object_instance, object_property, array_index);
 	/* store the data */
 	(void)bacnet_storage_set(&key, application_data, application_data_len);
 }
@@ -220,25 +210,21 @@ bool bacnet_basic_write_property_store(BACNET_WRITE_PROPERTY_DATA *wp_data)
 {
 	BACNET_ARRAY_INDEX array_index = BACNET_ARRAY_ALL;
 
-	if (property_list_bacnet_array_member(wp_data->object_type,
-					      wp_data->object_property)) {
+	if (property_list_bacnet_array_member(wp_data->object_type, wp_data->object_property)) {
 		array_index = wp_data->array_index;
 	} else if (wp_data->object_property == PROP_PRESENT_VALUE) {
 		/* indirect Priority_Array write */
 		if (Device_Objects_Property_List_Member(
-			    wp_data->object_type, wp_data->object_instance,
-			    PROP_PRIORITY_ARRAY)) {
+			    wp_data->object_type, wp_data->object_instance, PROP_PRIORITY_ARRAY)) {
 			/* store the priority as an array index to be used on restore */
 			array_index = wp_data->priority;
 		}
 	} else {
 		array_index = wp_data->array_index;
 	}
-	bacnet_basic_settings_store(wp_data->object_type,
-				    wp_data->object_instance,
+	bacnet_basic_settings_store(wp_data->object_type, wp_data->object_instance,
 				    wp_data->object_property, array_index,
-				    wp_data->application_data,
-				    wp_data->application_data_len);
+				    wp_data->application_data, wp_data->application_data_len);
 
 	return true;
 }
@@ -249,8 +235,7 @@ void bacnet_basic_settings_init(void)
 {
 	bacnet_storage_init();
 	/* This callback enables storing any successful write property */
-	Device_Write_Property_Store_Callback_Set(
-		bacnet_basic_write_property_store);
+	Device_Write_Property_Store_Callback_Set(bacnet_basic_write_property_store);
 }
 #endif
 
@@ -260,29 +245,22 @@ void bacnet_basic_settings_init(void)
 void bacnet_basic_init(void)
 {
 	/* set up our confirmed service unrecognized service handler - required! */
-	apdu_set_unrecognized_service_handler_handler(
-		handler_unrecognized_service);
+	apdu_set_unrecognized_service_handler_handler(handler_unrecognized_service);
 	/* we need to handle who-is to support dynamic device binding */
-	apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS,
-				     handler_who_is);
-	apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_HAS,
-				     handler_who_has);
+	apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_IS, handler_who_is);
+	apdu_set_unconfirmed_handler(SERVICE_UNCONFIRMED_WHO_HAS, handler_who_has);
 	/* Set the handlers for any confirmed services that we support. */
 	/* We must implement read property - it's required! */
-	apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROPERTY,
-				   handler_read_property);
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROPERTY, handler_read_property);
 	apdu_set_confirmed_handler(SERVICE_CONFIRMED_READ_PROP_MULTIPLE,
 				   handler_read_property_multiple);
-	apdu_set_confirmed_handler(SERVICE_CONFIRMED_WRITE_PROPERTY,
-				   handler_write_property);
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_WRITE_PROPERTY, handler_write_property);
 	apdu_set_confirmed_handler(SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE,
 				   handler_write_property_multiple);
-	apdu_set_confirmed_handler(SERVICE_CONFIRMED_SUBSCRIBE_COV,
-				   handler_cov_subscribe);
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_SUBSCRIBE_COV, handler_cov_subscribe);
 	/* handle communication so we can shutup when asked, or restart */
-	apdu_set_confirmed_handler(
-		SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
-		handler_device_communication_control);
+	apdu_set_confirmed_handler(SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
+				   handler_device_communication_control);
 	apdu_set_confirmed_handler(SERVICE_CONFIRMED_REINITIALIZE_DEVICE,
 				   handler_reinitialize_device);
 	/* start the 1 second timer for non-critical cyclic tasks */
@@ -312,7 +290,7 @@ void bacnet_basic_task(void)
 {
 	bool hello_world = false;
 	uint16_t pdu_len = 0;
-	BACNET_ADDRESS src = { 0 };
+	BACNET_ADDRESS src = {0};
 	uint32_t elapsed_milliseconds = 0;
 	uint32_t elapsed_seconds = 0;
 

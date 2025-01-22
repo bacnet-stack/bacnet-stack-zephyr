@@ -41,17 +41,17 @@ static struct mstimer Sensor_Update_Timer;
  */
 static void BACnet_Smart_Sensor_Init_Handler(void *context)
 {
-    (void)context;
-    LOG_INF("BACnet Stack Initialized");
-    /* initialize child objects for this basic sample */
-    Device_Object_Name_ANSI_Init(Device_Name);
-    Analog_Input_Create(Sensor_Instance);
-    Analog_Input_Name_Set(Sensor_Instance, "Sensor");
-    Analog_Input_Present_Value_Set(Sensor_Instance, 25.0f);
+	(void)context;
+	LOG_INF("BACnet Stack Initialized");
+	/* initialize child objects for this basic sample */
+	Device_Object_Name_ANSI_Init(Device_Name);
+	Analog_Input_Create(Sensor_Instance);
+	Analog_Input_Name_Set(Sensor_Instance, "Sensor");
+	Analog_Input_Present_Value_Set(Sensor_Instance, 25.0f);
 	LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
-    /* start the seconds cyclic timer */
-    mstimer_set(&Sensor_Update_Timer, 1000);
-    srand(sys_rand32_get());
+	/* start the seconds cyclic timer */
+	mstimer_set(&Sensor_Update_Timer, 1000);
+	srand(sys_rand32_get());
 }
 
 /**
@@ -61,20 +61,20 @@ static void BACnet_Smart_Sensor_Init_Handler(void *context)
  */
 static void BACnet_Smart_Sensor_Task_Handler(void *context)
 {
-    float temperature = 0.0f, change = 0.0f;
+	float temperature = 0.0f, change = 0.0f;
 
-    (void)context;
-    if (mstimer_expired(&Sensor_Update_Timer)) {
-        mstimer_reset(&Sensor_Update_Timer);
-        /* simulate a sensor reading, and update the BACnet object values */
-        if (Analog_Input_Out_Of_Service(Sensor_Instance)) {
-            return;
-        }
-        temperature = Analog_Input_Present_Value(Sensor_Instance);
-        change = -1.0f+2.0f*((float)rand())/RAND_MAX;
-        temperature += change;
-        Analog_Input_Present_Value_Set(Sensor_Instance, temperature);
-    }
+	(void)context;
+	if (mstimer_expired(&Sensor_Update_Timer)) {
+		mstimer_reset(&Sensor_Update_Timer);
+		/* simulate a sensor reading, and update the BACnet object values */
+		if (Analog_Input_Out_Of_Service(Sensor_Instance)) {
+			return;
+		}
+		temperature = Analog_Input_Present_Value(Sensor_Instance);
+		change = -1.0f + 2.0f * ((float)rand()) / RAND_MAX;
+		temperature += change;
+		Analog_Input_Present_Value_Set(Sensor_Instance, temperature);
+	}
 }
 
 int main(void)
@@ -82,12 +82,12 @@ int main(void)
 	LOG_INF("BACnet Device: %s", Device_Name);
 	LOG_INF("BACnet Stack Version " BACNET_VERSION_TEXT);
 	LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
-    bacnet_basic_init_callback_set(BACnet_Smart_Sensor_Init_Handler, NULL);
-    bacnet_basic_task_callback_set(BACnet_Smart_Sensor_Task_Handler, NULL);
-    /* work happens in server module */
-    for (;;) {
-        k_sleep(K_MSEC(1000));
-    }
+	bacnet_basic_init_callback_set(BACnet_Smart_Sensor_Init_Handler, NULL);
+	bacnet_basic_task_callback_set(BACnet_Smart_Sensor_Task_Handler, NULL);
+	/* work happens in server module */
+	for (;;) {
+		k_sleep(K_MSEC(1000));
+	}
 
-    return 0;
+	return 0;
 }
