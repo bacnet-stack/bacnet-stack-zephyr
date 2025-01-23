@@ -1,0 +1,22 @@
+# Kconfig - Subsystem RS485 Driver configuration options
+#
+# @author Steve Karg <skarg@users.sourceforge.net>
+# @date January 2025
+# @copyright SPDX-License-Identifier: Apache-2.0
+
+config BACNET_DRIVER_RS485
+	bool "BACnet MS/TP RS485 Driver support"
+	help
+	  Enables BACnet implementation of RS485 driver for MS/TP
+
+config BACNET_DRIVER_RS485_BUFFER_TX_SIZE8
+	int "Size of the RS485 transmit ring buffer in bytes"
+	default 512
+	help
+		   "This option sets size of RS485 transmit buffer in bytes"
+
+config BACNET_DRIVER_RS485_BUFFER_RX_SIZE8
+	int "Size of the RS485 receive ring buffer in bytes"
+	default 512
+	help
+		   "This option sets size of RS485 receive buffer in bytes"
