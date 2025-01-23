@@ -10,3 +10,8 @@ zephyr_sources_ifdef(
   CONFIG_BACDL_BIP6
   bip6-init.c
 )
+
+zephyr_sources_ifdef(
+  CONFIG_BACDL_MSTP
+  mstp-init.c
+)

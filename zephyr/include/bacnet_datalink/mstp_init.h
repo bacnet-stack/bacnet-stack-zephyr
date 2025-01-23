@@ -8,7 +8,7 @@
 #ifndef BACNET_DATALINK_MSTP_INIT_H
 #define BACNET_DATALINK_MSTP_INIT_H
 
-#include <stdint.h>
+#include <stdbool.h>
 #include <stdint.h>
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
