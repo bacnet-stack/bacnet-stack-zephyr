@@ -39,7 +39,7 @@ bool bacnet_port_mstp_init(void)
 {
     uint32_t instance = 1;
     BACNET_ADDRESS addr = { 0 };
-    uint8_t mac = 0;
+    uint8_t mac = 255;
     uint32_t baud = 38400;
     uint8_t max_master = 127;
 

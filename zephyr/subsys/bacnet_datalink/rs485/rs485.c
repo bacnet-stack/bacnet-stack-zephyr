@@ -287,6 +287,8 @@ int32_t bacnet_driver_rs485_enable(struct bacnet_driver_rs485 *context)
         if (result != 0) {
             goto cleanup;
         }
+        LOG_INF("UART %s configured baud rate (%lu)", context->iface_name,
+                (unsigned long)context->config.uart_baud);
         result = uart_callback_set(context->uart_dev, uart_cb, context);
         if (result != 0) {
             LOG_ERR("UART %s failed set callback (%d)", context->iface_name,
