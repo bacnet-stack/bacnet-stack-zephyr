@@ -16,6 +16,7 @@ zephyr_library_sources(
   bacnet_port.c
   bacnet_port_ipv4.c
   bacnet_port_ipv6.c
+  bacnet_port_mstp.c
   bacnet_basic.c
   device.c
   server.c

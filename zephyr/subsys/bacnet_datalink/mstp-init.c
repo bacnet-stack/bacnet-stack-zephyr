@@ -7,10 +7,13 @@
  */
 #include <stdint.h>
 #include <stdbool.h>
-#include <zephyr/device.h>
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/types.h>
+#include <zephyr/drivers/uart.h>
 #include <zephyr/sys/printk.h>
+#include <bacnet_datalink/rs485.h>
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
 /* BACnet Stack API */
@@ -26,55 +29,83 @@
 #include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
+/* select the UART peripheral */
+#define RS485_NODE DT_NODELABEL(arduino_serial)
+static const struct device *const uart_dev = DEVICE_DT_GET(RS485_NODE);
+static struct bacnet_driver_rs485 rs485_context;
 /* MS/TP port */
 static struct mstp_port_struct_t MSTP_Port;
 
 /** Initialize the driver hardware */
 static void rs485_init(void)
 {
+    int32_t result;
 
+	if (!device_is_ready(uart_dev)) {
+        LOG_ERR("UART device not found!");
+		return;
+	}
+    rs485_context.uart_dev = uart_dev;
+    result = bacnet_driver_rs485_enable(&rs485_context);
+    if (result < 0) {
+        LOG_ERR("Failed to enable RS485 driver: result=%d", result);
+    }
 }
 
 /** Prepare & transmit a packet. */
 void rs485_send(const uint8_t *payload, uint16_t payload_len)
 {
+    int32_t result;
 
+    result = bacnet_driver_rs485_transmit(&rs485_context, payload, payload_len);
+    if (result < 0) {
+        LOG_ERR("Failed to transmit RS485 packet: result=%d", result);
+    }
 }
 
 /** Check if one received byte is available */
-bool rs485_read(uint8_t *buf)
+bool rs485_read(uint8_t *data_register)
 {
-    return false;
+    return bacnet_driver_rs485_byte_available(&rs485_context, data_register);
 }
 
 /** true if the driver is transmitting */
 bool rs485_transmitting(void)
 {
-    return false;
+    return bacnet_driver_rs485_transmitting(&rs485_context);
 }
 
 /** Get the current baud rate */
 uint32_t rs485_baud_rate(void)
 {
-    return 0;
+    return rs485_context.config.uart_baud;
 }
 
 /** Set the current baud rate */
 bool rs485_baud_rate_set(uint32_t baud)
 {
-    return false;
+    int32_t result;
+
+    rs485_context.config.uart_baud = baud;
+    result = bacnet_driver_rs485_configure(&rs485_context);
+    if (result < 0) {
+        LOG_ERR("Failed to set RS485 baud to %lu: result=%d",
+            (unsigned long)baud, result);
+    }
+
+    return result == 0;
 }
 
 /** Get the current silence time */
 uint32_t rs485_silence_milliseconds(void)
 {
-    return 0;
+    return bacnet_driver_rs485_silence_milliseconds(&rs485_context);
 }
 
 /** Reset the silence time */
-void rs485_silence_reset(void);
+void rs485_silence_reset(void)
 {
-
+    bacnet_driver_rs485_silence_reset(&rs485_context);
 }
 
 static struct dlmstp_rs485_driver RS485_Driver = {
@@ -96,7 +127,7 @@ static uint8_t Output_Buffer[DLMSTP_MPDU_MAX];
  * @param new_uuid - UUID to be set
  * @param length - length of the UUID
  */
-void mstp_init_uuid(const uint8_t *new_uuid, size_t length);
+void mstp_init_uuid(const uint8_t *new_uuid, size_t length)
 {
     if (new_uuid && length) {
         memcpy(MSTP_Port.UUID, new_uuid, length);
@@ -154,6 +185,7 @@ void mstp_init_max_master(uint8_t max_master)
  */
 void mstp_init_port(uint8_t mac, uint32_t baud, uint8_t max_master)
 {
+    rs485_init();
     /* initialize MSTP datalink layer */
     MSTP_Port.Nmax_info_frames = DLMSTP_MAX_INFO_FRAMES;
     MSTP_Port.Nmax_master = max_master;
