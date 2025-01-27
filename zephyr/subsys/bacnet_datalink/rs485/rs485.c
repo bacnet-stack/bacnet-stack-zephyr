@@ -134,6 +134,14 @@ bacnet_driver_rs485_silence_milliseconds(struct bacnet_driver_rs485 *context)
     return delta;
 }
 
+void
+bacnet_driver_rs485_silence_reset(struct bacnet_driver_rs485 *context)
+{
+    if (context) {
+        context->silence_timer = k_uptime_get();
+    }
+}
+
 bool bacnet_driver_rs485_transmitting(struct bacnet_driver_rs485 *context)
 {
     bool transmitting = false;
@@ -240,6 +248,26 @@ int32_t bacnet_driver_rs485_disable(struct bacnet_driver_rs485 *context)
     return result;
 }
 
+int32_t bacnet_driver_rs485_configure(struct bacnet_driver_rs485 *context)
+{
+    int32_t result = -EINVAL;
+    struct uart_config uart_config = {
+        .baudrate = context->config.uart_baud,
+        .parity = UART_CFG_PARITY_NONE,
+        .stop_bits = UART_CFG_STOP_BITS_1,
+        .data_bits = UART_CFG_DATA_BITS_8,
+        .flow_ctrl = UART_CFG_FLOW_CTRL_NONE,
+    };
+
+    result = uart_configure(context->uart_dev, &uart_config);
+    if (result != 0) {
+        LOG_ERR("UART %s failed to configure (%d)", context->iface_name,
+                result);
+    }
+
+    return result;
+}
+
 int32_t bacnet_driver_rs485_enable(struct bacnet_driver_rs485 *context)
 {
     int32_t result = -EINVAL;
@@ -255,19 +283,8 @@ int32_t bacnet_driver_rs485_enable(struct bacnet_driver_rs485 *context)
         context->received = 0;
         context->enabled = true;
 
-        /* TODO: Configure pins for UART */
-        struct uart_config uart_config = {
-            .baudrate = context->config.uart_baud,
-            .parity = UART_CFG_PARITY_NONE,
-            .stop_bits = UART_CFG_STOP_BITS_1,
-            .data_bits = UART_CFG_DATA_BITS_8,
-            .flow_ctrl = UART_CFG_FLOW_CTRL_NONE,
-        };
-
-        result = uart_configure(context->uart_dev, &uart_config);
+        result = bacnet_driver_rs485_configure(context);
         if (result != 0) {
-            LOG_ERR("UART %s failed to configure (%d)", context->iface_name,
-                    result);
             goto cleanup;
         }
         result = uart_callback_set(context->uart_dev, uart_cb, context);

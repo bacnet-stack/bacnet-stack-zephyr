@@ -15,3 +15,5 @@ zephyr_sources_ifdef(
   CONFIG_BACDL_MSTP
   mstp-init.c
 )
+
+add_subdirectory_ifdef(CONFIG_BACDL_MSTP rs485)

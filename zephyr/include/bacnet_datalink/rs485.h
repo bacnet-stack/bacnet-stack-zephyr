@@ -18,6 +18,7 @@
 #include <zephyr/drivers/uart.h>
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
+#include "bacnet/datalink/dlmstp.h"
 
 /** @brief Config structure
  *
@@ -25,7 +26,7 @@
  *  Configuration must be done while the driver is disabled.
  */
 struct bacnet_driver_rs485_config {
-	const uint32_t uart_baud;
+	uint32_t uart_baud;
 	const struct gpio_dt_spec rts;
 };
 
@@ -43,11 +44,11 @@ struct bacnet_driver_rs485 {
     bool transmitting;
     /* data stores for receiving */
     struct ring_buf rb_tx;
-    uint8_t rb_tx_buffer[CONFIG_BACNET_DRIVER_RS485_BUFFER_TX_SIZE8];
+    uint8_t rb_tx_buffer[DLMSTP_MPDU_MAX];
     uint8_t buffer_rx[1];
     /* data stores for transmitting */
     struct ring_buf rb_rx;
-    uint8_t rb_rx_buffer[CONFIG_BACNET_DRIVER_RS485_BUFFER_RX_SIZE8];
+    uint8_t rb_rx_buffer[DLMSTP_MPDU_MAX];
     uint8_t buffer_tx[1];
     /* timer for tracking line silence */
     int64_t silence_timer;
@@ -81,6 +82,14 @@ int32_t bacnet_driver_rs485_config_get(struct bacnet_driver_rs485 *context,
  */
 int64_t
 bacnet_driver_rs485_silence_milliseconds(struct bacnet_driver_rs485 *context);
+
+/** @brief set the driver silence time to current time
+ *
+ *  @param bacnet_driver_rs485 The handle of the protocol processor.
+ */
+void
+bacnet_driver_rs485_silence_reset(struct bacnet_driver_rs485 *context);
+
 
 /** @brief driver transmission collision state
  *
@@ -166,6 +175,18 @@ int32_t bacnet_driver_rs485_transmit_cancel(struct bacnet_driver_rs485 *context)
  *  @return -ENOSYS if not supported.
  */
 int32_t bacnet_driver_rs485_disable(struct bacnet_driver_rs485 *context);
+
+
+/** @brief Configure driver to with current configuration
+ *  @note Use this function to reconfigure the baud rate
+ *
+ *  @param bacnet_driver_rs485 The handle of the protocol processor.
+ *
+ *  @return Zero upon success.
+ *  @return -EINVAL if invalid parameter(s).
+ *  @return -ENOSYS if not supported.
+ */
+int32_t bacnet_driver_rs485_configure(struct bacnet_driver_rs485 *context);
 
 /** @brief Enable driver to run with current configuration
  *

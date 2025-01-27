@@ -57,6 +57,9 @@ config BACDL_ETHERNET
 
 config BACDL_MSTP
 	bool "BACnet MSTP datalink"
+	select BACNET_DRIVER_RS485
+	select UART_ASYNC_API
+	select RING_BUFFER
 	help
 	  Enable BACnet MSTP datalink
 
