@@ -185,6 +185,8 @@ void mstp_init_max_master(uint8_t max_master)
  */
 void mstp_init_port(uint8_t mac, uint32_t baud, uint8_t max_master)
 {
+    rs485_context.iface_name = "RS485";
+    rs485_context.config.uart_baud = baud;
     rs485_init();
     /* initialize MSTP datalink layer */
     MSTP_Port.Nmax_info_frames = DLMSTP_MAX_INFO_FRAMES;
