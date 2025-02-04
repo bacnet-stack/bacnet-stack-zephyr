@@ -6,8 +6,10 @@
 
 config BACNET_DRIVER_RS485
 	bool "BACnet MS/TP RS485 Driver support"
-	select UART_ASYNC_API
 	select RING_BUFFER
+	imply SERIAL_SUPPORT_INTERRUPT
+	imply UART_INTERRUPT_DRIVEN
+	imply UART_USE_RUNTIME_CONFIGURE
 	default y
 	help
 	  Enables BACnet implementation of RS485 driver for MS/TP

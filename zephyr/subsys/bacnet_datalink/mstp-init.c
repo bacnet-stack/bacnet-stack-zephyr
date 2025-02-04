@@ -39,17 +39,6 @@ static struct mstp_port_struct_t MSTP_Port;
 /** Initialize the driver hardware */
 static void rs485_init(void)
 {
-    int32_t result;
-
-	if (!device_is_ready(uart_dev)) {
-        LOG_ERR("UART device not found!");
-		return;
-	}
-    rs485_context.uart_dev = uart_dev;
-    result = bacnet_driver_rs485_enable(&rs485_context);
-    if (result < 0) {
-        LOG_ERR("Failed to enable RS485 driver: result=%d", result);
-    }
 }
 
 /** Prepare & transmit a packet. */
@@ -185,9 +174,19 @@ void mstp_init_max_master(uint8_t max_master)
  */
 void mstp_init_port(uint8_t mac, uint32_t baud, uint8_t max_master)
 {
+    int32_t result;
+
+	if (!device_is_ready(uart_dev)) {
+        LOG_ERR("UART device not found!");
+		return;
+	}
+    rs485_context.uart_dev = uart_dev;
     rs485_context.iface_name = "RS485";
     rs485_context.config.uart_baud = baud;
-    rs485_init();
+    result = bacnet_driver_rs485_enable(&rs485_context);
+    if (result < 0) {
+        LOG_ERR("Failed to enable RS485 driver: result=%d", result);
+    }
     /* initialize MSTP datalink layer */
     MSTP_Port.Nmax_info_frames = DLMSTP_MAX_INFO_FRAMES;
     MSTP_Port.Nmax_master = max_master;
