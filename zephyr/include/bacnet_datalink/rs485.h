@@ -43,13 +43,11 @@ struct bacnet_driver_rs485 {
     bool enabled;
     bool transmitting;
     /* data stores for receiving */
-    struct ring_buf rb_tx;
-    uint8_t rb_tx_buffer[DLMSTP_MPDU_MAX];
-    uint8_t buffer_rx[1];
-    /* data stores for transmitting */
     struct ring_buf rb_rx;
     uint8_t rb_rx_buffer[DLMSTP_MPDU_MAX];
-    uint8_t buffer_tx[1];
+    /* data stores for transmitting */
+    struct ring_buf rb_tx;
+    uint8_t rb_tx_buffer[DLMSTP_MPDU_MAX];
     /* timer for tracking line silence */
     int64_t silence_timer;
     /* counters for statistics */
