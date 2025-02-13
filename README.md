@@ -45,6 +45,18 @@ A device application demonstrating configuration of a
 [BACnet Smart Sensor (B-SS) device profile](./zephyr/samples/profiles/b-ss/README.rst)
 that can be used with any supported board boards.
 
+### Device Profile - BACnet Lighting Device (B-LD)
+
+A device application demonstrating configuration of a
+[BACnet Lighting Device (B-LD) device profile](./zephyr/samples/profiles/b-ld/README.rst)
+that can be used with any supported board boards.
+
+### Device Profile - BACnet Lighting Supervisor (B-LS)
+
+A device application demonstrating configuration of a
+[BACnet Lighting Supervisor (B-LS) device profile](./zephyr/samples/profiles/b-ls/README.rst)
+that can be used with any supported board boards.
+
 # Coding Style and Guidelines
 
 See Zephyr Project [Coding Guidelines](https://docs.zephyrproject.org/latest/contribute/coding_guidelines/index.html)
