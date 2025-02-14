@@ -50,6 +50,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/bactext.c
     ${BACNET_SRC}/indtext.c
     ${BACNET_SRC}/lighting.c
+    ${BACNET_SRC}/proplist.c
     ${BACNET_SRC}/wp.c
     ${BACNET_BASIC_SRC}/sys/keylist.c
     ${BACNET_SRC}/hostnport.c
