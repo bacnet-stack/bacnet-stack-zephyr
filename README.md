@@ -25,6 +25,39 @@ quickly create a custom BACnet device on a variety of existing boards.
 These samples are crafted to be simple and easy to understand, serving as a
 starting point for your own projects.
 
+This repository is a Zephyr manifest-module, which means it can be used in either
+of the following ways:
+  
+- As a module brought in by a different manifest (recommended for product development)
+
+  **[Prototyped but not verified]** Add the following into the root manifest file (e.g., $workspace_dir/$manifest_repo/west.yml)
+
+  ```
+  # In external manifest repository, `west.yml`
+  # to bring in the Zephyr integration of bacnet-stack
+  # as a Zephyr module
+  
+    # Add the following under remotes:
+      - name: bacnet-stack
+        url-base: https://github.com/bacnet-stack
+
+    # Add the following under projects:
+      - name: bacnet
+        repo-path: bacnet-stack-zephyr
+        path: modules/lib/bacnet
+        import:
+          name-allowlist:
+            - bacnet-stack
+  
+      - name: bacnet-stack
+        path: modules/lib/bacnet/stack
+  ```
+
+  - As a workspace manifest repository (recommended for bacnet-stack contributions):
+  
+    `west init -m https://github.com/bacnet-stack/bacnet-stack-zephyr --mr default $my_workspace`
+
+
 ## Hello BACnet Stack
 
 A simple "Hello World" sample that can be used with any supported board boards
