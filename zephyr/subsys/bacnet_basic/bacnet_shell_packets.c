@@ -26,13 +26,11 @@
  */
 static int cmd_packets(const struct shell *sh, size_t argc, char **argv)
 {
-    (void)argc;
-    (void)argv;
-    shell_print(sh, "BACnet thread packets received: %ld",
-                bacnet_basic_packet_count());
+	(void)argc;
+	(void)argv;
+	shell_print(sh, "BACnet thread packets received: %ld", bacnet_basic_packet_count());
 
-    return 0;
+	return 0;
 }
 
-SHELL_SUBCMD_ADD((bacnet), packets, NULL,  "BACnet task packet stats", cmd_packets,
-		 1, 0);
+SHELL_SUBCMD_ADD((bacnet), packets, NULL, "BACnet task packet stats", cmd_packets, 1, 0);
