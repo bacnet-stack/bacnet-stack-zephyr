@@ -25,14 +25,30 @@ jobs:
           west init -l .
           west update
 
+      - name: Samples - Hello World
+        working-directory: bacnet
+        run: |
+          west build -p always -b native_posix zephyr/samples/hello_world
+
+      - name: Samples - BACnet Profile B-SS
+        working-directory: bacnet
+        run: |
+          west build -b nucleo_f429zi -p always bacnet/zephyr/samples/profiles/b-ss/
+
+      - name: Archive Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: bacnet/build
+
       - name: Twister Tests unit_testing
         working-directory: bacnet
         run: |
           pwd
           ./unittest.sh
 
-      - name: Archive firmware
+      - name: Archive Test Results
         uses: actions/upload-artifact@v4
         with:
-          name: firmware
+          name: unit_testing
           path: bacnet/twister-out.unit_testing
