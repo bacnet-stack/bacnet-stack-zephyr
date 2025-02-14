@@ -28,12 +28,12 @@ jobs:
       - name: Samples - Hello World
         working-directory: bacnet
         run: |
-          west build -p always -b native_posix zephyr/samples/hello_world
+          west build -p always -b native_posix ./zephyr/samples/hello_world
 
       - name: Samples - BACnet Profile B-SS
         working-directory: bacnet
         run: |
-          west build -b nucleo_f429zi -p always bacnet/zephyr/samples/profiles/b-ss/
+          west build -b nucleo_f429zi -p always ./zephyr/samples/profiles/b-ss
 
       - name: Archive Firmware
         uses: actions/upload-artifact@v4
