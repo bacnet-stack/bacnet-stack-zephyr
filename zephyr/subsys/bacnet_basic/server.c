@@ -16,9 +16,6 @@
 #include "bacnet/datalink/datalink.h"
 #include "bacnet_basic/bacnet_basic.h"
 #include "bacnet_basic/bacnet_port.h"
-#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
-#include "bacnet_settings/bacnet_storage.h"
-#endif
 
 /* note: stack is minimally 3x of MAX_APDU */
 #ifndef CONFIG_BACNET_BASIC_SERVER_STACK_SIZE
@@ -45,40 +42,33 @@
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 static struct k_thread server_thread_data;
-static K_THREAD_STACK_DEFINE(server_thread_stack,
-                             CONFIG_BACNET_BASIC_SERVER_STACK_SIZE);
+static K_THREAD_STACK_DEFINE(server_thread_stack, CONFIG_BACNET_BASIC_SERVER_STACK_SIZE);
 
 /**
  * @brief BACnet Server Thread
  */
 static void server_thread(void)
 {
-    LOG_INF("BACnet Server: started");
+	LOG_INF("BACnet Server: started");
 
-#if defined(CONFIG_BACNETSTACK_BACNET_SETTINGS)
-    bacnet_storage_init();
-#endif
-    bacnet_basic_init();
-    for (;;) {
-        if (bacnet_port_init()) {
-            break;
-        } else {
-            LOG_ERR("Server: port initialization failed");
-            k_sleep(K_MSEC(1000));
-        }
-    }
-    LOG_INF("Server: thread stack=%u bytes",
-        CONFIG_BACNET_BASIC_SERVER_STACK_SIZE);
-    LOG_INF("Server: thread priority=%u",
-        CONFIG_BACNET_BASIC_SERVER_THREAD_PRIORITY);
-    LOG_INF("Server: thread sleep=%u milliseconds",
-        CONFIG_BACNET_BASIC_SERVER_KSLEEP);
-    LOG_INF("Server: initialized");
-    for (;;) {
-        k_sleep(K_MSEC(CONFIG_BACNET_BASIC_SERVER_KSLEEP));
-        bacnet_basic_task();
-        bacnet_port_task();
-    }
+	bacnet_basic_init();
+	for (;;) {
+		if (bacnet_port_init()) {
+			break;
+		} else {
+			LOG_ERR("Server: port initialization failed");
+			k_sleep(K_MSEC(1000));
+		}
+	}
+	LOG_INF("Server: thread stack=%u bytes", CONFIG_BACNET_BASIC_SERVER_STACK_SIZE);
+	LOG_INF("Server: thread priority=%u", CONFIG_BACNET_BASIC_SERVER_THREAD_PRIORITY);
+	LOG_INF("Server: thread sleep=%u milliseconds", CONFIG_BACNET_BASIC_SERVER_KSLEEP);
+	LOG_INF("Server: initialized");
+	for (;;) {
+		k_sleep(K_MSEC(CONFIG_BACNET_BASIC_SERVER_KSLEEP));
+		bacnet_basic_task();
+		bacnet_port_task();
+	}
 }
 
 /**
@@ -86,15 +76,13 @@ static void server_thread(void)
  */
 static int server_init(void)
 {
-    k_thread_create(&server_thread_data, server_thread_stack,
-                    K_THREAD_STACK_SIZEOF(server_thread_stack),
-                    (k_thread_entry_t)server_thread, NULL, NULL, NULL,
-                    K_PRIO_PREEMPT(CONFIG_BACNET_BASIC_SERVER_THREAD_PRIORITY), 0,
-                    K_NO_WAIT);
-    k_thread_name_set(&server_thread_data, "bacnet_server");
+	k_thread_create(&server_thread_data, server_thread_stack,
+			K_THREAD_STACK_SIZEOF(server_thread_stack), (k_thread_entry_t)server_thread,
+			NULL, NULL, NULL,
+			K_PRIO_PREEMPT(CONFIG_BACNET_BASIC_SERVER_THREAD_PRIORITY), 0, K_NO_WAIT);
+	k_thread_name_set(&server_thread_data, "bacnet_server");
 
-    return 0;
+	return 0;
 }
 
-SYS_INIT(server_init, APPLICATION,
-         CONFIG_BACNET_BASIC_SERVER_INIT_PRIORITY);
+SYS_INIT(server_init, APPLICATION, CONFIG_BACNET_BASIC_SERVER_INIT_PRIORITY);

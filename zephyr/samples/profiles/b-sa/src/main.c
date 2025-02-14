@@ -78,15 +78,14 @@ static void BACnet_Smart_Actuator_Task_Handler(void *context)
 	if (mstimer_expired(&Actuator_Update_Timer)) {
 		mstimer_reset(&Actuator_Update_Timer);
 		/* simulate an internal software program,
-           and update the BACnet object values */
+	   and update the BACnet object values */
 		if (Analog_Output_Out_Of_Service(Actuator_Instance)) {
 			return;
 		}
 		percent = Analog_Output_Present_Value(Actuator_Instance);
 		change = -1.0f + 2.0f * ((float)rand()) / RAND_MAX;
 		percent += change;
-		Analog_Output_Present_Value_Set(Actuator_Instance, percent,
-						BACNET_MAX_PRIORITY);
+		Analog_Output_Present_Value_Set(Actuator_Instance, percent, BACNET_MAX_PRIORITY);
 	}
 }
 
@@ -95,10 +94,8 @@ int main(void)
 	LOG_INF("BACnet Device: %s", Device_Name);
 	LOG_INF("BACnet Stack Version " BACNET_VERSION_TEXT);
 	LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
-	bacnet_basic_init_callback_set(BACnet_Smart_Actuator_Init_Handler,
-				       NULL);
-	bacnet_basic_task_callback_set(BACnet_Smart_Actuator_Task_Handler,
-				       NULL);
+	bacnet_basic_init_callback_set(BACnet_Smart_Actuator_Init_Handler, NULL);
+	bacnet_basic_task_callback_set(BACnet_Smart_Actuator_Task_Handler, NULL);
 	/* work happens in server module */
 	for (;;) {
 		k_sleep(K_MSEC(1000));

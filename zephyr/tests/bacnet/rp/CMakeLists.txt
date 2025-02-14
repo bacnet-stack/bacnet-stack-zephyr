@@ -35,6 +35,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/bacstr.c
     ${BACNET_SRC}/bacint.c
     ${BACNET_SRC}/bacreal.c
+    ${BACNET_SRC}/proplist.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")

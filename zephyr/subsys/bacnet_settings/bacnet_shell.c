@@ -18,8 +18,7 @@
  * @param argv Argument list
  * @return 0 on success, negative on failure
  */
-static int cmd_key(BACNET_STORAGE_KEY *key, const struct shell *sh, size_t argc,
-		   char **argv)
+static int cmd_key(BACNET_STORAGE_KEY *key, const struct shell *sh, size_t argc, char **argv)
 {
 	uint16_t object_type;
 	uint32_t object_instance;
@@ -28,37 +27,29 @@ static int cmd_key(BACNET_STORAGE_KEY *key, const struct shell *sh, size_t argc,
 	long value = 0;
 
 	if (argc < 3) {
-		shell_error(
-			sh,
-			"Usage: %s <object-type> <instance> <property> [value]",
-			argv[0]);
+		shell_error(sh, "Usage: %s <object-type> <instance> <property> [value]", argv[0]);
 		return -EINVAL;
 	}
 	value = strtoul(argv[1], NULL, 0);
 	if ((value < 0) || (value >= UINT16_MAX)) {
-		shell_error(sh, "Invalid object-type: %s. Must be 0-65535.",
-			    argv[1]);
+		shell_error(sh, "Invalid object-type: %s. Must be 0-65535.", argv[1]);
 		return -EINVAL;
 	}
 	object_type = (uint16_t)value;
 	value = strtoul(argv[2], NULL, 0);
 	if (value > 4194303) {
-		shell_error(sh,
-			    "Invalid object-instance: %s. Must be 0-4194303.",
-			    argv[2]);
+		shell_error(sh, "Invalid object-instance: %s. Must be 0-4194303.", argv[2]);
 		return -EINVAL;
 	}
 	object_instance = (uint32_t)value;
 	value = strtoul(argv[3], NULL, 0);
 	if (value > UINT32_MAX) {
-		shell_error(sh, "Invalid property: %s. Must be 0-4294967295.",
-			    argv[3]);
+		shell_error(sh, "Invalid property: %s. Must be 0-4294967295.", argv[3]);
 		return -EINVAL;
 	}
 	property_id = (uint32_t)value;
 	/* setup the storage key */
-	bacnet_storage_key_init(key, object_type, object_instance, property_id,
-				array_index);
+	bacnet_storage_key_init(key, object_type, object_instance, property_id, array_index);
 
 	return 0;
 }
@@ -72,9 +63,9 @@ static int cmd_key(BACNET_STORAGE_KEY *key, const struct shell *sh, size_t argc,
  */
 static int cmd_string(const struct shell *sh, size_t argc, char **argv)
 {
-	char key_name[BACNET_STORAGE_KEY_SIZE_MAX + 1] = { 0 };
-	uint8_t data[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = { 0 };
-	BACNET_STORAGE_KEY key = { 0 };
+	char key_name[BACNET_STORAGE_KEY_SIZE_MAX + 1] = {0};
+	uint8_t data[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = {0};
+	BACNET_STORAGE_KEY key = {0};
 	size_t arg_len = 0;
 	int rc;
 
@@ -90,8 +81,7 @@ static int cmd_string(const struct shell *sh, size_t argc, char **argv)
 		if (rc == 0) {
 			shell_print(sh, "Set %s = %s", key_name, argv[4]);
 		} else {
-			shell_error(sh, "Unable to set %s = %s", key_name,
-				    argv[4]);
+			shell_error(sh, "Unable to set %s = %s", key_name, argv[4]);
 			return -EINVAL;
 		}
 	} else {
@@ -107,10 +97,9 @@ static int cmd_string(const struct shell *sh, size_t argc, char **argv)
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_bacnet_settings_cmds,
-			       SHELL_CMD(string, NULL,
-					 "get or set BACnet storage string",
+			       SHELL_CMD(string, NULL, "get or set BACnet storage string",
 					 cmd_string),
 			       SHELL_SUBCMD_SET_END);
 
-SHELL_SUBCMD_ADD((bacnet), settings, &sub_bacnet_settings_cmds,
-		 "BACnet settings commands", NULL, 1, 0);
+SHELL_SUBCMD_ADD((bacnet), settings, &sub_bacnet_settings_cmds, "BACnet settings commands", NULL, 1,
+		 0);
