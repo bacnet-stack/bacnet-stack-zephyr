@@ -286,23 +286,22 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/datalink/bacsec.c
     ${BACNETSTACK_SRC}/bacnet/datalink/bacsec.h
     ${BACNETSTACK_SRC}/bacnet/datalink/bip6.h
-    $<$<BOOL:${CONFIG_BACDL_BIP}>:${BACNETSTACK_SRC}/bacnet/datalink/bip.h>
-    $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/datalink/bvlc6.c>
-    $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/datalink/bvlc6.h>
-    $<$<BOOL:${CONFIG_BACDL_BIP}>:${BACNETSTACK_SRC}/bacnet/datalink/bvlc.h>
-    $<$<BOOL:${CONFIG_BACDL_BIP}>:${BACNETSTACK_SRC}/bacnet/datalink/bvlc.c>
-    $<$<BOOL:${CONFIG_BACDL_MSTP}>:${BACNETSTACK_SRC}/bacnet/datalink/cobs.h>
-    $<$<BOOL:${CONFIG_BACDL_MSTP}>:${BACNETSTACK_SRC}/bacnet/datalink/cobs.c>
-    $<$<BOOL:${CONFIG_BACDL_MSTP}>:${BACNETSTACK_SRC}/bacnet/datalink/crc.h>
-    $<$<BOOL:${CONFIG_BACDL_MSTP}>:${BACNETSTACK_SRC}/bacnet/datalink/crc.c>
+    ${BACNETSTACK_SRC}/bacnet/datalink/bip.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/bvlc6.c
+    ${BACNETSTACK_SRC}/bacnet/datalink/bvlc6.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/bvlc.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/bvlc.c
+    ${CONFIG_BACDL_MSTP}/bacnet/datalink/cobs.h
+    ${CONFIG_BACDL_MSTP}/bacnet/datalink/cobs.c
+    ${BACNETSTACK_SRC}/bacnet/datalink/crc.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/crc.c
     ${BACNETSTACK_SRC}/bacnet/datalink/datalink.c
     ${BACNETSTACK_SRC}/bacnet/datalink/datalink.h
     ${BACNETSTACK_SRC}/bacnet/datalink/ethernet.h
-    ${BACNETSTACK_SRC}/bacnet/datalink/dlmstp.h
-    $<$<BOOL:${CONFIG_BACDL_MSTP}>:${BACNETSTACK_SRC}/bacnet/datalink/dlmstp.c>
+    ${BACNETSTACK_SRC}/bacnet/datalink/mstp.h
     ${BACNETSTACK_SRC}/bacnet/datalink/mstpdef.h
     ${BACNETSTACK_SRC}/bacnet/datalink/mstp.h
-    $<$<BOOL:${CONFIG_BACDL_MSTP}>:${BACNETSTACK_SRC}/bacnet/datalink/mstp.c>
+    ${BACNETSTACK_SRC}/bacnet/datalink/mstp.c
     ${BACNETSTACK_SRC}/bacnet/datalink/mstptext.c
     ${BACNETSTACK_SRC}/bacnet/datalink/mstptext.h
     ${BACNETSTACK_SRC}/bacnet/datetime.c
