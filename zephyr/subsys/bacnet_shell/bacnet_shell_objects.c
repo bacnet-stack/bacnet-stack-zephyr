@@ -16,8 +16,6 @@
 #include "bacnet/bacapp.h"
 /* BACnet objects API */
 #include "bacnet/basic/object/device.h"
-/* Basic BACnet */
-#include "bacnet_basic/bacnet_basic.h"
 
 /**
  * @brief List all BACnet objects in this device

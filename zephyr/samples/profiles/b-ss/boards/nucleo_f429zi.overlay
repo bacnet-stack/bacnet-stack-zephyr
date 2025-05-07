@@ -7,13 +7,24 @@
 /delete-node/ &storage_partition;
 
 &flash0 {
-	partitions {
-		/* Set 48KB of storage at the beginning of bank2 in order to have 3 sectors smaller than 32K
-		 * 	(nvs.h: uint16_t sector_size)
-		 */
-		storage_partition: partition@100000 {
-			label = "storage";
-			reg = <0x000100000 DT_SIZE_K(48)>;
-		};
-	};
+    partitions {
+        /* Set 48KB of storage at the beginning of bank2 in order to have 3 sectors smaller than 32K
+         *  (nvs.h: uint16_t sector_size)
+         */
+        storage_partition: partition@100000 {
+            label = "storage";
+            reg = <0x000100000 DT_SIZE_K(48)>;
+        };
+    };
+};
+
+&arduino_serial {
+    status = "okay";
+
+    modbus0 {
+        compatible = "zephyr,modbus-serial";
+        status = "okay";
+
+        de-gpios = <&arduino_header 8 GPIO_ACTIVE_LOW>; /* D2*/
+    };
 };

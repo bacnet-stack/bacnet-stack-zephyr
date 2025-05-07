@@ -22,7 +22,8 @@
 #if (BACNET_PROTOCOL_REVISION >= 17)
 #include "bacnet/basic/object/netport.h"
 #endif
-#include "bacnet_basic/bacnet_basic.h"
+#include "bacnet/basic/server/bacnet_basic.h"
+#include "bacnet/basic/server/bacnet_port.h"
 
 /* Logging module registration is already done in ports/zephyr/main.c */
 #include "bacnet_osif/bacnet_log.h"
@@ -97,9 +98,19 @@ int main(void)
 	LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
 	bacnet_basic_init_callback_set(BACnet_Lighting_Device_Init_Handler, NULL);
 	bacnet_basic_task_callback_set(BACnet_Lighting_Device_Task_Handler, NULL);
-	/* work happens in server module */
+	bacnet_basic_init();
 	for (;;) {
-		k_sleep(K_MSEC(1000));
+		if (bacnet_port_init()) {
+			break;
+		} else {
+			LOG_ERR("Server: port initialization failed");
+			k_sleep(K_MSEC(1000));
+		}
+	}
+	for (;;) {
+		k_sleep(K_MSEC(CONFIG_BACNET_BASIC_SERVER_KSLEEP));
+		bacnet_basic_task();
+		bacnet_port_task();
 	}
 
 	return 0;
