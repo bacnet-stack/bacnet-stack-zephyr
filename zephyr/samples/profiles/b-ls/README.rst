@@ -45,9 +45,13 @@ Building and Running
 This sample can be found under :bacnet_file:`samples/profiles/b-ls` in
 the BACnet tree.
 
-The sample can be built for several platforms.
+The sample can be built for several platforms - use `west boards` to
+list the supported boards.
 
 Compile this sample for the `nucleo_f429zi` board:
 
     west build -b nucleo_f429zi -p always bacnet/zephyr/samples/profiles/b-ls/
 
+Compile this sample for the `rpi_pico` board:
+
+    west build -b rpi_pico -p always bacnet/zephyr/samples/profiles/b-ls/
