@@ -52,6 +52,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/datetime.c
     ${BACNET_SRC}/timestamp.c
     ${BACNET_SRC}/basic/sys/days.c
+    ${BACNET_SRC}/basic/sys/debug.c
     ${BACNET_SRC}/bacdevobjpropref.c
     ${BACNET_SRC}/bactext.c
     ${BACNET_SRC}/indtext.c
