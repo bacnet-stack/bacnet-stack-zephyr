@@ -1,0 +1,32 @@
+/*
+ * Copyright (c) 2021 Yonatan Schachter
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&flash0 {
+    reg = <0x10000000 DT_SIZE_M(2)>;
+
+    partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        /* Reserved memory for the second stage bootloader */
+        second_stage_bootloader: partition@0 {
+            label = "second_stage_bootloader";
+            reg = <0x00000000 0x100>;
+            read-only;
+        };
+
+        slot0_partition: partition@100 {
+            label = "image-0";
+            reg = <0x100 (DT_SIZE_M(1) - 0xF000)>;
+        };
+
+        storage_partition: partition@1f9000 {
+            label = "storage";
+            reg = <0x1F9000 0x00007000>;
+        };
+    };
+};
