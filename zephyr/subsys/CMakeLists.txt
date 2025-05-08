@@ -1,13 +1,11 @@
 # Copyright (c) 2020 Legrand North America, LLC.
 # SPDX-License-Identifier: Apache-2.0
-message(STATUS "BACNETSTACK: CONFIG_BACNETSTACK_BACNET_SETTINGS \"${CONFIG_BACNETSTACK_BACNET_SETTINGS}\"")
-message(STATUS "BACNETSTACK: CONFIG_BACNETSTACK_BACNET_SHELL \"${CONFIG_BACNETSTACK_BACNET_SHELL}\"")
 message(STATUS "BACNETSTACK: CONFIG_BACNETSTACK_BACNET_SERVER \"${CONFIG_BACNETSTACK_BACNET_SERVER}\"")
 message(STATUS "BACNETSTACK: CONFIG_BACNETSTACK_BACNET_OBJECT \"${CONFIG_BACNETSTACK_BACNET_OBJECT}\"")
 
 add_subdirectory(bacnet_datalink)
 add_subdirectory(bacnet_osif)
-add_subdirectory_ifdef(CONFIG_BACNETSTACK_BACNET_SETTINGS bacnet_settings)
-add_subdirectory_ifdef(CONFIG_BACNETSTACK_BACNET_SHELL bacnet_shell)
+add_subdirectory(bacnet_settings)
+add_subdirectory(bacnet_shell)
 add_subdirectory_ifdef(CONFIG_BACNETSTACK_BACNET_SERVER server)
 add_subdirectory_ifdef(CONFIG_BACNETSTACK_BACNET_OBJECT object)

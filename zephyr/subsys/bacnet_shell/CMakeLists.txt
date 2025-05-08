@@ -7,11 +7,11 @@ zephyr_library(bacnet_shell)
 
 zephyr_library_include_directories(include)
 
-zephyr_library_sources_ifdef(BACNETSTACK_BACNET_SHELL
+zephyr_library_sources_ifdef(CONFIG_BACNETSTACK_BACNET_SHELL
   bacnet_shell.c
 )
 
-zephyr_library_sources_ifdef(BACNETSTACK_BACNET_BASIC_SHELL
+zephyr_library_sources_ifdef(CONFIG_BACNETSTACK_BACNET_BASIC_SHELL
   bacnet_shell_objects.c
   bacnet_shell_packets.c
   bacnet_shell_uptime.c

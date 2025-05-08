@@ -4,22 +4,22 @@
 # @date May 2024
 # @copyright SPDX-License-Identifier: Apache-2.0
 
-config BACNETSTACK_BACNET_SHELL
-    bool "BACnet Shell"
-    default n
-    select SHELL
-    select CONSOLE
-    select KERNEL_SHELL
-    select THREAD_MONITOR
-    select THREAD_NAME
-    select DEVICE_SHELL
-    select LOG
+menuconfig BACNETSTACK_BACNET_SHELL
+    bool "BACNETSTACK_BACNET_SHELL"
+    default y if BACNETSTACK && SHELL
     help
-      Enable BACnet Shell support
+      This option enables BACnet Shell services
 
-config BACNETSTACK_BACNET_BASIC_SHELL
-    bool "BACnet Basic subsystem shell"
-    default n
-    depends on BACNETSTACK_BACNET_SHELL
-    help
-      Enable BACnet Basic subsystem shell support
+if BACNETSTACK_BACNET_SHELL
+
+    module = BACNETSTACK_BACNET_SHELL
+    module-str = bacnet_shell
+
+    config BACNETSTACK_BACNET_BASIC_SHELL
+        bool "BACnet Basic subsystem shell"
+        default n
+        depends on BACNETSTACK_BACNET_SHELL
+        help
+          Enable BACnet Basic subsystem shell support
+
+endif # BACNETSTACK_BACNET_SHELL
