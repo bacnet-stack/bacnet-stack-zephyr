@@ -15,7 +15,8 @@
 #include "bacnet/version.h"
 #include "bacnet/basic/sys/mstimer.h"
 #include "bacnet/basic/sys/linear.h"
-/* BACnet Stack basic device API - see bacnet_basic/device.c for details */
+/* BACnet Stack basic device API -
+   see bacnet/basic/server/bacnet_device.c for details */
 #include "bacnet/basic/object/device.h"
 /* BACnet Stack basic objects enabled in prj.conf */
 #include "bacnet/basic/object/lo.h"
