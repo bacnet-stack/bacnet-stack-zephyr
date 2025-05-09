@@ -45,9 +45,10 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/bacapp.c
     ${BACNET_SRC}/bacdcode.c
     ${BACNET_SRC}/bacdest.c
-    ${BACNET_SRC}/bacstr.c
     ${BACNET_SRC}/bacint.c
+    ${BACNET_SRC}/baclog.c
     ${BACNET_SRC}/bacreal.c
+    ${BACNET_SRC}/bacstr.c
     ${BACNET_SRC}/bactext.c
     ${BACNET_SRC}/cov.c
     ${BACNET_SRC}/channel_value.c

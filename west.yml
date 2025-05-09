@@ -50,5 +50,7 @@ manifest:
         - picolibc
         - hal_stm32
         - hal_microchip
+        - hal_espressif
+        - hal_rpi_pico
         - segger
         - mcuboot

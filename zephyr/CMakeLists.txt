@@ -39,6 +39,8 @@ if(NOT (CONFIG_BACDL_ETHERNET OR
   CONFIG_BACDL_ARCNET OR
   CONFIG_BACDL_BIP OR
   CONFIG_BACDL_BIP6 OR
+  CONFIG_BACDL_CUSTOM OR
+  CONFIG_BACDL_MULTIPLE OR
   CONFIG_BACDL_NONE OR
   CONFIG_BACAPP_ALL))
   set(CONFIG_BACDL_NONE YES)
@@ -49,6 +51,8 @@ message(STATUS "BACNETSTACK: BACDL_BIP \"${CONFIG_BACDL_BIP}\"")
 message(STATUS "BACNETSTACK: BACDL_ARCNET \"${CONFIG_BACDL_ARCNET}\"")
 message(STATUS "BACNETSTACK: BACDL_MSTP \"${CONFIG_BACDL_MSTP}\"")
 message(STATUS "BACNETSTACK: BACDL_ETHERNET \"${CONFIG_BACDL_ETHERNET}\"")
+message(STATUS "BACNETSTACK: BACDL_CUSTOM \"${CONFIG_BACDL_CUSTOM}\"")
+message(STATUS "BACNETSTACK: BACDL_MULTIPLE \"${CONFIG_BACDL_MULTIPLE}\"")
 message(STATUS "BACNETSTACK: BACDL_NONE \"${CONFIG_BACDL_NONE}\"")
 message(STATUS "BACNETSTACK: BACAPP_ALL \"${CONFIG_BACAPP_ALL}\"")
 
@@ -203,6 +207,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_wp.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_wpm.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_wpm.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_write_group.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_write_group.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_abort.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_ack_alarm.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_arfs.h
@@ -237,10 +243,13 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/services.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bigend.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bigend.h
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/datetime_mstimer.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/days.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/days.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/debug.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/debug.h
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/dst.c
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/dst.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/fifo.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/fifo.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/filename.c
@@ -277,18 +286,18 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/datalink/bacsec.c
     ${BACNETSTACK_SRC}/bacnet/datalink/bacsec.h
     ${BACNETSTACK_SRC}/bacnet/datalink/bip6.h
-    $<$<BOOL:${CONFIG_BACDL_BIP}>:${BACNETSTACK_SRC}/bacnet/datalink/bip.h>
-    $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/datalink/bvlc6.c>
-    $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/datalink/bvlc6.h>
-    $<$<BOOL:${CONFIG_BACDL_BIP}>:${BACNETSTACK_SRC}/bacnet/datalink/bvlc.h>
-    $<$<BOOL:${CONFIG_BACDL_BIP}>:${BACNETSTACK_SRC}/bacnet/datalink/bvlc.c>
-    $<$<BOOL:${CONFIG_BACDL_MSTP}>:${BACNETSTACK_SRC}/bacnet/datalink/crc.h>
-    $<$<BOOL:${CONFIG_BACDL_MSTP}>:${BACNETSTACK_SRC}/bacnet/datalink/crc.c>
+    ${BACNETSTACK_SRC}/bacnet/datalink/bip.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/bvlc6.c
+    ${BACNETSTACK_SRC}/bacnet/datalink/bvlc6.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/bvlc.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/bvlc.c
+    ${BACNETSTACK_SRC}/bacnet/datalink/crc.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/crc.c
     ${BACNETSTACK_SRC}/bacnet/datalink/datalink.c
     ${BACNETSTACK_SRC}/bacnet/datalink/datalink.h
     ${BACNETSTACK_SRC}/bacnet/datalink/dlmstp.h
     ${BACNETSTACK_SRC}/bacnet/datalink/ethernet.h
-    $<$<BOOL:${CONFIG_BACDL_MSTP}>:${BACNETSTACK_SRC}/bacnet/datalink/mstp.h>
+    ${BACNETSTACK_SRC}/bacnet/datalink/mstp.h
     ${BACNETSTACK_SRC}/bacnet/datalink/mstpdef.h
     ${BACNETSTACK_SRC}/bacnet/datalink/mstp.h
     ${BACNETSTACK_SRC}/bacnet/datalink/mstptext.c
@@ -355,6 +364,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/wp.h
     ${BACNETSTACK_SRC}/bacnet/wpm.c
     ${BACNETSTACK_SRC}/bacnet/wpm.h
+    ${BACNETSTACK_SRC}/bacnet/write_group.c
+    ${BACNETSTACK_SRC}/bacnet/write_group.h
     )
 
 message(STATUS "BACNETSTACK: CONFIG_BACNET_BASIC_OBJECT_DEVICE_SERVER \"${CONFIG_BACNET_BASIC_OBJECT_DEVICE_SERVER}\"")
@@ -366,6 +377,11 @@ set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/h_bbmd6.c>
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/vmac.c>
     ${BACNETSTACK_SRC}/bacnet/basic/npdu/s_router.c
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_basic.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_device.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_ipv4.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_ipv4.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_credential.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_door.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_point.c>
@@ -393,6 +409,7 @@ set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_INTEGER_VALUE}>:${BACNETSTACK_SRC}/bacnet/basic/object/iv.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_LOAD_CONTROL}>:${BACNETSTACK_SRC}/bacnet/basic/object/lc.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/lo.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_BINARY_LIGHTING_OUTPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/blo.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_LIFE_SAFETY_POINT}>:${BACNETSTACK_SRC}/bacnet/basic/object/lsp.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_MULTISTATE_INPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/ms-input.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_MULTISTATE_OUTPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/mso.c>
@@ -553,4 +570,3 @@ zephyr_compile_definitions(
 
 
   )
-
