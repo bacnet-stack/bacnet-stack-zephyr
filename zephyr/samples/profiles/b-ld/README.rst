@@ -48,3 +48,7 @@ Compile this sample for the `nucleo_f429zi` board:
 Compile this sample for the `rpi_pico` board:
 
     west build -b rpi_pico -p always bacnet/zephyr/samples/profiles/b-ld/
+
+Compile this sample for the `adafruit_grand_central_m4_express` board with
+
+    west build -b adafruit_grand_central_m4_express -p always bacnet/zephyr/samples/profiles/b-ld/
