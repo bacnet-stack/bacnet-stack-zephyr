@@ -1,0 +1,25 @@
+# Kconfig - Subsystem Shell configuration options
+#
+# @author Steve Karg <skarg@users.sourceforge.net>
+# @date May 2024
+# @copyright SPDX-License-Identifier: Apache-2.0
+
+menuconfig BACNETSTACK_BACNET_SHELL
+    bool "BACNETSTACK_BACNET_SHELL"
+    default y if BACNETSTACK && SHELL
+    help
+      This option enables BACnet Shell services
+
+if BACNETSTACK_BACNET_SHELL
+
+    module = BACNETSTACK_BACNET_SHELL
+    module-str = bacnet_shell
+
+    config BACNETSTACK_BACNET_BASIC_SHELL
+        bool "BACnet Basic subsystem shell"
+        default n
+        depends on BACNETSTACK_BACNET_SHELL
+        help
+          Enable BACnet Basic subsystem shell support
+
+endif # BACNETSTACK_BACNET_SHELL
