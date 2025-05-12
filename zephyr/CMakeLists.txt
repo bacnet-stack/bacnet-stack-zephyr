@@ -169,6 +169,7 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_awf.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_ccov.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_ccov.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_cov.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_cov.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_dcc.c
@@ -427,7 +428,6 @@ set(BACNETSTACK_BASIC_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf_a.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_awf.c
-    ${BACNETSTACK_SRC}/bacnet/basic/service/h_ccov.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_gas_a.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_get_alarm_sum.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_getevent_a.c
@@ -514,7 +514,6 @@ zephyr_compile_definitions(
   $<$<BOOL:${CONFIG_BACDL_MSTP}>:BACDL_MSTP>
   $<$<BOOL:${CONFIG_BACDL_ETHERNET}>:BACDL_ETHERNET>
   $<$<BOOL:${CONFIG_BACDL_CUSTOM}>:BACDL_CUSTOM>
-
   # library features
   $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS}>:BACNET_BASIC_OBJECTS>
   $<$<BOOL:${CONFIG_BACNET_PROPERTY_LISTS}>:BACNET_PROPERTY_LISTS=1>
@@ -526,6 +525,8 @@ zephyr_compile_definitions(
   MAX_ADDRESS_CACHE=${CONFIG_BACNET_MAX_ADDRESS_CACHE}
   MAX_CHARACTER_STRING_BYTES=${CONFIG_BACNET_MAX_CHARACTER_STRING_BYTES}
   MAX_OCTET_STRING_BYTES=${CONFIG_BACNET_MAX_OCTET_STRING_BYTES}
+  $<$<BOOL:${CONFIG_BACNET_BASIC_COV_SUBSCRIPTIONS_SIZE}>:MAX_COV_SUBCRIPTIONS=${CONFIG_BACNET_BASIC_COV_SUBSCRIPTIONS_SIZE}>
+  $<$<BOOL:${CONFIG_BACNET_BASIC_COV_ADDRESSES_SIZE}>:MAX_COV_ADDRESSES=${CONFIG_BACNET_BASIC_COV_ADDRESSES_SIZE}>
   # BACnet data types supported for WriteProperty: all = minimal + extra
   $<$<BOOL:${CONFIG_BACAPP_ALL}>:BACAPP_ALL>
   $<$<BOOL:${CONFIG_BACAPP_MINIMAL}>:BACAPP_MINIMAL>
