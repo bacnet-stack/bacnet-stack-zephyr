@@ -44,6 +44,7 @@ static struct mstimer Sensor_Update_Timer;
  */
 static void BACnet_Smart_Sensor_Init_Handler(void *context)
 {
+	const float default_temperature = 25.0f;
 	uint32_t array_index = BACNET_ARRAY_ALL;
 	bool status = false;
 	int i;
@@ -62,20 +63,22 @@ static void BACnet_Smart_Sensor_Init_Handler(void *context)
 
 	(void)context;
 	LOG_INF("BACnet Stack Initialized");
+	/* initialize objects with default values for this basic sample */
 	Device_Object_Name_ANSI_Init(Device_Name);
+	Analog_Input_Create(Sensor_Instance);
+	Analog_Input_Name_Set(Sensor_Instance, "Sensor");
+	Analog_Input_Present_Value_Set(Sensor_Instance, default_temperature);
+	Analog_Input_Units_Set(Sensor_Instance, UNITS_DEGREES_CELSIUS);
+	Analog_Input_COV_Increment_Set(Sensor_Instance, 1.0f);
+	/* restore any property values previously stored via WriteProperty */
 	for (i = 0; i < ARRAY_SIZE(device_writeable_property_list); i++) {
 		status = bacnet_settings_write_property_restore(
-			OBJECT_DEVICE, BACNET_MAX_INSTANCE,
-			device_writeable_property_list[i], array_index,
-			Device_Write_Property_Local);
+			OBJECT_DEVICE, BACNET_MAX_INSTANCE, device_writeable_property_list[i],
+			array_index, Device_Write_Property_Local);
 		if (!status) {
 			/* no settings stored for this property, use defaults */
 		}
 	}
-	/* initialize child objects for this basic sample */
-	Analog_Input_Create(Sensor_Instance);
-	Analog_Input_Name_Set(Sensor_Instance, "Sensor");
-	/* Writable property values previously stored via WriteProperty */
 	for (i = 0; i < ARRAY_SIZE(analog_input_writeable_property_list); i++) {
 		status = bacnet_settings_write_property_restore(
 			OBJECT_ANALOG_INPUT, Sensor_Instance,
@@ -119,6 +122,8 @@ static void BACnet_Smart_Sensor_Task_Handler(void *context)
 
 int main(void)
 {
+	bool port_initialized = false;
+
 	LOG_INF("BACnet Device: %s", Device_Name);
 	LOG_INF("BACnet Stack Version " BACNET_VERSION_TEXT);
 	LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
@@ -126,17 +131,13 @@ int main(void)
 	bacnet_basic_task_callback_set(BACnet_Smart_Sensor_Task_Handler, NULL);
 	bacnet_basic_init();
 	for (;;) {
-		if (bacnet_port_init()) {
-			break;
-		} else {
-			LOG_ERR("Server: port initialization failed");
-			k_sleep(K_MSEC(1000));
-		}
-	}
-	for (;;) {
 		k_sleep(K_MSEC(CONFIG_BACNET_BASIC_SERVER_KSLEEP));
 		bacnet_basic_task();
-		bacnet_port_task();
+		if (port_initialized) {
+			bacnet_port_task();
+		} else {
+			port_initialized = bacnet_port_init();
+		}
 	}
 
 	return 0;
