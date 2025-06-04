@@ -21,6 +21,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
+void bacnet_settings_basic_store(BACNET_OBJECT_TYPE object_type, uint32_t object_instance,
+				 BACNET_PROPERTY_ID object_property, BACNET_ARRAY_INDEX array_index,
+				 uint8_t *application_data, int application_data_len);
 bool bacnet_settings_write_property_store(BACNET_WRITE_PROPERTY_DATA *wp_data);
 bool bacnet_settings_write_property_restore(uint16_t object_type, uint32_t object_instance,
 					    uint32_t property_id, uint32_t array_index,

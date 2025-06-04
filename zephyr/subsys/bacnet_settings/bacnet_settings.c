@@ -20,6 +20,27 @@
 #include "bacnet/wp.h"
 
 /**
+ * @brief Store the BACnet data after a WriteProperty for object property
+ * @param object_type - BACnet object type
+ * @param object_instance - BACnet object instance
+ * @param object_property - BACnet object property
+ * @param array_index - BACnet array index
+ * @param application_data - pointer to the data
+ * @param application_data_len - length of the data
+ * @note Used directly with bacnet_basic_store_callback_set() function
+ */
+void bacnet_settings_basic_store(BACNET_OBJECT_TYPE object_type, uint32_t object_instance,
+				 BACNET_PROPERTY_ID object_property, BACNET_ARRAY_INDEX array_index,
+				 uint8_t *application_data, int application_data_len)
+{
+	BACNET_STORAGE_KEY key = {0};
+
+	bacnet_storage_key_init(&key, object_type, object_instance, object_property, array_index);
+	/* store the data */
+	(void)bacnet_storage_set(&key, application_data, application_data_len);
+}
+
+/**
  * @brief Store application data to an object property after a successful
  *  WriteProperty of the object property
  * @param wp_data - pointer to the write property data

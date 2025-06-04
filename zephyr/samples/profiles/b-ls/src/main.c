@@ -36,7 +36,7 @@
 #include <bacnet_osif/bacnet_log.h>
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
-/* FIXME: get the device instance and name from settings! */
+/* Default values before we get the device instance and name from settings */
 static const uint32_t Device_Instance = 260126;
 static const char *Device_Name = "BACnet Lighting Supervisor (B-LS)";
 /* instances for our objects */
@@ -141,20 +141,15 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
 
 	(void)context;
 	LOG_INF("BACnet Stack Initialized");
-	/* initialize objects for this basic sample */
-	Device_Init(NULL);
+	/* initialize objects with default values for this basic sample */
 	Device_Set_Object_Instance_Number(Device_Instance);
 	Device_Object_Name_ANSI_Init(Device_Name);
 	/* lighting output object */
 	Lighting_Output_Create(Lighting_Instance);
 	Lighting_Output_Name_Set(Lighting_Instance, "Light-1");
-	Lighting_Output_Write_Present_Value_Callback_Set(Lighting_Output_Tracking_Value_Handler);
 	/* binary lighting output object */
 	Binary_Lighting_Output_Create(Binary_Lighting_Instance);
 	Binary_Lighting_Output_Name_Set(Binary_Lighting_Instance, "Binary-Light-1");
-	Binary_Lighting_Output_Write_Value_Callback_Set(
-		Binary_Lighting_Output_Present_Value_Handler);
-	Binary_Lighting_Output_Blink_Warn_Callback_Set(Binary_Lighting_Output_Blink_Warn_Handler);
 	/* channel object */
 	Channel_Create(Channel_Instance);
 	Channel_Name_Set(Channel_Instance, "Lights");
@@ -196,7 +191,12 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
 	}
 	/* These writable property values are stored WriteProperty.
 	   Set this callback after init to prevent recursion. */
-	Device_Write_Property_Store_Callback_Set(bacnet_settings_write_property_store);
+	bacnet_basic_store_callback_set(bacnet_settings_basic_store);
+	/* lighting output callbacks */
+	Lighting_Output_Write_Present_Value_Callback_Set(Lighting_Output_Tracking_Value_Handler);
+	Binary_Lighting_Output_Write_Value_Callback_Set(
+		Binary_Lighting_Output_Present_Value_Handler);
+	Binary_Lighting_Output_Blink_Warn_Callback_Set(Binary_Lighting_Output_Blink_Warn_Handler);
 	/* link WriteGroup service to our channel object  */
 	Write_Group_Notification.callback = Channel_Write_Group;
 	handler_write_group_notification_add(&Write_Group_Notification);

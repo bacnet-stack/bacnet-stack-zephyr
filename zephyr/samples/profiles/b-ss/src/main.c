@@ -9,7 +9,6 @@
 #include <zephyr/random/random.h>
 #include <stdint.h>
 #include <stdlib.h>
-
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
 /* BACnet Stack core API */
@@ -31,7 +30,9 @@
 #include <bacnet_osif/bacnet_log.h>
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
+/* Default values before we get the device instance and name from settings */
 static const char *Device_Name = "BACnet Smart Sensor (B-SS)";
+static const uint32_t Device_Instance = 260121;
 /* object instances */
 static const uint32_t Sensor_Instance = 1;
 /* timer for Sensor Update Interval */
@@ -64,6 +65,7 @@ static void BACnet_Smart_Sensor_Init_Handler(void *context)
 	(void)context;
 	LOG_INF("BACnet Stack Initialized");
 	/* initialize objects with default values for this basic sample */
+	Device_Set_Object_Instance_Number(Device_Instance);
 	Device_Object_Name_ANSI_Init(Device_Name);
 	Analog_Input_Create(Sensor_Instance);
 	Analog_Input_Name_Set(Sensor_Instance, "Sensor");
@@ -90,7 +92,7 @@ static void BACnet_Smart_Sensor_Init_Handler(void *context)
 	}
 	/* These writable property values are stored WriteProperty.
 	   Set this callback after init to prevent recursion. */
-	Device_Write_Property_Store_Callback_Set(bacnet_settings_write_property_store);
+	bacnet_basic_store_callback_set(bacnet_settings_basic_store);
 	LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
 	/* start the seconds cyclic timer */
 	mstimer_set(&Sensor_Update_Timer, 1000);

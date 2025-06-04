@@ -31,7 +31,7 @@
 #include <bacnet_osif/bacnet_log.h>
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
-/* FIXME: get the device instance and name from settings! */
+/* Default values before we get the device instance and name from settings */
 static const uint32_t Device_Instance = 260124;
 static const char *Device_Name = "BACnet Smart Actuator (B-SA)";
 /* object instances */
@@ -97,7 +97,7 @@ static void BACnet_Smart_Actuator_Init_Handler(void *context)
 	}
 	/* These writable property values are stored WriteProperty.
 	   Set this callback after init to prevent recursion. */
-	Device_Write_Property_Store_Callback_Set(bacnet_settings_write_property_store);
+	bacnet_basic_store_callback_set(bacnet_settings_basic_store);
 	LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
 	/* start the seconds cyclic timer */
 	mstimer_set(&Actuator_Update_Timer, 1000);
