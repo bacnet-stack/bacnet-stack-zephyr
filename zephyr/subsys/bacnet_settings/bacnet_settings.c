@@ -16,6 +16,90 @@
 #include "bacnet/bacdcode.h"
 #include "bacnet/bacstr.h"
 #include "bacnet/bacint.h"
+#include "bacnet/proplist.h"
+#include "bacnet/wp.h"
+
+/**
+ * @brief Store application data to an object property after a successful
+ *  WriteProperty of the object property
+ * @param wp_data - pointer to the write property data
+ * @note Used directly with Device_Write_Property_Store_Callback_Set() function
+ */
+bool bacnet_settings_write_property_store(BACNET_WRITE_PROPERTY_DATA *wp_data)
+{
+	BACNET_STORAGE_KEY key = {0};
+	BACNET_ARRAY_INDEX array_index;
+	int rv;
+
+	if (property_list_bacnet_array_member(wp_data->object_type, wp_data->object_property)) {
+		array_index = wp_data->array_index;
+	} else if (wp_data->object_property == PROP_PRESENT_VALUE) {
+		/* indirect Priority_Array write */
+		if (property_list_commandable_member(wp_data->object_type,
+						     wp_data->object_property)) {
+			/* store the priority as an array index to be used on restore */
+			array_index = wp_data->priority;
+		} else {
+			array_index = BACNET_ARRAY_ALL;
+		}
+	} else {
+		array_index = wp_data->array_index;
+	}
+	/* create the key */
+	bacnet_storage_key_init(&key, wp_data->object_type, wp_data->object_instance,
+				wp_data->object_property, array_index);
+	/* store the data */
+	rv = bacnet_storage_set(&key, wp_data->application_data, wp_data->application_data_len);
+	if (rv < 0) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * @brief Get a BACnet encoded value from non-volatile storage
+ * and write it to the object specific WriteProperty handler.
+ * @param object_type [in] The BACnet object type
+ * @param object_instance [in] The BACnet object instance
+ * @param property_id [in] The BACnet property id
+ * @param array_index [in] The BACnet array index
+ * @param write_function [in] the WriteProperty function of the object
+ * @param commandable [in] true if the object is commandable
+ * @param
+ * @return true on success, false on failure.
+ */
+bool bacnet_settings_write_property_restore(uint16_t object_type, uint32_t object_instance,
+					    uint32_t property_id, uint32_t array_index,
+					    write_property_function write_function)
+{
+	bool status = false;
+	uint8_t name[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = {0};
+	BACNET_STORAGE_KEY key = {0};
+	int stored_len;
+	BACNET_WRITE_PROPERTY_DATA wp_data = {0};
+
+	bacnet_storage_key_init(&key, object_type, object_instance, property_id, array_index);
+	stored_len = bacnet_storage_get(&key, name, sizeof(name));
+	if ((stored_len > 0) && (stored_len <= MAX_APDU)) {
+		wp_data.application_data_len = stored_len;
+		memcpy(&wp_data.application_data[0], &name[0], stored_len);
+		wp_data.object_type = object_type;
+		wp_data.object_instance = object_instance;
+		wp_data.object_property = property_id;
+		if (property_list_commandable_member(object_type, property_id)) {
+			/* commandable: the priority is stored as an array index */
+			wp_data.priority = array_index;
+			wp_data.array_index = BACNET_ARRAY_ALL;
+		} else {
+			wp_data.priority = BACNET_MAX_PRIORITY;
+			wp_data.array_index = array_index;
+		}
+		status = write_function(&wp_data);
+	}
+
+	return status;
+}
 
 /**
  * @brief Get a BACnet SIGNED INTEGER value from non-volatile storage

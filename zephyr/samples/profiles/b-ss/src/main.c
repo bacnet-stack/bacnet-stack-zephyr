@@ -25,9 +25,10 @@
 #endif
 #include "bacnet/basic/server/bacnet_basic.h"
 #include "bacnet/basic/server/bacnet_port.h"
-
+/* BACnet Stack Zephyr services */
+#include <bacnet_settings/bacnet_settings.h>
 /* Logging module registration is already done in ports/zephyr/main.c */
-#include "bacnet_osif/bacnet_log.h"
+#include <bacnet_osif/bacnet_log.h>
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 static const char *Device_Name = "BACnet Smart Sensor (B-SS)";
@@ -43,13 +44,50 @@ static struct mstimer Sensor_Update_Timer;
  */
 static void BACnet_Smart_Sensor_Init_Handler(void *context)
 {
+	uint32_t array_index = BACNET_ARRAY_ALL;
+	bool status = false;
+	int i;
+	int32_t analog_input_writeable_property_list[] = {
+		/* list of properties to set via WriteProperty */
+		PROP_OUT_OF_SERVICE,
+		PROP_PRESENT_VALUE,
+		PROP_UNITS,
+		PROP_COV_INCREMENT,
+	};
+	int32_t device_writeable_property_list[] = {
+		/* list of properties to set via WriteProperty */
+		PROP_OBJECT_IDENTIFIER,
+		PROP_OBJECT_NAME,
+	};
+
 	(void)context;
 	LOG_INF("BACnet Stack Initialized");
-	/* initialize child objects for this basic sample */
 	Device_Object_Name_ANSI_Init(Device_Name);
+	for (i = 0; i < ARRAY_SIZE(device_writeable_property_list); i++) {
+		status = bacnet_settings_write_property_restore(
+			OBJECT_DEVICE, BACNET_MAX_INSTANCE,
+			device_writeable_property_list[i], array_index,
+			Device_Write_Property_Local);
+		if (!status) {
+			/* no settings stored for this property, use defaults */
+		}
+	}
+	/* initialize child objects for this basic sample */
 	Analog_Input_Create(Sensor_Instance);
 	Analog_Input_Name_Set(Sensor_Instance, "Sensor");
-	Analog_Input_Present_Value_Set(Sensor_Instance, 25.0f);
+	/* Writable property values previously stored via WriteProperty */
+	for (i = 0; i < ARRAY_SIZE(analog_input_writeable_property_list); i++) {
+		status = bacnet_settings_write_property_restore(
+			OBJECT_ANALOG_INPUT, Sensor_Instance,
+			analog_input_writeable_property_list[i], array_index,
+			Analog_Input_Write_Property);
+		if (!status) {
+			/* no settings stored for this property, use defaults */
+		}
+	}
+	/* These writable property values are stored WriteProperty.
+	   Set this callback after init to prevent recursion. */
+	Device_Write_Property_Store_Callback_Set(bacnet_settings_write_property_store);
 	LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
 	/* start the seconds cyclic timer */
 	mstimer_set(&Sensor_Update_Timer, 1000);
