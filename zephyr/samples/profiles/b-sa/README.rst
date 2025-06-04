@@ -33,4 +33,4 @@ Compile this sample for the `rpi_pico` board:
 
 Compile this sample for the `adafruit_grand_central_m4_express` board with
 
-    west build -b adafruit_grand_central_m4_express -p always bacnet/zephyr/samples/profiles/b-ld/
+    west build -b adafruit_grand_central_m4_express -p always bacnet/zephyr/samples/profiles/b-sa/
