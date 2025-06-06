@@ -1,0 +1,144 @@
+name: Zephyr OS CMake
+
+on:
+  push:
+    branches: [ "default" ]
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  sample-hello-world:
+    name: Build Sample Hello World
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: bacnet
+      - name: Initialize
+        working-directory: bacnet
+        run: |
+          west init -l .
+          west update
+      - name: Samples - Hello World
+        working-directory: bacnet
+        run: |
+          pwd
+          west build -p always -b native_posix ./zephyr/samples/hello_bacnet_stack
+      - name: Archive Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: bacnet/build
+
+  sample-bacnet-profile-b-ss:
+    name: Build Sample BACnet Profile B-SS
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: bacnet
+      - name: Initialize
+        working-directory: bacnet
+        run: |
+          west init -l .
+          west update
+      - name: Sample - BACnet Profile B-SS
+        working-directory: bacnet
+        run: |
+          pwd
+          west build -b nucleo_f429zi -p always ./zephyr/samples/profiles/b-ss
+      - name: Archive Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: bacnet/build
+
+  sample-bacnet-profile-b-sa:
+    name: Build Sample BACnet Profile B-SA
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: bacnet
+      - name: Initialize
+        working-directory: bacnet
+        run: |
+          west init -l .
+          west update
+      - name: Sample - BACnet Profile B-SA
+        working-directory: bacnet
+        run: |
+          pwd
+          west build -b nucleo_f429zi -p always ./zephyr/samples/profiles/b-sa
+      - name: Archive Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: bacnet/build
+
+  sample-bacnet-profile-b-ld:
+    name: Build Sample BACnet Profile B-LD
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: bacnet
+      - name: Initialize
+        working-directory: bacnet
+        run: |
+          west init -l .
+          west update
+      - name: Sample - BACnet Profile B-LD
+        working-directory: bacnet
+        run: |
+          pwd
+          west build -b nucleo_f429zi -p always ./zephyr/samples/profiles/b-ld
+      - name: Archive Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: bacnet/build
+
+  sample-bacnet-profile-b-ls:
+    name: Build Sample BACnet Profile B-LS
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: bacnet
+      - name: Initialize
+        working-directory: bacnet
+        run: |
+          west init -l .
+          west update
+      - name: Sample - BACnet Profile B-LS
+        working-directory: bacnet
+        run: |
+          pwd
+          west build -b nucleo_f429zi -p always ./zephyr/samples/profiles/b-ls
+      - name: Archive Firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: bacnet/build

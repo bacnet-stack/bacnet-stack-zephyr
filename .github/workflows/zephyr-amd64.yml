@@ -1,0 +1,28 @@
+name: Zephyr OS CMake
+
+on:
+  push:
+    branches: [ "default" ]
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  test:
+    name: Twister Tests on AMD64
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:v0.28.0-amd64
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
+      - name: Twister Tests unit_testing
+        working-directory: bacnet
+        run: |
+          pwd
+          ./unittest.sh
+
+      - name: Archive Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit_testing
+          path: bacnet/twister-out.unit_testing
