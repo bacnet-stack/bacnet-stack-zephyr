@@ -9,7 +9,6 @@ on:
   workflow_dispatch:
 
 jobs:
-jobs:
   sample-hello-world:
     name: Build Sample Hello World
     runs-on: ubuntu-24.04
