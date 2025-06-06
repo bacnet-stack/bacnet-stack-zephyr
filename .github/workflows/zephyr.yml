@@ -9,8 +9,9 @@ on:
 
 jobs:
   build:
+    name: Build Samples for ARM64
     runs-on: ubuntu-latest
-    container: zephyrprojectrtos/ci:v0.28.0-amd64
+    container: zephyrprojectrtos/ci:v0.28.0-arm64
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
@@ -37,12 +38,36 @@ jobs:
           pwd
           west build -b nucleo_f429zi -p always ./zephyr/samples/profiles/b-ss
 
+      - name: Samples - BACnet Profile B-SA
+        working-directory: bacnet
+        run: |
+          pwd
+          west build -b nucleo_f429zi -p always ./zephyr/samples/profiles/b-sa
+
+      - name: Samples - BACnet Profile B-LS
+        working-directory: bacnet
+        run: |
+          pwd
+          west build -b nucleo_f429zi -p always ./zephyr/samples/profiles/b-ls
+
+      - name: Samples - BACnet Profile B-LD
+        working-directory: bacnet
+        run: |
+          pwd
+          west build -b nucleo_f429zi -p always ./zephyr/samples/profiles/b-ld
       - name: Archive Firmware
         uses: actions/upload-artifact@v4
         with:
           name: firmware
           path: bacnet/build
 
+  test:
+    name: Twister Tests on AMD64
+    runs-on: ubuntu-latest
+    container: zephyrprojectrtos/ci:v0.28.0-amd64
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
       - name: Twister Tests unit_testing
         working-directory: bacnet
         run: |
