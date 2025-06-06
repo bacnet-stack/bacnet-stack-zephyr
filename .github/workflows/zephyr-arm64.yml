@@ -1,18 +1,19 @@
 name: Zephyr OS ARM64 Builds
 
 on:
-  #push:
-  #  branches: [ "default" ]
-  #pull_request:
-  #  branches:
-  #    - '*'
+  push:
+    branches: [ "default" ]
+  pull_request:
+    branches:
+      - '*'
   workflow_dispatch:
 
 jobs:
+jobs:
   sample-hello-world:
     name: Build Sample Hello World
-    runs-on: ubuntu-latest
-    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    runs-on: ubuntu-24.04
+    container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
@@ -38,8 +39,8 @@ jobs:
 
   sample-bacnet-profile-b-ss:
     name: Build Sample BACnet Profile B-SS
-    runs-on: ubuntu-latest
-    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    runs-on: ubuntu-24.04
+    container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
@@ -65,8 +66,8 @@ jobs:
 
   sample-bacnet-profile-b-sa:
     name: Build Sample BACnet Profile B-SA
-    runs-on: ubuntu-latest
-    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    runs-on: ubuntu-24.04
+    container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
@@ -92,8 +93,8 @@ jobs:
 
   sample-bacnet-profile-b-ld:
     name: Build Sample BACnet Profile B-LD
-    runs-on: ubuntu-latest
-    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    runs-on: ubuntu-24.04
+    container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
@@ -119,8 +120,8 @@ jobs:
 
   sample-bacnet-profile-b-ls:
     name: Build Sample BACnet Profile B-LS
-    runs-on: ubuntu-latest
-    container: zephyrprojectrtos/ci:v0.28.0-arm64
+    runs-on: ubuntu-24.04
+    container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
