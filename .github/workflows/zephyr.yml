@@ -1,4 +1,4 @@
-name: Zephyr OS AMD64 Tests
+name: Zephyr OS Tests
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: Twister Tests on AMD64
+    name: Twister Tests
     runs-on: ubuntu-24.04
     container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
