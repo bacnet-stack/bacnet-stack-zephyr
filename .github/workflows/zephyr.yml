@@ -16,6 +16,15 @@ jobs:
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: bacnet
+      - name: Initialize
+        working-directory: bacnet
+        run: |
+          west init -l .
+          west update
       - name: Twister Tests unit_testing
         working-directory: bacnet
         run: |
