@@ -1,4 +1,4 @@
-name: Zephyr OS CMake
+name: Zephyr OS AMD64 Tests
 
 on:
   #push:

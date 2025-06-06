@@ -1,4 +1,4 @@
-name: Zephyr OS CMake
+name: Zephyr OS ARM64 Builds
 
 on:
   #push:
