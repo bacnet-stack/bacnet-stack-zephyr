@@ -1,4 +1,4 @@
-name: Zephyr OS ARM64 Builds
+name: Zephyr OS BACnet Sample Builds
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   sample-hello-world:
-    name: Build Sample Hello World
+    name: Build Hello BACnet Stack
     runs-on: ubuntu-24.04
     container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
@@ -37,7 +37,7 @@ jobs:
           path: bacnet/build
 
   sample-bacnet-profile-b-ss:
-    name: Build Sample BACnet Profile B-SS
+    name: Build BACnet Sample Profile B-SS
     runs-on: ubuntu-24.04
     container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
@@ -64,7 +64,7 @@ jobs:
           path: bacnet/build
 
   sample-bacnet-profile-b-sa:
-    name: Build Sample BACnet Profile B-SA
+    name: Build BACnet Sample Profile B-SA
     runs-on: ubuntu-24.04
     container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
@@ -91,7 +91,7 @@ jobs:
           path: bacnet/build
 
   sample-bacnet-profile-b-ld:
-    name: Build Sample BACnet Profile B-LD
+    name: Build BACnet Sample Profile B-LD
     runs-on: ubuntu-24.04
     container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
@@ -118,7 +118,7 @@ jobs:
           path: bacnet/build
 
   sample-bacnet-profile-b-ls:
-    name: Build Sample BACnet Profile B-LS
+    name: Build BACnet Sample Profile B-LS
     runs-on: ubuntu-24.04
     container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
     env:
