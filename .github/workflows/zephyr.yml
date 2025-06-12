@@ -1,5 +1,7 @@
 name: Zephyr OS Tests
-
+# For Zephyr 3.7 LTS, use the v0.26-branch
+# or the latest v0.26.x release Docker image.
+# Docker image was built on Ubuntu 22.04
 on:
   push:
     branches: [ "default" ]
@@ -11,8 +13,8 @@ on:
 jobs:
   test:
     name: Twister Tests
-    runs-on: ubuntu-24.04
-    container: ghcr.io/zephyrproject-rtos/ci:v0.27.4
+    runs-on: ubuntu-22.04
+    container: ghcr.io/zephyrproject-rtos/v0.26.18
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
