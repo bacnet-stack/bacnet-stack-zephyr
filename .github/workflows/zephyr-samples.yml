@@ -15,7 +15,7 @@ jobs:
   sample-hello-world:
     name: Build Hello BACnet Stack
     runs-on: ubuntu-22.04
-    container: ghcr.io/zephyrproject-rtos/ci:v0.26.18
+    container: ghcr.io/zephyrproject-rtos/ci:v0.26-branch
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
@@ -42,7 +42,7 @@ jobs:
   sample-bacnet-profile-b-ss:
     name: Build BACnet Sample Profile B-SS
     runs-on: ubuntu-22.04
-    container: ghcr.io/zephyrproject-rtos/v0.26.18
+    container: ghcr.io/zephyrproject-rtos/v0.26-branch
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
@@ -69,7 +69,7 @@ jobs:
   sample-bacnet-profile-b-sa:
     name: Build BACnet Sample Profile B-SA
     runs-on: ubuntu-22.04
-    container: ghcr.io/zephyrproject-rtos/v0.26.18
+    container: ghcr.io/zephyrproject-rtos/v0.26-branch
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
@@ -96,7 +96,7 @@ jobs:
   sample-bacnet-profile-b-ld:
     name: Build BACnet Sample Profile B-LD
     runs-on: ubuntu-22.04
-    container: ghcr.io/zephyrproject-rtos/v0.26.18
+    container: ghcr.io/zephyrproject-rtos/v0.26-branch
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
@@ -123,7 +123,7 @@ jobs:
   sample-bacnet-profile-b-ls:
     name: Build BACnet Sample Profile B-LS
     runs-on: ubuntu-22.04
-    container: ghcr.io/zephyrproject-rtos/v0.26.18
+    container: ghcr.io/zephyrproject-rtos/v0.26-branch
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
