@@ -15,6 +15,34 @@ rm -rf "$OUTPUT_DIR"
 # Run twister with the specified test cases and output directory
 "$TWISTER_EXE" -O "$OUTPUT_DIR" -T "$TEST_CASES_DIR"
 
+# twister output directory cleanup
+find $OUTPUT_DIR -name 'modules' -exec rm -rf {} \;
+find $OUTPUT_DIR -name 'app' -exec rm -rf \
+    '{}/../zephyr/arch
+    {}/../zephyr/boards
+    {}/../zephyr/cmake
+    {}/../zephyr/CMakeFiles
+    {}/../zephyr/dev_graph.dot
+    {}/../zephyr/drivers
+    {}/../zephyr/dts.cmake
+    {}/../zephyr/edt.pickle
+    {}/../zephyr/include
+    {}/../zephyr/isrList.bin
+    {}/../zephyr/kconfig
+    {}/../zephyr/kernel
+    {}/../zephyr/lib
+    {}/../zephyr/libzephyr.a
+    {}/../zephyr/misc
+    {}/../zephyr/modules
+    {}/../zephyr/soc
+    {}/../zephyr/subsys
+    {}/../Makefile
+    {}/../Kconfig
+    {}/../cmake_install.cmake
+    {}/../CMakeCache.txt' \;
+find $OUTPUT_DIR -name 'app' -exec rm -rf '{}' \;
+echo "Twister output cleanup completed successfully."
+
 # Check if twister ran successfully
 if [ $? -eq 0 ]; then
     echo "Twister testing completed successfully."
