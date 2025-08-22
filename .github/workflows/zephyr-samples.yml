@@ -1,6 +1,6 @@
 permissions:
   contents: read
-name: Zephyr OS Tests
+name: Zephyr OS Samples
 # For Zephyr 3.7 LTS, use the v0.26-branch
 # or the latest v0.26.x release Docker image.
 # Docker image was built on Ubuntu 22.04
