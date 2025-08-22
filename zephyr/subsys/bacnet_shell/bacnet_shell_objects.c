@@ -34,16 +34,19 @@ static int cmd_objects(const struct shell *sh, size_t argc, char **argv)
 
 	(void)argc;
 	(void)argv;
-	shell_print(sh, "List of BACnet Objects: [{");
+	/* display the object-list as well formed JSON */
+	shell_print(sh, "{\"%s\": [", bactext_property_name(PROP_OBJECT_LIST));
 	count = Device_Object_List_Count();
 	for (array_index = 1; array_index <= count; array_index++) {
 		found = Device_Object_List_Identifier(array_index, &object_type, &instance);
 		if (found) {
-			shell_print(sh, "  \"%s-%u\"%c", bactext_object_type_name(object_type),
-				    instance, (array_index == count) ? ' ' : ',');
+			shell_print(sh, "{\"%s\":{\"%s\":%u}}%s",
+				    bactext_property_name(PROP_OBJECT_IDENTIFIER),
+				    bactext_object_type_name(object_type), instance,
+				    (array_index == count) ? "]," : ",");
 		}
 	}
-	shell_print(sh, "}] -- %d objects found", count);
+	shell_print(sh, "\"object-list-size\": %d}", count);
 
 	return 0;
 }
