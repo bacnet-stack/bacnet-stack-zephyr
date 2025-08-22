@@ -34,3 +34,25 @@ Compile this sample for the `rpi_pico` board:
 Compile this sample for the `adafruit_grand_central_m4_express` board with
 
     west build -b adafruit_grand_central_m4_express -p always bacnet/zephyr/samples/profiles/b-sa/
+
+Using the Shell
+***************
+
+The shell is available on some boards via virtual communication port:
+
+    picocom --baud 115200 /dev/ttyACM0
+
+    Terminal ready
+    *** Booting Zephyr OS build v3.7.0 ***
+    [00:00:00.012,000] <inf> bacnet: BACnet Device: BACnet Smart Actuator (B-SA)
+    [00:00:00.012,000] <inf> bacnet: BACnet Stack Version 1.4.1
+    [00:00:00.012,000] <inf> bacnet: BACnet Stack Max APDU: 1476
+    uart:~$
+    bacnet   clear    device   devmem   help     history  kernel   net
+    rem      resize   retval   shell    stats
+    uart:~$ bacnet objects
+    {"object-list": [
+    {"object-identifier":{"device":260124}},
+    {"object-identifier":{"analog-output":1}},
+    {"object-identifier":{"network-port":0}}],
+    "object-list-size": 3}
