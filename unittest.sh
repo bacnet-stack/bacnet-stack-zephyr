@@ -17,7 +17,8 @@ rm -rf "$OUTPUT_DIR"
 # Run twister with the specified test cases and output directory
 "$TWISTER_EXE" -O "$OUTPUT_DIR" -p "$TWISTER_PLATFORM" -T "$TEST_CASES_DIR"
 
-# twister output directory cleanup
+# twister output directory cleanup files we do not archive
+find $OUTPUT_DIR -name 'CMakeFiles' -exec rm -rf {} \;
 find $OUTPUT_DIR -name 'modules' -exec rm -rf {} \;
 find $OUTPUT_DIR -name 'app' -exec rm -rf \
     '{}/../zephyr/arch
