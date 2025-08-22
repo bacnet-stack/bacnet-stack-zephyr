@@ -1,3 +1,5 @@
+permissions:
+  contents: read
 name: Zephyr OS Tests
 # For Zephyr 3.7 LTS, use the v0.26-branch
 # or the latest v0.26.x release Docker image.
