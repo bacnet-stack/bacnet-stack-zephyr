@@ -18,8 +18,8 @@ rm -rf "$OUTPUT_DIR"
 "$TWISTER_EXE" -O "$OUTPUT_DIR" -p "$TWISTER_PLATFORM" -T "$TEST_CASES_DIR"
 
 # twister output directory cleanup files we do not archive
-find $OUTPUT_DIR -name 'CMakeFiles' -exec rm -rf {} \;
-find $OUTPUT_DIR -name 'modules' -exec rm -rf {} \;
+find $OUTPUT_DIR -name 'CMakeFiles' -exec rm -rf {} \; 2>/dev/null
+find $OUTPUT_DIR -name 'modules' -exec rm -rf {} \; 2>/dev/null
 find $OUTPUT_DIR -name 'app' -exec rm -rf \
     '{}/../zephyr/arch
     {}/../zephyr/boards
@@ -42,8 +42,8 @@ find $OUTPUT_DIR -name 'app' -exec rm -rf \
     {}/../Makefile
     {}/../Kconfig
     {}/../cmake_install.cmake
-    {}/../CMakeCache.txt' \;
-find $OUTPUT_DIR -name 'app' -exec rm -rf '{}' \;
+    {}/../CMakeCache.txt' \; 2>/dev/null
+find $OUTPUT_DIR -name 'app' -exec rm -rf '{}' \; 2>/dev/null
 echo "Twister output cleanup completed successfully."
 
 # Check if twister ran successfully
