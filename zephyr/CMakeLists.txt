@@ -292,15 +292,18 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/datalink/bvlc6.h
     ${BACNETSTACK_SRC}/bacnet/datalink/bvlc.h
     ${BACNETSTACK_SRC}/bacnet/datalink/bvlc.c
+    ${BACNETSTACK_SRC}/bacnet/datalink/cobs.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/cobs.c
     ${BACNETSTACK_SRC}/bacnet/datalink/crc.h
     ${BACNETSTACK_SRC}/bacnet/datalink/crc.c
     ${BACNETSTACK_SRC}/bacnet/datalink/datalink.c
     ${BACNETSTACK_SRC}/bacnet/datalink/datalink.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/dlmstp.c
     ${BACNETSTACK_SRC}/bacnet/datalink/dlmstp.h
     ${BACNETSTACK_SRC}/bacnet/datalink/ethernet.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/mstp.c
     ${BACNETSTACK_SRC}/bacnet/datalink/mstp.h
     ${BACNETSTACK_SRC}/bacnet/datalink/mstpdef.h
-    ${BACNETSTACK_SRC}/bacnet/datalink/mstp.h
     ${BACNETSTACK_SRC}/bacnet/datalink/mstptext.c
     ${BACNETSTACK_SRC}/bacnet/datalink/mstptext.h
     ${BACNETSTACK_SRC}/bacnet/datetime.c
