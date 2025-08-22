@@ -641,6 +641,48 @@ config BACNET_BASIC_OBJECT_TRENDLOG
     help
         Use the BACnet basic trendlog object
 
+config BACNET_BASIC_DEVICE_OBJECT_VERSION
+    string "BACnet Device default Object Version string"
+    default "1.0.0"
+    help
+        BACnet Device Object Version string
+
+config BACNET_BASIC_DEVICE_OBJECT_NAME
+    string "BACnet Device default Object Name string"
+    default "BACnet Device"
+    help
+        BACnet Device Object Name string
+
+config BACNET_BASIC_DEVICE_DESCRIPTION
+    string "BACnet Device default Description string"
+    default "BACnet Device"
+    help
+        BACnet Device default Description string
+
+config BACNET_BASIC_DEVICE_LOCATION_NAME
+    string "BACnet Device default Location Name string"
+    default "BACnet Device"
+    help
+        BACnet Device default Location Name string
+
+config BACNET_BASIC_COV_SUBSCRIPTIONS_SIZE
+    int "BACnet Device maximum number of COV Subscriptions"
+    default 0
+    help
+        BACnet Device maximum number of COV Subscriptions
+
+config BACNET_BASIC_COV_ADDRESSES_SIZE
+    int "BACnet Device maximum number of COV Addresses"
+    default 0
+    help
+        BACnet Device maximum number of COV Addresses
+
+config BACNET_BASIC_DEVICE_SERIAL_NUMBER
+    string "BACnet Device default Serial Number string"
+    default "BACnet Device"
+    help
+        BACnet Device default Serial Number string
+
 # MINIMAL CONFIG_NET_RX_STACK_SIZE
 config NET_TX_STACK_SIZE
     int
