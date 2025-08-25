@@ -169,6 +169,7 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_awf.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_ccov.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_ccov.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_cov.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_cov.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_dcc.c
@@ -297,10 +298,12 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/datalink/crc.c
     ${BACNETSTACK_SRC}/bacnet/datalink/datalink.c
     ${BACNETSTACK_SRC}/bacnet/datalink/datalink.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/dlmstp.c
+    ${BACNETSTACK_SRC}/bacnet/datalink/dlmstp.h
     ${BACNETSTACK_SRC}/bacnet/datalink/ethernet.h
-    ${BACNETSTACK_SRC}/bacnet/datalink/mstpdef.h
-    ${BACNETSTACK_SRC}/bacnet/datalink/mstp.h
     ${BACNETSTACK_SRC}/bacnet/datalink/mstp.c
+    ${BACNETSTACK_SRC}/bacnet/datalink/mstp.h
+    ${BACNETSTACK_SRC}/bacnet/datalink/mstpdef.h
     ${BACNETSTACK_SRC}/bacnet/datalink/mstptext.c
     ${BACNETSTACK_SRC}/bacnet/datalink/mstptext.h
     ${BACNETSTACK_SRC}/bacnet/datalink/dlmstp.h
@@ -380,6 +383,11 @@ set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/h_bbmd6.c>
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/vmac.c>
     ${BACNETSTACK_SRC}/bacnet/basic/npdu/s_router.c
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_basic.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_device.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_ipv4.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_ipv4.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_credential.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_door.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_point.c>
@@ -425,7 +433,6 @@ set(BACNETSTACK_BASIC_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf_a.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_awf.c
-    ${BACNETSTACK_SRC}/bacnet/basic/service/h_ccov.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_gas_a.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_get_alarm_sum.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_getevent_a.c
@@ -512,7 +519,6 @@ zephyr_compile_definitions(
   $<$<BOOL:${CONFIG_BACDL_MSTP}>:BACDL_MSTP>
   $<$<BOOL:${CONFIG_BACDL_ETHERNET}>:BACDL_ETHERNET>
   $<$<BOOL:${CONFIG_BACDL_CUSTOM}>:BACDL_CUSTOM>
-
   # library features
   $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS}>:BACNET_BASIC_OBJECTS>
   $<$<BOOL:${CONFIG_BACNET_PROPERTY_LISTS}>:BACNET_PROPERTY_LISTS=1>
@@ -524,6 +530,8 @@ zephyr_compile_definitions(
   MAX_ADDRESS_CACHE=${CONFIG_BACNET_MAX_ADDRESS_CACHE}
   MAX_CHARACTER_STRING_BYTES=${CONFIG_BACNET_MAX_CHARACTER_STRING_BYTES}
   MAX_OCTET_STRING_BYTES=${CONFIG_BACNET_MAX_OCTET_STRING_BYTES}
+  $<$<BOOL:${CONFIG_BACNET_BASIC_COV_SUBSCRIPTIONS_SIZE}>:MAX_COV_SUBCRIPTIONS=${CONFIG_BACNET_BASIC_COV_SUBSCRIPTIONS_SIZE}>
+  $<$<BOOL:${CONFIG_BACNET_BASIC_COV_ADDRESSES_SIZE}>:MAX_COV_ADDRESSES=${CONFIG_BACNET_BASIC_COV_ADDRESSES_SIZE}>
   # BACnet data types supported for WriteProperty: all = minimal + extra
   $<$<BOOL:${CONFIG_BACAPP_ALL}>:BACAPP_ALL>
   $<$<BOOL:${CONFIG_BACAPP_MINIMAL}>:BACAPP_MINIMAL>
@@ -568,4 +576,3 @@ zephyr_compile_definitions(
 
 
   )
-
