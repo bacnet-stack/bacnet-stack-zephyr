@@ -15,7 +15,7 @@
 #include "bacnet/bactext.h"
 #include "bacnet/bacapp.h"
 /* Basic BACnet */
-#include "bacnet_basic/bacnet_basic.h"
+#include "bacnet/basic/server/bacnet_basic.h"
 
 /**
  * @brief Print BACnet packet statistics

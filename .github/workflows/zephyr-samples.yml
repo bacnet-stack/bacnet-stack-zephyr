@@ -1,0 +1,42 @@
+permissions:
+  contents: read
+name: Zephyr OS Samples
+# For Zephyr 3.7 LTS, use the v0.26-branch
+# or the latest v0.26.x release Docker image.
+# Docker image was built on Ubuntu 22.04
+on:
+  push:
+    branches: [ "default" ]
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Twister Tests
+    runs-on: ubuntu-22.04
+    container: ghcr.io/zephyrproject-rtos/ci:v0.26-branch
+    env:
+      CMAKE_PREFIX_PATH: /opt/toolchains
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: bacnet
+      - name: Initialize
+        working-directory: bacnet
+        run: |
+          west init -l .
+          west update
+      - name: Twister Tests samples
+        working-directory: bacnet
+        run: |
+          pwd
+          ./samples.sh
+
+      - name: Archive Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: samples
+          path: bacnet/twister-out.samples

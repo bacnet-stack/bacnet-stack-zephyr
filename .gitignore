@@ -55,6 +55,7 @@ Mkfile.old
 dkms.conf
 
 # Zephyr OS
+build
 outdir
 outdir-*
 scripts/basic/fixdep
