@@ -36,13 +36,88 @@ LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 #define STORAGE_PARTITION    storage_partition
 #define STORAGE_PARTITION_ID FIXED_PARTITION_ID(STORAGE_PARTITION)
 
+static bacnet_storage_restore_callback BACnet_Storage_Restore_Callback;
+
+int bacnet_storage_restore(BACNET_STORAGE_KEY *key, const void *data,
+					       size_t data_size)
+{
+	int err = 0;
+
+	if (BACnet_Storage_Restore_Callback) {
+		err = BACnet_Storage_Restore_Callback(key, data, data_size);
+	}
+
+	return err;
+}
+
+/**
+ * @brief Attempt to convert a numeric string into a unsigned long integer
+ * @param search_name - string to convert
+ * @param value - where to put the converted value
+ * @return true if converted and found_index is set
+ * @return false if not converted and found_index is not set
+ */
+bool bacnet_storage_strtoul(const char *search_name, unsigned long *long_value)
+{
+    char *endptr;
+    unsigned long value;
+
+    value = strtoul(search_name, &endptr, 0);
+    if (endptr == search_name) {
+        /* No digits found */
+        return false;
+    }
+    if (value == ULONG_MAX) {
+        /* If the correct value is outside the range of representable values,
+           {ULONG_MAX} shall be returned */
+        return false;
+    }
+    if (*endptr != '\0') {
+        /* Extra text found */
+        return false;
+    }
+	if (long_value) {
+	    *long_value = (unsigned)value;
+	}
+
+    return true;
+}
+
+int bacnet_storage_handler_set(const char *name, size_t len, settings_read_cb read_cb,
+		  void *cb_arg);
+int bacnet_storage_handler_commit(void);
+int bacnet_storage_handler_export(int (*cb)(const char *name,
+			       const void *value, size_t val_len));
+
+/* dynamic main tree handler */
+struct settings_handler bacnet_storage_handler = {
+		.name = "bacnet",
+		/* This gets called when asking for a settings element value
+		   by its name using settings_runtime_get() from the runtime backend.*/
+		.h_get = NULL,
+		/* This gets called when the value is loaded from persisted storage
+		   with settings_load(), or when using settings_runtime_set() from
+		   the runtime backend.*/
+		.h_set = bacnet_storage_handler_set,
+		/* This gets called after the settings have been loaded in full.
+		   Sometimes you don’t want an individual setting value to take
+		   effect right away, for example if there are multiple settings
+		   which are interdependent.*/
+		.h_commit = bacnet_storage_handler_commit,
+		/* This gets called to write all current settings.
+		   This happens when settings_save() tries to save the settings
+		   or transfer to any user-implemented back-end.*/
+		.h_export = bacnet_storage_handler_export
+};
+
 /**
  * @brief Initialize the non-volatile data
  */
-void bacnet_storage_init(void)
+int bacnet_storage_init(bacnet_storage_restore_callback restore_cb)
 {
-	int rc;
+	int rc = 0;
 
+	BACnet_Storage_Restore_Callback = restore_cb;
 #if defined(CONFIG_SETTINGS_FILE) && defined(CONFIG_FILE_SYSTEM_LITTLEFS)
 	FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(cstorage);
 
@@ -67,10 +142,18 @@ void bacnet_storage_init(void)
 	rc = settings_subsys_init();
 	if (rc) {
 		LOG_ERR("settings subsys initialization: fail (err %d)", rc);
-		return;
+		return rc;
 	}
+	rc = settings_register(&bacnet_storage_handler);
+	if (rc) {
+		LOG_ERR("settings_register failed (err %d)", rc);
+		return rc;
+	}
+	settings_load();
 
 	LOG_INF("settings subsys initialization: OK.");
+
+	return rc;
 }
 
 /**
@@ -121,6 +204,142 @@ int bacnet_storage_key_encode(char *buffer, size_t buffer_size, BACNET_STORAGE_K
 	}
 
 	return rc;
+}
+
+/**
+ * @brief Decode a storage key string into a BACnet object property
+ * @param name settings name key string
+ * @param key BACnet key (type, instance, property, array index)
+ * @return 0=success, negative on error
+ */
+int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
+{
+	const char *next;
+	size_t next_len;
+    char object_type_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
+    char object_instance_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
+    char property_id_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
+    char array_index_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
+	unsigned long long_value = 0;
+	const char base_name[] = CONFIG_BACNET_STORAGE_BASE_NAME;
+
+	/* settings root name */
+	if (settings_name_steq(path, base_name, &next) && next) {
+		/* OPTIONAL - called from shell */
+		path = next;
+	}
+	/* object-type */
+	next_len = settings_name_next(path, &next);
+	if (next) {
+		if (next_len + 1 > sizeof(object_type_name)) {
+			LOG_ERR("object-type name too long: %d", next_len);
+			return -EINVAL;
+		}
+		memcpy(object_type_name, path, next_len);
+		if (bacnet_storage_strtoul(object_type_name, &long_value)) {
+			key->object_type = long_value;
+		} else {
+			return -EINVAL;
+		}
+	} else {
+		return -EINVAL;
+	}
+	/* object-instance */
+	path = next;
+	next_len = settings_name_next(path, &next);
+	if (next) {
+		if (next_len + 1 > sizeof(object_instance_name)) {
+			LOG_ERR("object-instance name too long: %d", next_len);
+			return -EINVAL;
+		}
+		memcpy(object_instance_name, path, next_len);
+		if (bacnet_storage_strtoul(object_instance_name, &long_value)) {
+			key->object_instance = long_value;
+		} else {
+			return -EINVAL;
+		}
+	} else {
+		return -EINVAL;
+	}
+	/* property-id */
+	path = next;
+	next_len = settings_name_next(path, &next);
+	if (next) {
+		if (next_len + 1 > sizeof(property_id_name)) {
+			LOG_ERR("property-id name too long: %d", next_len);
+			return -EINVAL;
+		}
+		memcpy(property_id_name, path, next_len);
+		if (bacnet_storage_strtoul(property_id_name, &long_value)) {
+			key->property_id = long_value;
+		} else {
+			return -EINVAL;
+		}
+	} else {
+		return -EINVAL;
+	}
+	/* array-index - OPTIONAL */
+	path = next;
+	next_len = settings_name_next(path, &next);
+	if (next) {
+		if (next_len + 1 > sizeof(array_index_name)) {
+			LOG_ERR("array-index name too long: %d", next_len);
+			return -EINVAL;
+		}
+		memcpy(array_index_name, path, next_len);
+		if (bacnet_storage_strtoul(array_index_name, &long_value)) {
+			key->array_index = long_value;
+		} else {
+			return -EINVAL;
+		}
+	} else {
+		key->array_index = BACNET_STORAGE_ARRAY_INDEX_NONE;
+	}
+
+	return 0;
+}
+
+int bacnet_storage_handler_set(const char *path, size_t data_len,
+	settings_read_cb read_cb, void *cb_arg)
+{
+	int rc = -EINVAL;
+	BACNET_STORAGE_KEY key = { 0 };
+	uint8_t data[BACNET_STORAGE_VALUE_SIZE_MAX] = { 0 };
+
+	if (bacnet_storage_key_decode(path, &key)==0) {
+		/* get the data if there is any */
+		if (data_len == 0) {
+			rc = 0;
+		} else {
+			rc = read_cb(cb_arg, &data, sizeof(data));
+			if (rc < 0) {
+				if (rc == -ENOENT) {
+					rc = 0;
+				} else {
+					LOG_ERR("Data restore error: %d", rc);
+
+				}
+			} else {
+				bacnet_storage_restore(&key, data, data_len);
+				LOG_INF("Data restored:%s %d bytes", path, data_len);
+			}
+		}
+	}
+
+	return rc;
+}
+
+int bacnet_storage_handler_commit(void)
+{
+    LOG_INF("Restored all settings");
+	return 0;
+}
+
+int bacnet_storage_handler_export(int (*cb)(const char *name,
+			       const void *value, size_t val_len))
+{
+	LOG_INF("Export requested");
+	return 0;
 }
 
 /**

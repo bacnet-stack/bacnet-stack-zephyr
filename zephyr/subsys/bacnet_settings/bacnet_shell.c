@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <zephyr/shell/shell.h>
 #include <bacnet_settings/bacnet_storage.h>
+#include <bacnet/bactext.h>
 
 /**
  * @brief Get or set a string using BACnet storage subsystem
@@ -25,12 +26,18 @@ static int cmd_key(BACNET_STORAGE_KEY *key, const struct shell *sh, size_t argc,
 	uint32_t property_id = 77;
 	uint32_t array_index = BACNET_STORAGE_ARRAY_INDEX_NONE;
 	long value = 0;
+	int found_index = 0;
 
 	if (argc < 3) {
 		shell_error(sh, "Usage: %s <object-type> <instance> <property> [value]", argv[0]);
 		return -EINVAL;
 	}
-	value = strtoul(argv[1], NULL, 0);
+	if (bactext_object_type_strtol(argv[1], &found_index)) {
+		value = found_index;
+	} else {
+		shell_error(sh, "Invalid object-type: %s.", argv[1]);
+		return -EINVAL;
+	}
 	if ((value < 0) || (value >= UINT16_MAX)) {
 		shell_error(sh, "Invalid object-type: %s. Must be 0-65535.", argv[1]);
 		return -EINVAL;
@@ -42,7 +49,12 @@ static int cmd_key(BACNET_STORAGE_KEY *key, const struct shell *sh, size_t argc,
 		return -EINVAL;
 	}
 	object_instance = (uint32_t)value;
-	value = strtoul(argv[3], NULL, 0);
+	if (bactext_property_strtol(argv[3], &found_index)) {
+		value = found_index;
+	} else {
+		shell_error(sh, "Invalid property: %s.", argv[1]);
+		return -EINVAL;
+	}
 	if (value > UINT32_MAX) {
 		shell_error(sh, "Invalid property: %s. Must be 0-4294967295.", argv[3]);
 		return -EINVAL;
@@ -65,7 +77,7 @@ static int cmd_string(const struct shell *sh, size_t argc, char **argv)
 {
 	char key_name[BACNET_STORAGE_KEY_SIZE_MAX + 1] = {0};
 	uint8_t data[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = {0};
-	BACNET_STORAGE_KEY key = {0};
+	BACNET_STORAGE_KEY key = {0}, test_key = {0};
 	size_t arg_len = 0;
 	int rc;
 
@@ -75,6 +87,14 @@ static int cmd_string(const struct shell *sh, size_t argc, char **argv)
 	}
 	/* convert the key to a string for the shell */
 	(void)bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+	/* convert the key string to numbers for a test */
+	if (bacnet_storage_key_decode(key_name, &test_key) == 0) {
+		shell_print(sh, "key=%lu/%lu/%lu/%lu",
+			(unsigned long)test_key.object_type,
+			(unsigned long)test_key.object_instance,
+			(unsigned long)test_key.property_id,
+			(unsigned long)test_key.array_index);
+	}
 	if (argc > 4) {
 		arg_len = strlen(argv[4]);
 		rc = bacnet_storage_set(&key, argv[4], arg_len);

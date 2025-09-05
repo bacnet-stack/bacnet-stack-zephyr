@@ -79,32 +79,25 @@ bool bacnet_settings_write_property_store(BACNET_WRITE_PROPERTY_DATA *wp_data)
 }
 
 /**
- * @brief Get a BACnet encoded value from non-volatile storage
- * and write it to the object specific WriteProperty handler.
- * @param object_type [in] The BACnet object type
+ * @brief Callback from the Zephyr settings_restore iterator
+ * @param key [in] The BACnet object type
  * @param object_instance [in] The BACnet object instance
  * @param property_id [in] The BACnet property id
  * @param array_index [in] The BACnet array index
  * @param write_function [in] the WriteProperty function of the object
- * @param commandable [in] true if the object is commandable
- * @param
  * @return true on success, false on failure.
  */
-bool bacnet_settings_write_property_restore(uint16_t object_type, uint32_t object_instance,
+bool bacnet_settings_restore(uint16_t object_type, uint32_t object_instance,
 					    uint32_t property_id, uint32_t array_index,
+						const void *data, size_t data_len,
 					    write_property_function write_function)
 {
 	bool status = false;
-	uint8_t name[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = {0};
-	BACNET_STORAGE_KEY key = {0};
-	int stored_len;
 	BACNET_WRITE_PROPERTY_DATA wp_data = {0};
 
-	bacnet_storage_key_init(&key, object_type, object_instance, property_id, array_index);
-	stored_len = bacnet_storage_get(&key, name, sizeof(name));
-	if ((stored_len > 0) && (stored_len <= MAX_APDU)) {
-		wp_data.application_data_len = stored_len;
-		memcpy(&wp_data.application_data[0], &name[0], stored_len);
+	if ((data_len > 0) && (data_len <= MAX_APDU)) {
+		wp_data.application_data_len = data_len;
+		memcpy(&wp_data.application_data[0], data, data_len);
 		wp_data.object_type = object_type;
 		wp_data.object_instance = object_instance;
 		wp_data.object_property = property_id;
@@ -118,6 +111,35 @@ bool bacnet_settings_write_property_restore(uint16_t object_type, uint32_t objec
 		}
 		status = write_function(&wp_data);
 	}
+
+	return status;
+}
+
+/**
+ * @brief Get a BACnet encoded value from non-volatile storage
+ * and write it to the object specific WriteProperty handler.
+ * @param object_type [in] The BACnet object type
+ * @param object_instance [in] The BACnet object instance
+ * @param property_id [in] The BACnet property id
+ * @param array_index [in] The BACnet array index
+ * @param write_function [in] the WriteProperty function of the object
+ * @return true on success, false on failure.
+ */
+bool bacnet_settings_write_property_restore(uint16_t object_type, uint32_t object_instance,
+					    uint32_t property_id, uint32_t array_index,
+					    write_property_function write_function)
+{
+	bool status = false;
+	uint8_t data[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = {0};
+	BACNET_STORAGE_KEY key = {0};
+	int data_len;
+
+	bacnet_storage_key_init(&key, object_type, object_instance, property_id, array_index);
+	data_len = bacnet_storage_get(&key, data, sizeof(data));
+ 	status = bacnet_settings_restore(object_type, object_instance,
+					    property_id, array_index,
+						data, data_len,
+					    write_function);
 
 	return status;
 }
