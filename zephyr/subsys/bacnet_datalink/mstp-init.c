@@ -199,3 +199,18 @@ void mstp_init_port(uint8_t mac, uint32_t baud, uint8_t max_master)
     MSTP_Port.UserData = &MSTP_User_Data;
     dlmstp_init((char *)&MSTP_Port);
 }
+
+/**
+ * @brief BACnet MS/TP Thread
+ */
+static void mstp_thread(void)
+{
+	LOG_INF("MS/TP: started");
+	mstp_data_init();
+    for (;;) {
+        mstp_receive_frame();
+        mstp_check_for_timeout();
+        mstp_send_frame();
+        k_yield();
+    }
+}

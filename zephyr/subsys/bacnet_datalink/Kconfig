@@ -1,0 +1,42 @@
+# Kconfig - Subsystem BACnet Datalink configuration options
+# @author Steve Karg <skarg@users.sourceforge.net>
+# @date August 2025
+# @copyright SPDX-License-Identifier: Apache-2.0
+
+menuconfig BACNET_DATALINK_MSTP
+    bool "BACNET_DATALINK_MSTP"
+    help
+      This option enables BACnet MS/TP services
+
+if BACNET_DATALINK_MSTP
+
+    module = BACNET_DATALINK_MSTP
+    module-str = bacnet_mstp
+
+    config BACNET_DATALINK_MSTP_APP_PRIORITY
+        int "BACnet MSTP init priority"
+        default 0
+        help
+          This sets the starting priority of the thread.
+
+    config BACNET_DATALINK_MSTP_PRIO
+        int "BACnet MSTP thread priority"
+        default 50
+        help
+          This sets the execution priority of the thread.
+
+    config BACNET_DATALINK_MSTP_STACK_SIZE
+        int "BACnet MSTP stack size"
+        default 4096
+        help
+          This sets the stack size of the thread.
+
+	config BACNET_DATALINK_MSTP_RX_PACKET_COUNT
+		int "BACnet MS/TP Datalink receive packet count"
+		default 8 if BACDL_MSTP
+		help
+			Number of receive packets for BACnet MS/TP service
+
+endif
+
+rsource "rs485/Kconfig"
