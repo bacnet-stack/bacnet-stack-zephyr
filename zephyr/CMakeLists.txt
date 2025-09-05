@@ -387,7 +387,8 @@ set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_device.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_ipv4.c>
-    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_ipv4.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_ipv6.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_mstp.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_credential.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_door.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_point.c>
