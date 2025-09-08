@@ -41,7 +41,7 @@ manifest:
       revision: master
     - name: zephyr
       path: zephyr
-      revision: v3.7.0
+      revision: v3.7.1
       remote: zephyrproject-rtos
       west-commands: scripts/west-commands.yml
       import:

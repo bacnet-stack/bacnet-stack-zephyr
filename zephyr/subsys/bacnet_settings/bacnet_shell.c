@@ -11,6 +11,7 @@
 #include <zephyr/shell/shell.h>
 #include <bacnet_settings/bacnet_storage.h>
 #include <bacnet/bactext.h>
+#include <bacnet/proplist.h>
 #include <bacnet/wp.h>
 
 static const char Storage_Base_Name[] = CONFIG_BACNET_STORAGE_BASE_NAME;
@@ -29,6 +30,7 @@ static int cmd_key(BACNET_STORAGE_KEY *key, const struct shell *sh, size_t argc,
 	uint32_t property_id = 77;
 	uint32_t array_index = BACNET_STORAGE_ARRAY_INDEX_NONE;
 	long value = 0;
+	unsigned long unsigned_value = 0;
 	int found_index = 0;
 
 	if (argc < 3) {
@@ -46,12 +48,31 @@ static int cmd_key(BACNET_STORAGE_KEY *key, const struct shell *sh, size_t argc,
 		return -EINVAL;
 	}
 	object_type = (uint16_t)value;
-	value = strtoul(argv[2], NULL, 0);
-	if (value > 4194303) {
+	if (!bacnet_storage_strtoul(argv[2], &unsigned_value)) {
+		shell_error(sh, "Invalid object-instance: %s.", argv[2]);
+		return -EINVAL;
+	}
+	if (unsigned_value > 4194303) {
 		shell_error(sh, "Invalid object-instance: %s. Must be 0-4194303.", argv[2]);
 		return -EINVAL;
 	}
-	object_instance = (uint32_t)value;
+	object_instance = (uint32_t)unsigned_value;
+	/* property can have @ to denote priority or array */
+	char *at_ptr = strchr(argv[3], '@');
+	if (at_ptr) {
+		if (!bacnet_storage_strtoul(at_ptr + 1, &unsigned_value)) {
+			shell_error(sh, "Invalid array-index: \"%s\"", at_ptr);
+			return -EINVAL;
+		}
+		if (unsigned_value > UINT32_MAX) {
+			shell_error(sh, "Invalid array-index: \"%s\". Must be 0-4294967295.",
+				    at_ptr);
+			return -EINVAL;
+		}
+		array_index = (uint32_t)unsigned_value;
+		/* null terminate the string at the @ symbol */
+		*at_ptr = 0;
+	}
 	if (bactext_property_strtol(argv[3], &found_index)) {
 		value = found_index;
 	} else {
@@ -65,6 +86,111 @@ static int cmd_key(BACNET_STORAGE_KEY *key, const struct shell *sh, size_t argc,
 	property_id = (uint32_t)value;
 	/* setup the storage key */
 	bacnet_storage_key_init(key, object_type, object_instance, property_id, array_index);
+
+	return 0;
+}
+
+/**
+ * @brief Get or set a string using BACnet storage subsystem
+ * @param sh Shell
+ * @param argc Number of arguments
+ * @param argv Argument list
+ * @return 0 on success, negative on failure
+ */
+static int cmd_value(const struct shell *sh, size_t argc, char **argv)
+{
+	char key_name[BACNET_STORAGE_KEY_SIZE_MAX + 1] = {0};
+	uint8_t data[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = {0};
+	BACNET_STORAGE_KEY key = {0};
+	int rc;
+	unsigned enumerated_value = 0;
+	bool status = false;
+	bool null_value = false;
+	BACNET_APPLICATION_DATA_VALUE value = {0};
+	BACNET_OBJECT_PROPERTY_VALUE object_value = {0};
+	char value_name[80] = {0};
+	char *value_string = NULL;
+	uint8_t value_tag;
+	int len;
+
+	rc = cmd_key(&key, sh, argc, argv);
+	if (rc < 0) {
+		return rc;
+	}
+	/* convert the key to a string for the shell to print */
+	(void)bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+	if (argc > 4) {
+		value_string = argv[4];
+		if (property_list_commandable_member(key.object_type, key.property_id)) {
+			/* check for case insensitive NULL string */
+			if (bacnet_strnicmp(value_string, "NULL", 4) == 0) {
+				null_value = true;
+			}
+		}
+		/* convert the string value into a tagged union value */
+		if (null_value) {
+			value.tag = BACNET_APPLICATION_TAG_NULL;
+			status = true;
+		} else {
+			value_tag = bacapp_known_property_tag(key.object_type, key.property_id);
+			/* check for known property types */
+			if (value_tag == BACNET_APPLICATION_TAG_ENUMERATED) {
+				status = bactext_object_property_strtoul(
+					(BACNET_OBJECT_TYPE)key.object_type,
+					(BACNET_PROPERTY_ID)key.property_id, value_string,
+					&enumerated_value);
+				if (status) {
+					value.tag = BACNET_APPLICATION_TAG_ENUMERATED;
+					value.type.Enumerated = (uint32_t)enumerated_value;
+				}
+			} else {
+				status = bacapp_parse_application_data(value_tag, value_string,
+								       &value);
+			}
+		}
+		if (status) {
+			shell_print(sh, "Parsed %s = %s as tag=%u", key_name, value_string,
+				    value.tag);
+			len = bacapp_encode_application_data(NULL, &value);
+			if (len <= 0) {
+				return false;
+			} else if (len > sizeof(data)) {
+				return false;
+			}
+			len = bacapp_encode_application_data(data, &value);
+			rc = bacnet_storage_set(&key, data, len);
+			if (rc == 0) {
+				shell_print(sh, "Set %s = %s", key_name, value_string);
+			} else {
+				shell_error(sh, "Unable to set %s = %s", key_name, value_string);
+				return -EINVAL;
+			}
+		} else {
+			shell_error(sh, "Unable to parse value for %s = %s", key_name,
+				    value_string);
+			return -EINVAL;
+		}
+	} else {
+		rc = bacnet_storage_get(&key, data, sizeof(data));
+		if (rc < 0) {
+			shell_error(sh, "Unable to get %s", key_name);
+			return -EINVAL;
+		}
+		/* convert to printable value */
+		len = bacapp_decode_known_array_property(data, rc, &value, key.object_type,
+							 key.property_id, key.array_index);
+		if (len < 0) {
+			shell_error(sh, "Unable to decode value for %s", key_name);
+			return -EINVAL;
+		}
+		object_value.object_type = key.object_type;
+		object_value.object_instance = key.object_instance;
+		object_value.object_property = key.property_id;
+		object_value.array_index = key.array_index;
+		object_value.value = &value;
+		bacapp_snprintf_value(value_name, sizeof(value_name), &object_value);
+		shell_print(sh, "Get %s = %s", key_name, value_name);
+	}
 
 	return 0;
 }
@@ -200,6 +326,7 @@ static int cmd_list(const struct shell *sh, size_t argc, char **argv)
 
 SHELL_STATIC_SUBCMD_SET_CREATE(
 	sub_bacnet_settings_cmds, SHELL_CMD(list, NULL, "list BACnet storage strings", cmd_list),
+	SHELL_CMD(value, NULL, "get or set BACnet storage value", cmd_value),
 	SHELL_CMD(string, NULL, "get or set BACnet storage string", cmd_string),
 	SHELL_CMD(delete, NULL, "delete BACnet storage string", cmd_delete), SHELL_SUBCMD_SET_END);
 
