@@ -39,20 +39,16 @@ static const uint32_t Sensor_Instance = 1;
 /* timer for Sensor Update Interval */
 static struct mstimer Sensor_Update_Timer;
 
-int BACnet_Smart_Sensor_Settings_Restore(
-	BACNET_STORAGE_KEY *key, const void *data, size_t data_len)
+/**
+ * @brief Callback data for WriteProperty restore iterator
+ * @param write_function The WriteProperty function to call
+ * @param context The context to pass to the WriteProperty function
+ * @return true if the WriteProperty succeeded
+ */
+static bool Settings_Restore_Callback(BACNET_WRITE_PROPERTY_DATA *wp_data, void *context)
 {
-	bool status;
-	int err = 0;
-
-	status = bacnet_settings_restore(key->object_type, key->object_instance,
-		key->property_id, key->array_index,
-		data, data_len, Device_Write_Property);
-	if (!status) {
-		err = -EACCES;
-	}
-
-	return err;
+	(void)context;
+	return Device_Write_Property(wp_data);
 }
 
 /**
@@ -63,23 +59,6 @@ int BACnet_Smart_Sensor_Settings_Restore(
 static void BACnet_Smart_Sensor_Init_Handler(void *context)
 {
 	const float default_temperature = 25.0f;
-#if 0
-	uint32_t array_index = BACNET_ARRAY_ALL;
-	bool status = false;
-	int i;
-	int32_t analog_input_writeable_property_list[] = {
-		/* list of properties to set via WriteProperty */
-		PROP_OUT_OF_SERVICE,
-		PROP_PRESENT_VALUE,
-		PROP_UNITS,
-		PROP_COV_INCREMENT,
-	};
-	int32_t device_writeable_property_list[] = {
-		/* list of properties to set via WriteProperty */
-		PROP_OBJECT_IDENTIFIER,
-		PROP_OBJECT_NAME,
-	};
-#endif
 
 	(void)context;
 	LOG_INF("BACnet Stack Initialized");
@@ -92,28 +71,10 @@ static void BACnet_Smart_Sensor_Init_Handler(void *context)
 	Analog_Input_Units_Set(Sensor_Instance, UNITS_DEGREES_CELSIUS);
 	Analog_Input_COV_Increment_Set(Sensor_Instance, 1.0f);
 	/* restore any property values previously stored via WriteProperty */
-	bacnet_storage_init(BACnet_Smart_Sensor_Settings_Restore);
-#if 0
-	for (i = 0; i < ARRAY_SIZE(device_writeable_property_list); i++) {
-		status = bacnet_settings_write_property_restore(
-			OBJECT_DEVICE, BACNET_MAX_INSTANCE, device_writeable_property_list[i],
-			array_index, Device_Write_Property_Local);
-		if (!status) {
-			/* no settings stored for this property, use defaults */
-		}
-	}
-	for (i = 0; i < ARRAY_SIZE(analog_input_writeable_property_list); i++) {
-		status = bacnet_settings_write_property_restore(
-			OBJECT_ANALOG_INPUT, Sensor_Instance,
-			analog_input_writeable_property_list[i], array_index,
-			Analog_Input_Write_Property);
-		if (!status) {
-			/* no settings stored for this property, use defaults */
-		}
-	}
-#endif
+	bacnet_settings_init();
+	bacnet_settings_write_property_restore(&Settings_Restore_Callback, NULL);
 	/* writable property values are stored with WriteProperty.
-	   Set this callback after init to prevent recursion. */
+	   Set this callback after restore to prevent recursion. */
 	bacnet_basic_store_callback_set(bacnet_settings_basic_store);
 	LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
 	/* start the seconds cyclic timer */

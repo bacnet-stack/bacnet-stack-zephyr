@@ -45,26 +45,24 @@ static void BACnet_Smart_Actuator_Datalink_Init(void)
 }
 
 /**
+ * @brief Callback data for WriteProperty restore iterator
+ * @param write_function The WriteProperty function to call
+ * @param context The context to pass to the WriteProperty function
+ * @return true if the WriteProperty succeeded
+ */
+static bool Settings_Restore_Callback(BACNET_WRITE_PROPERTY_DATA *wp_data, void *context)
+{
+	(void)context;
+	return Device_Write_Property(wp_data);
+}
+
+/**
  * @brief BACnet Project Initialization Handler
  * @param context [in] The context to pass to the callback function
  * @note This is called from the BACnet task
  */
 static void BACnet_Smart_Actuator_Init_Handler(void *context)
 {
-	uint32_t array_index = BACNET_ARRAY_ALL;
-	bool status = false;
-	int i;
-	int32_t analog_output_writeable_property_list[] = {
-		/* list of properties to set via WriteProperty */
-		PROP_OUT_OF_SERVICE, PROP_PRESENT_VALUE,  PROP_UNITS,
-		PROP_COV_INCREMENT,  PROP_MIN_PRES_VALUE, PROP_MAX_PRES_VALUE,
-	};
-	int32_t device_writeable_property_list[] = {
-		/* list of properties to set via WriteProperty */
-		PROP_OBJECT_IDENTIFIER,
-		PROP_OBJECT_NAME,
-	};
-
 	(void)context;
 	LOG_INF("BACnet Stack Initialized");
 	BACnet_Smart_Actuator_Datalink_Init();
@@ -78,25 +76,10 @@ static void BACnet_Smart_Actuator_Init_Handler(void *context)
 	Analog_Output_Min_Pres_Value_Set(Actuator_Instance, 0.0f);
 	Analog_Output_Max_Pres_Value_Set(Actuator_Instance, 100.0f);
 	/* restore any property values previously stored via WriteProperty */
-	for (i = 0; i < ARRAY_SIZE(device_writeable_property_list); i++) {
-		status = bacnet_settings_write_property_restore(
-			OBJECT_DEVICE, BACNET_MAX_INSTANCE, device_writeable_property_list[i],
-			array_index, Device_Write_Property_Local);
-		if (!status) {
-			/* no settings stored for this property, use defaults */
-		}
-	}
-	for (i = 0; i < ARRAY_SIZE(analog_output_writeable_property_list); i++) {
-		status = bacnet_settings_write_property_restore(
-			OBJECT_ANALOG_OUTPUT, Actuator_Instance,
-			analog_output_writeable_property_list[i], array_index,
-			Analog_Output_Write_Property);
-		if (!status) {
-			/* no settings stored for this property, use defaults */
-		}
-	}
-	/* These writable property values are stored WriteProperty.
-	   Set this callback after init to prevent recursion. */
+	bacnet_settings_init();
+	bacnet_settings_write_property_restore(&Settings_Restore_Callback, NULL);
+	/* writable property values are stored with WriteProperty.
+	   Set this callback after restore to prevent recursion. */
 	bacnet_basic_store_callback_set(bacnet_settings_basic_store);
 	LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
 	/* start the seconds cyclic timer */

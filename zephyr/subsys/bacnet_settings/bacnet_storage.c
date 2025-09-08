@@ -37,14 +37,22 @@ LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 #define STORAGE_PARTITION_ID FIXED_PARTITION_ID(STORAGE_PARTITION)
 
 static bacnet_storage_restore_callback BACnet_Storage_Restore_Callback;
+static void *BACnet_Storage_Restore_Context;
 
-int bacnet_storage_restore(BACNET_STORAGE_KEY *key, const void *data,
-					       size_t data_size)
+/**
+ * @brief Restore a BACnet storage item
+ * @param key BACnet key (type, instance, property, array index)
+ * @param data - pointer to the data to restore
+ * @param data_size - size of the data to restore
+ * @return 0 on success, negative on failure
+ */
+int bacnet_storage_restore(BACNET_STORAGE_KEY *key, const void *data, size_t data_size)
 {
 	int err = 0;
 
 	if (BACnet_Storage_Restore_Callback) {
-		err = BACnet_Storage_Restore_Callback(key, data, data_size);
+		err = BACnet_Storage_Restore_Callback(key, data, data_size,
+						      BACnet_Storage_Restore_Context);
 	}
 
 	return err;
@@ -59,65 +67,57 @@ int bacnet_storage_restore(BACNET_STORAGE_KEY *key, const void *data,
  */
 bool bacnet_storage_strtoul(const char *search_name, unsigned long *long_value)
 {
-    char *endptr;
-    unsigned long value;
+	char *endptr;
+	unsigned long value;
 
-    value = strtoul(search_name, &endptr, 0);
-    if (endptr == search_name) {
-        /* No digits found */
-        return false;
-    }
-    if (value == ULONG_MAX) {
-        /* If the correct value is outside the range of representable values,
-           {ULONG_MAX} shall be returned */
-        return false;
-    }
-    if (*endptr != '\0') {
-        /* Extra text found */
-        return false;
-    }
+	value = strtoul(search_name, &endptr, 0);
+	if (endptr == search_name) {
+		/* No digits found */
+		return false;
+	}
+	if (value == ULONG_MAX) {
+		/* If the correct value is outside the range of representable values,
+		   {ULONG_MAX} shall be returned */
+		return false;
+	}
+	if (*endptr != '\0') {
+		/* Extra text found */
+		return false;
+	}
 	if (long_value) {
-	    *long_value = (unsigned)value;
+		*long_value = (unsigned)value;
 	}
 
-    return true;
+	return true;
 }
-
-int bacnet_storage_handler_set(const char *name, size_t len, settings_read_cb read_cb,
-		  void *cb_arg);
-int bacnet_storage_handler_commit(void);
-int bacnet_storage_handler_export(int (*cb)(const char *name,
-			       const void *value, size_t val_len));
 
 /* dynamic main tree handler */
 struct settings_handler bacnet_storage_handler = {
-		.name = "bacnet",
-		/* This gets called when asking for a settings element value
-		   by its name using settings_runtime_get() from the runtime backend.*/
-		.h_get = NULL,
-		/* This gets called when the value is loaded from persisted storage
-		   with settings_load(), or when using settings_runtime_set() from
-		   the runtime backend.*/
-		.h_set = bacnet_storage_handler_set,
-		/* This gets called after the settings have been loaded in full.
-		   Sometimes you don’t want an individual setting value to take
-		   effect right away, for example if there are multiple settings
-		   which are interdependent.*/
-		.h_commit = bacnet_storage_handler_commit,
-		/* This gets called to write all current settings.
-		   This happens when settings_save() tries to save the settings
-		   or transfer to any user-implemented back-end.*/
-		.h_export = bacnet_storage_handler_export
-};
+	.name = "bacnet",
+	/* This gets called when asking for a settings element value
+	   by its name using settings_runtime_get() from the runtime backend.*/
+	.h_get = NULL,
+	/* This gets called when the value is loaded from persisted storage
+	   with settings_load(), or when using settings_runtime_set() from
+	   the runtime backend.*/
+	.h_set = bacnet_storage_handler_set,
+	/* This gets called after the settings have been loaded in full.
+	   Sometimes you don’t want an individual setting value to take
+	   effect right away, for example if there are multiple settings
+	   which are interdependent.*/
+	.h_commit = bacnet_storage_handler_commit,
+	/* This gets called to write all current settings.
+	   This happens when settings_save() tries to save the settings
+	   or transfer to any user-implemented back-end.*/
+	.h_export = bacnet_storage_handler_export};
 
 /**
  * @brief Initialize the non-volatile data
  */
-int bacnet_storage_init(bacnet_storage_restore_callback restore_cb)
+int bacnet_storage_init(void)
 {
 	int rc = 0;
 
-	BACnet_Storage_Restore_Callback = restore_cb;
 #if defined(CONFIG_SETTINGS_FILE) && defined(CONFIG_FILE_SYSTEM_LITTLEFS)
 	FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(cstorage);
 
@@ -149,9 +149,41 @@ int bacnet_storage_init(bacnet_storage_restore_callback restore_cb)
 		LOG_ERR("settings_register failed (err %d)", rc);
 		return rc;
 	}
-	settings_load();
 
 	LOG_INF("settings subsys initialization: OK.");
+
+	return rc;
+}
+
+/**
+ * @brief Set the callback function for restoring BACnet storage items
+ * @param restore_cb - pointer to the restore callback function
+ * @return 0=success, negative on error
+ */
+int bacnet_storage_load_callback_set(bacnet_storage_restore_callback restore_cb, void *context)
+{
+	int rc = 0;
+
+	BACnet_Storage_Restore_Callback = restore_cb;
+	BACnet_Storage_Restore_Context = context;
+
+	return rc;
+}
+
+/**
+ * @brief Load all BACnet settings from storage
+ * @return 0=success, negative on error
+ */
+int bacnet_storage_load(void)
+{
+	int rc = 0;
+
+	rc = settings_load();
+	if (rc) {
+		LOG_ERR("settings_load failed (err %d)", rc);
+		return rc;
+	}
+	LOG_INF("settings_load: OK.");
 
 	return rc;
 }
@@ -216,10 +248,10 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
 {
 	const char *next;
 	size_t next_len;
-    char object_type_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
-    char object_instance_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
-    char property_id_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
-    char array_index_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
+	char object_type_name[SETTINGS_MAX_DIR_DEPTH + 1] = {0};
+	char object_instance_name[SETTINGS_MAX_DIR_DEPTH + 1] = {0};
+	char property_id_name[SETTINGS_MAX_DIR_DEPTH + 1] = {0};
+	char array_index_name[SETTINGS_MAX_DIR_DEPTH + 1] = {0};
 	unsigned long long_value = 0;
 	const char base_name[] = CONFIG_BACNET_STORAGE_BASE_NAME;
 
@@ -299,29 +331,39 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
 	return 0;
 }
 
-int bacnet_storage_handler_set(const char *path, size_t data_len,
-	settings_read_cb read_cb, void *cb_arg)
+/**
+ * @brief settings callback: Set a value in BACnet storage
+ * @param path - settings name key string
+ * @param data_len - length of the data to set
+ * @param read_cb - callback to read the value
+ * @param cb_arg - callback argument
+ * @return 0=success, negative on error
+ */
+int bacnet_storage_handler_set(const char *path, size_t data_len, settings_read_cb read_cb,
+			       void *cb_arg)
 {
 	int rc = -EINVAL;
-	BACNET_STORAGE_KEY key = { 0 };
-	uint8_t data[BACNET_STORAGE_VALUE_SIZE_MAX] = { 0 };
+	BACNET_STORAGE_KEY key = {0};
+	uint8_t data[BACNET_STORAGE_VALUE_SIZE_MAX] = {0};
 
-	if (bacnet_storage_key_decode(path, &key)==0) {
+	if (bacnet_storage_key_decode(path, &key) == 0) {
 		/* get the data if there is any */
 		if (data_len == 0) {
 			rc = 0;
 		} else {
 			rc = read_cb(cb_arg, &data, sizeof(data));
 			if (rc < 0) {
+				/* On error returns -ERRNO code. */
 				if (rc == -ENOENT) {
 					rc = 0;
 				} else {
 					LOG_ERR("Data restore error: %d", rc);
-
 				}
 			} else {
-				bacnet_storage_restore(&key, data, data_len);
-				LOG_INF("Data restored:%s %d bytes", path, data_len);
+				rc = bacnet_storage_restore(&key, data, data_len);
+				if (rc == 0) {
+					LOG_INF("Data restored:%s %d bytes", path, data_len);
+				}
 			}
 		}
 	}
@@ -329,22 +371,32 @@ int bacnet_storage_handler_set(const char *path, size_t data_len,
 	return rc;
 }
 
+/**
+ * @brief settings callback: Commit all changes to BACnet storage
+ * @return 0=success, negative on error
+ */
 int bacnet_storage_handler_commit(void)
 {
-    LOG_INF("Restored all settings");
+	LOG_INF("Restored all settings");
 	return 0;
 }
 
-int bacnet_storage_handler_export(int (*cb)(const char *name,
-			       const void *value, size_t val_len))
+/**
+ * @brief settings callback: This gets called to write all current settings.
+ *  This happens when settings_save() tries to save the settings
+ *  or transfer to any user-implemented back-end.
+ * @param cb - callback function to receive the settings
+ * @return 0=success, negative on error
+ */
+int bacnet_storage_handler_export(int (*cb)(const char *name, const void *value, size_t val_len))
 {
-	LOG_INF("Export requested");
+	LOG_INF("FIXME: Export requested");
 	return 0;
 }
 
 /**
  * @brief Set a value with a specific key to non-volatile storage
- * @param key [in] Key in string format.
+ * @param key BACnet key (type, instance, property, array index)
  * @param data [in] one or more bytes of data
  * @param data_len [in] Value length in bytes.
  * @return 0 on success, non-zero on failure.
@@ -442,7 +494,7 @@ static int load_immediate_value(const char *name, void *value, size_t value_size
 
 /**
  * @brief Get a value with a specific key to non-volatile storage
- * @param key [in] Key in string format.
+ * @param key BACnet key (type, instance, property, array index)
  * @param data [out] Binary value.
  * @param data_size [in] requested value length in bytes
  * @return data length on success 0..N, negative on failure.
@@ -463,6 +515,26 @@ int bacnet_storage_get(BACNET_STORAGE_KEY *key, void *data, size_t data_size)
 		LOG_INF("no entry");
 	} else {
 		LOG_INF("unexpected" FAIL_MSG, rc);
+	}
+
+	return rc;
+}
+
+/**
+ * @brief Delete a value with a specific key from non-volatile storage
+ * @param key BACnet key (type, instance, property, array index)
+ * @return 0 on success, non-zero on failure.
+ */
+int bacnet_storage_delete(BACNET_STORAGE_KEY *key)
+{
+	char name[SETTINGS_MAX_NAME_LEN + 1] = {0};
+	int rc;
+
+	rc = bacnet_storage_key_encode(name, sizeof(name), key);
+	LOG_INF("Delete a key-value pair. Key=%s", name);
+	rc = settings_delete(name);
+	if (rc) {
+		LOG_INF(FAIL_MSG, rc);
 	}
 
 	return rc;

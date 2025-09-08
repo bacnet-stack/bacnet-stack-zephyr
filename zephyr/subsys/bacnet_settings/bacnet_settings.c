@@ -8,7 +8,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#include <zephyr/sys/byteorder.h>
 #include <bacnet_settings/bacnet_storage.h>
 #include <bacnet_settings/bacnet_settings.h>
 #include "bacnet/bacdef.h"
@@ -18,6 +17,9 @@
 #include "bacnet/bacint.h"
 #include "bacnet/proplist.h"
 #include "bacnet/wp.h"
+
+/* Callback for restore */
+static bacnet_settings_restore_callback Restore_Callback;
 
 /**
  * @brief Store the BACnet data after a WriteProperty for object property
@@ -79,23 +81,28 @@ bool bacnet_settings_write_property_store(BACNET_WRITE_PROPERTY_DATA *wp_data)
 }
 
 /**
- * @brief Callback from the Zephyr settings_restore iterator
- * @param key [in] The BACnet object type
+ * @brief Write data to the write_function for the specific object
+ *  instance property.
+ * @param object_type [in] The BACnet object type
  * @param object_instance [in] The BACnet object instance
  * @param property_id [in] The BACnet property id
- * @param array_index [in] The BACnet array index
+ * @param array_index [in] The BACnet array index or priority if commandable
+ * @param data [in] The data to restore
+ * @param data_len [in] The length of the data
  * @param write_function [in] the WriteProperty function of the object
- * @return true on success, false on failure.
+ * @param context [in] The context to pass to the WriteProperty function
+ * @return 0 on success, negative on failure.
  */
-bool bacnet_settings_restore(uint16_t object_type, uint32_t object_instance,
-					    uint32_t property_id, uint32_t array_index,
-						const void *data, size_t data_len,
-					    write_property_function write_function)
+static int bacnet_settings_restore(uint16_t object_type, uint32_t object_instance,
+				   uint32_t property_id, uint32_t array_index, const void *data,
+				   size_t data_len,
+				   bacnet_settings_restore_callback restore_function, void *context)
 {
+	int err = -EINVAL;
 	bool status = false;
 	BACNET_WRITE_PROPERTY_DATA wp_data = {0};
 
-	if ((data_len > 0) && (data_len <= MAX_APDU)) {
+	if (data && (data_len > 0) && (data_len <= MAX_APDU)) {
 		wp_data.application_data_len = data_len;
 		memcpy(&wp_data.application_data[0], data, data_len);
 		wp_data.object_type = object_type;
@@ -109,39 +116,95 @@ bool bacnet_settings_restore(uint16_t object_type, uint32_t object_instance,
 			wp_data.priority = BACNET_MAX_PRIORITY;
 			wp_data.array_index = array_index;
 		}
-		status = write_function(&wp_data);
+		if (restore_function) {
+			status = restore_function(&wp_data, context);
+			if (status) {
+				err = 0;
+			} else {
+				/* map the BACnet Error to Zephyr Error */
+				switch (wp_data.error_code) {
+				case ERROR_CODE_UNKNOWN_OBJECT:
+				case ERROR_CODE_UNKNOWN_PROPERTY:
+					err = -ENOENT;
+					break;
+				case ERROR_CODE_WRITE_ACCESS_DENIED:
+					err = -EACCES;
+					break;
+				case ERROR_CODE_DUPLICATE_NAME:
+					err = -EEXIST;
+					break;
+				case ERROR_CODE_VALUE_OUT_OF_RANGE:
+					err = -ERANGE;
+					break;
+				case ERROR_CODE_INVALID_DATA_TYPE:
+				case ERROR_CODE_PROPERTY_IS_NOT_AN_ARRAY:
+					err = -EINVAL;
+					break;
+				case ERROR_CODE_NO_SPACE_TO_WRITE_PROPERTY:
+					err = -ENOSPC;
+					break;
+				case ERROR_CODE_CHARACTER_SET_NOT_SUPPORTED:
+				case ERROR_CODE_OPTIONAL_FUNCTIONALITY_NOT_SUPPORTED:
+					err = -ENOTSUP;
+					break;
+				default:
+					err = -EINVAL;
+					break;
+				}
+			}
+		}
 	}
 
-	return status;
+	return err;
 }
 
 /**
- * @brief Get a BACnet encoded value from non-volatile storage
- * and write it to the object specific WriteProperty handler.
- * @param object_type [in] The BACnet object type
- * @param object_instance [in] The BACnet object instance
- * @param property_id [in] The BACnet property id
- * @param array_index [in] The BACnet array index
- * @param write_function [in] the WriteProperty function of the object
+ * @brief Callback from the Zephyr settings_restore iterator
+ * @param key [in] The BACnet object type
+ * @param data [in] The data to restore
+ * @param data_len [in] The length of the data
+ * @return 0 on success, negative on failure.
+ */
+static int bacnet_storage_restore_handler(BACNET_STORAGE_KEY *key, const void *data,
+					  size_t data_len, void *context)
+{
+	bool status;
+	int err = 0;
+
+	status = bacnet_settings_restore(key->object_type, key->object_instance, key->property_id,
+					 key->array_index, data, data_len, Restore_Callback,
+					 context);
+	if (!status) {
+		err = -EACCES;
+	}
+
+	return err;
+}
+
+/**
+ * @brief Utilize the settings_restore iterator
+ * @param write_function [in] the WriteProperty function of the device object
  * @return true on success, false on failure.
  */
-bool bacnet_settings_write_property_restore(uint16_t object_type, uint32_t object_instance,
-					    uint32_t property_id, uint32_t array_index,
-					    write_property_function write_function)
+bool bacnet_settings_write_property_restore(bacnet_settings_restore_callback cb, void *context)
 {
-	bool status = false;
-	uint8_t data[BACNET_STORAGE_VALUE_SIZE_MAX + 1] = {0};
-	BACNET_STORAGE_KEY key = {0};
-	int data_len;
+	int err;
 
-	bacnet_storage_key_init(&key, object_type, object_instance, property_id, array_index);
-	data_len = bacnet_storage_get(&key, data, sizeof(data));
- 	status = bacnet_settings_restore(object_type, object_instance,
-					    property_id, array_index,
-						data, data_len,
-					    write_function);
+	if (!cb) {
+		return false;
+	}
+	Restore_Callback = cb;
+	err = bacnet_storage_load_callback_set(bacnet_storage_restore_handler, context);
+	if (err) {
+		return false;
+	}
+	/* iterate over all stored settings and call the restore callback for each */
+	err = bacnet_storage_load();
+	if (err) {
+		return false;
+	}
 
-	return status;
+	return true;
 }
 
 /**
@@ -477,4 +540,20 @@ bool bacnet_settings_string_set(uint16_t object_type, uint32_t object_instance,
 	rc = bacnet_storage_set(&key, (const char *)value, strlen(value) + 1);
 
 	return rc == 0;
+}
+
+/**
+ * @brief Initialize the BACnet settings storage
+ * @return true=success, false on error
+ */
+bool bacnet_settings_init(void)
+{
+	int err;
+
+	err = bacnet_storage_init();
+	if (err) {
+		return false;
+	}
+
+	return true;
 }

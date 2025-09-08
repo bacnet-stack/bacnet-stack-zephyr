@@ -102,6 +102,18 @@ void Binary_Lighting_Output_Blink_Warn_Handler(uint32_t object_instance)
 }
 
 /**
+ * @brief Callback data for WriteProperty restore iterator
+ * @param write_function The WriteProperty function to call
+ * @param context The context to pass to the WriteProperty function
+ * @return true if the WriteProperty succeeded
+ */
+static bool Settings_Restore_Callback(BACNET_WRITE_PROPERTY_DATA *wp_data, void *context)
+{
+	(void)context;
+	return Device_Write_Property(wp_data);
+}
+
+/**
  * @brief BACnet Project Initialization Handler
  * @param context [in] The context to pass to the callback function
  * @note This is called from the BACnet task
@@ -109,35 +121,6 @@ void Binary_Lighting_Output_Blink_Warn_Handler(uint32_t object_instance)
 static void BACnet_Lighting_Device_Init_Handler(void *context)
 {
 	BACNET_DEVICE_OBJECT_PROPERTY_REFERENCE member;
-	uint32_t array_index = BACNET_ARRAY_ALL;
-	bool status = false;
-	int i;
-	int32_t channel_writeable_property_list[] = {
-		/* list of properties to set via WriteProperty */
-		PROP_PRESENT_VALUE,  PROP_OUT_OF_SERVICE, PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES,
-		PROP_CHANNEL_NUMBER, PROP_CONTROL_GROUPS,
-	};
-	int32_t lighting_output_writeable_property_list[] = {
-		/* list of properties to set via WriteProperty */
-		PROP_OUT_OF_SERVICE,
-		PROP_DEFAULT_FADE_TIME,
-		PROP_DEFAULT_RAMP_RATE,
-		PROP_DEFAULT_STEP_INCREMENT,
-		PROP_TRANSITION,
-		PROP_PRESENT_VALUE,
-		PROP_RELINQUISH_DEFAULT,
-		PROP_BLINK_WARN_ENABLE,
-		PROP_EGRESS_TIME,
-		PROP_DEFAULT_FADE_TIME,
-		PROP_DEFAULT_RAMP_RATE,
-		PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY,
-		PROP_DEFAULT_STEP_INCREMENT,
-		PROP_TRANSITION};
-	int32_t device_writeable_property_list[] = {
-		/* list of properties to set via WriteProperty */
-		PROP_OBJECT_IDENTIFIER,
-		PROP_OBJECT_NAME,
-	};
 
 	(void)context;
 	LOG_INF("BACnet Stack Initialized");
@@ -164,33 +147,10 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
 	member.deviceIdentifier.instance = Device_Instance;
 	Channel_Reference_List_Member_Element_Set(Channel_Instance, 1, &member);
 	/* restore any property values previously stored via WriteProperty */
-	for (i = 0; i < ARRAY_SIZE(device_writeable_property_list); i++) {
-		status = bacnet_settings_write_property_restore(
-			OBJECT_DEVICE, BACNET_MAX_INSTANCE, device_writeable_property_list[i],
-			array_index, Device_Write_Property_Local);
-		if (!status) {
-			/* no settings stored for this property, use defaults */
-		}
-	}
-	for (i = 0; i < ARRAY_SIZE(lighting_output_writeable_property_list); i++) {
-		status = bacnet_settings_write_property_restore(
-			OBJECT_LIGHTING_OUTPUT, Lighting_Instance,
-			lighting_output_writeable_property_list[i], array_index,
-			Lighting_Output_Write_Property);
-		if (!status) {
-			/* no settings stored for this property, use defaults */
-		}
-	}
-	for (i = 0; i < ARRAY_SIZE(channel_writeable_property_list); i++) {
-		status = bacnet_settings_write_property_restore(
-			OBJECT_CHANNEL, Channel_Instance, channel_writeable_property_list[i],
-			array_index, Channel_Write_Property);
-		if (!status) {
-			/* no settings stored for this property, use defaults */
-		}
-	}
-	/* These writable property values are stored WriteProperty.
-	   Set this callback after init to prevent recursion. */
+	bacnet_settings_init();
+	bacnet_settings_write_property_restore(&Settings_Restore_Callback, NULL);
+	/* writable property values are stored with WriteProperty.
+	   Set this callback after restore to prevent recursion. */
 	bacnet_basic_store_callback_set(bacnet_settings_basic_store);
 	/* lighting output callbacks */
 	Lighting_Output_Write_Present_Value_Callback_Set(Lighting_Output_Tracking_Value_Handler);
