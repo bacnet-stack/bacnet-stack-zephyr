@@ -41,7 +41,7 @@ static struct mstimer Actuator_Update_Timer;
 
 static void BACnet_Smart_Actuator_Datalink_Init(void)
 {
-	/* nothing to do */
+    /* nothing to do */
 }
 
 /**
@@ -50,10 +50,11 @@ static void BACnet_Smart_Actuator_Datalink_Init(void)
  * @param context The context to pass to the WriteProperty function
  * @return true if the WriteProperty succeeded
  */
-static bool Settings_Restore_Callback(BACNET_WRITE_PROPERTY_DATA *wp_data, void *context)
+static bool
+Settings_Restore_Callback(BACNET_WRITE_PROPERTY_DATA *wp_data, void *context)
 {
-	(void)context;
-	return Device_Write_Property(wp_data);
+    (void)context;
+    return Device_Write_Property(wp_data);
 }
 
 /**
@@ -63,28 +64,28 @@ static bool Settings_Restore_Callback(BACNET_WRITE_PROPERTY_DATA *wp_data, void 
  */
 static void BACnet_Smart_Actuator_Init_Handler(void *context)
 {
-	(void)context;
-	LOG_INF("BACnet Stack Initialized");
-	BACnet_Smart_Actuator_Datalink_Init();
-	/* initialize objects with default values for this basic sample */
-	Device_Init(NULL);
-	Device_Set_Object_Instance_Number(Device_Instance);
-	Device_Object_Name_ANSI_Init(Device_Name);
-	Analog_Output_Create(Actuator_Instance);
-	Analog_Output_Name_Set(Actuator_Instance, "Actuator");
-	Analog_Output_Units_Set(Actuator_Instance, UNITS_PERCENT);
-	Analog_Output_Min_Pres_Value_Set(Actuator_Instance, 0.0f);
-	Analog_Output_Max_Pres_Value_Set(Actuator_Instance, 100.0f);
-	/* restore any property values previously stored via WriteProperty */
-	bacnet_settings_init();
-	bacnet_settings_write_property_restore(&Settings_Restore_Callback, NULL);
-	/* writable property values are stored with WriteProperty.
-	   Set this callback after restore to prevent recursion. */
-	bacnet_basic_store_callback_set(bacnet_settings_basic_store);
-	LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
-	/* start the seconds cyclic timer */
-	mstimer_set(&Actuator_Update_Timer, 1000);
-	srand(sys_rand32_get());
+    (void)context;
+    LOG_INF("BACnet Stack Initialized");
+    BACnet_Smart_Actuator_Datalink_Init();
+    /* initialize objects with default values for this basic sample */
+    Device_Init(NULL);
+    Device_Set_Object_Instance_Number(Device_Instance);
+    Device_Object_Name_ANSI_Init(Device_Name);
+    Analog_Output_Create(Actuator_Instance);
+    Analog_Output_Name_Set(Actuator_Instance, "Actuator");
+    Analog_Output_Units_Set(Actuator_Instance, UNITS_PERCENT);
+    Analog_Output_Min_Pres_Value_Set(Actuator_Instance, 0.0f);
+    Analog_Output_Max_Pres_Value_Set(Actuator_Instance, 100.0f);
+    /* restore any property values previously stored via WriteProperty */
+    bacnet_settings_init();
+    bacnet_settings_write_property_restore(&Settings_Restore_Callback, NULL);
+    /* writable property values are stored with WriteProperty.
+       Set this callback after restore to prevent recursion. */
+    bacnet_basic_store_callback_set(bacnet_settings_basic_store);
+    LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
+    /* start the seconds cyclic timer */
+    mstimer_set(&Actuator_Update_Timer, 1000);
+    srand(sys_rand32_get());
 }
 
 /**
@@ -94,42 +95,43 @@ static void BACnet_Smart_Actuator_Init_Handler(void *context)
  */
 static void BACnet_Smart_Actuator_Task_Handler(void *context)
 {
-	float percent = 0.0f, change = 0.0f;
+    float percent = 0.0f, change = 0.0f;
 
-	(void)context;
-	if (mstimer_expired(&Actuator_Update_Timer)) {
-		mstimer_reset(&Actuator_Update_Timer);
-		/* simulate an internal software program,
-		   and update the BACnet object values */
-		if (Analog_Output_Out_Of_Service(Actuator_Instance)) {
-			return;
-		}
-		percent = Analog_Output_Present_Value(Actuator_Instance);
-		change = -1.0f + 2.0f * ((float)rand()) / RAND_MAX;
-		percent += change;
-		Analog_Output_Present_Value_Set(Actuator_Instance, percent, BACNET_MAX_PRIORITY);
-	}
+    (void)context;
+    if (mstimer_expired(&Actuator_Update_Timer)) {
+        mstimer_reset(&Actuator_Update_Timer);
+        /* simulate an internal software program,
+           and update the BACnet object values */
+        if (Analog_Output_Out_Of_Service(Actuator_Instance)) {
+            return;
+        }
+        percent = Analog_Output_Present_Value(Actuator_Instance);
+        change = -1.0f + 2.0f * ((float)rand()) / RAND_MAX;
+        percent += change;
+        Analog_Output_Present_Value_Set(
+            Actuator_Instance, percent, BACNET_MAX_PRIORITY);
+    }
 }
 
 int main(void)
 {
-	bool port_initialized = false;
+    bool port_initialized = false;
 
-	LOG_INF("BACnet Device: %s", Device_Name);
-	LOG_INF("BACnet Stack Version " BACNET_VERSION_TEXT);
-	LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
-	bacnet_basic_init_callback_set(BACnet_Smart_Actuator_Init_Handler, NULL);
-	bacnet_basic_task_callback_set(BACnet_Smart_Actuator_Task_Handler, NULL);
-	bacnet_basic_init();
-	for (;;) {
-		k_sleep(K_MSEC(CONFIG_BACNET_BASIC_SERVER_KSLEEP));
-		bacnet_basic_task();
-		if (port_initialized) {
-			bacnet_port_task();
-		} else {
-			port_initialized = bacnet_port_init();
-		}
-	}
+    LOG_INF("BACnet Device: %s", Device_Name);
+    LOG_INF("BACnet Stack Version " BACNET_VERSION_TEXT);
+    LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
+    bacnet_basic_init_callback_set(BACnet_Smart_Actuator_Init_Handler, NULL);
+    bacnet_basic_task_callback_set(BACnet_Smart_Actuator_Task_Handler, NULL);
+    bacnet_basic_init();
+    for (;;) {
+        k_sleep(K_MSEC(CONFIG_BACNET_BASIC_SERVER_KSLEEP));
+        bacnet_basic_task();
+        if (port_initialized) {
+            bacnet_port_task();
+        } else {
+            port_initialized = bacnet_port_init();
+        }
+    }
 
-	return 0;
+    return 0;
 }
