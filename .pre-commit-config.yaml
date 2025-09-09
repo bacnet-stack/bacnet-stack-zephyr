@@ -41,11 +41,11 @@ repos:
       - id: remove-tabs
         name: Remove tabs (4 spaces)
         args: ["--whitespaces-count", "4"]
-        exclude: \.(yaml|yml|html|htm|sln|atsln|layout)$|Makefile|\.(mgw|mak|MAK)$|Dockerfile$
+        exclude: \.(c|h|yaml|yml|overlay|html|htm|sln|atsln|layout|rst)$|Makefile|\.(mgw|mak|MAK)|Dockerfile$
       - id: remove-tabs
         name: Remove tabs (2 spaces)
         args: ["--whitespaces-count", "2"]
-        files: '.*\.(yaml|yml|html|htm)|Dockerfile$'
+        files: '.*\.(yaml|yml|overlay|html|htm)|Dockerfile$'
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v20.1.5
