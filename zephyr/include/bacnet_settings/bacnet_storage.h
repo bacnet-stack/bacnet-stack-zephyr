@@ -44,6 +44,8 @@ int bacnet_storage_handler_commit(void);
 int bacnet_storage_handler_export(int (*cb)(const char *name, const void *value, size_t val_len));
 
 bool bacnet_storage_strtoul(const char *search_name, unsigned long *long_value);
+bool bacnet_storage_strtol(const char *search_name, long *long_value);
+bool bacnet_storage_strtof(const char *search_name, float *float_value);
 
 void bacnet_storage_key_init(BACNET_STORAGE_KEY *key, uint16_t object_type,
 			     uint32_t object_instance, uint32_t property_id, uint32_t array_index);

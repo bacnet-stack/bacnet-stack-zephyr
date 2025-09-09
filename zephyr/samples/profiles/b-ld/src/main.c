@@ -73,6 +73,14 @@ void BACnet_Lighting_Output_Tracking_Value_Handler(uint32_t object_instance, flo
 static bool Settings_Restore_Callback(BACNET_WRITE_PROPERTY_DATA *wp_data, void *context)
 {
 	(void)context;
+	if (wp_data == NULL) {
+		return false;
+	}
+	if ((wp_data->object_type == OBJECT_DEVICE) &&
+	    (wp_data->object_instance == BACNET_MAX_INSTANCE)) {
+		wp_data->object_instance = Device_Object_Instance_Number();
+	}
+
 	return Device_Write_Property(wp_data);
 }
 

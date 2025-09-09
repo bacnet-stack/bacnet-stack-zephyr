@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
+#include <math.h>
 #include <zephyr/settings/settings.h>
 #if defined(CONFIG_SETTINGS_FILE) && defined(CONFIG_FILE_SYSTEM_LITTLEFS)
 #include <zephyr/fs/fs.h>
@@ -62,8 +64,8 @@ int bacnet_storage_restore(BACNET_STORAGE_KEY *key, const void *data, size_t dat
  * @brief Attempt to convert a numeric string into a unsigned long integer
  * @param search_name - string to convert
  * @param value - where to put the converted value
- * @return true if converted and found_index is set
- * @return false if not converted and found_index is not set
+ * @return true if converted and value is set
+ * @return false if not converted and value is not set
  */
 bool bacnet_storage_strtoul(const char *search_name, unsigned long *long_value)
 {
@@ -85,7 +87,72 @@ bool bacnet_storage_strtoul(const char *search_name, unsigned long *long_value)
 		return false;
 	}
 	if (long_value) {
-		*long_value = (unsigned)value;
+		*long_value = value;
+	}
+
+	return true;
+}
+
+/**
+ * @brief Attempt to convert a numeric string into a signed long integer
+ * @param search_name - string to convert
+ * @param value - where to put the converted value
+ * @return true if converted and value is set
+ * @return false if not converted and value is not set
+ */
+bool bacnet_storage_strtol(const char *search_name, long *long_value)
+{
+	char *endptr;
+	long value;
+
+	value = strtol(search_name, &endptr, 0);
+	if (endptr == search_name) {
+		/* No digits found */
+		return false;
+	}
+	if (value == LONG_MAX || value == LONG_MIN) {
+		/* If the correct value is outside the range of representable values,
+		   {LONG_MAX} or {LONG_MIN} shall be returned */
+		return false;
+	}
+	if (*endptr != '\0') {
+		/* Extra text found */
+		return false;
+	}
+	if (long_value) {
+		*long_value = value;
+	}
+
+	return true;
+}
+
+/**
+ * @brief Attempt to convert a numeric string into a floating point value
+ * @param search_name - string to convert
+ * @param value - where to put the converted value
+ * @return true if converted and value is set
+ * @return false if not converted and value is not set
+ */
+bool bacnet_storage_strtof(const char *search_name, float *float_value)
+{
+	char *endptr;
+	float value;
+
+	value = strtof(search_name, &endptr);
+	if (endptr == search_name) {
+		/* No digits found */
+		return false;
+	}
+	if ((value == INFINITY) || (value == -INFINITY) || (value == NAN)) {
+		/* the correct value is outside the range of representable values */
+		return false;
+	}
+	if (*endptr != '\0') {
+		/* Extra text found */
+		return false;
+	}
+	if (float_value) {
+		*float_value = value;
 	}
 
 	return true;
@@ -262,9 +329,9 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
 	}
 	/* object-type */
 	next_len = settings_name_next(path, &next);
-	if (next) {
+	if (path) {
 		if (next_len + 1 > sizeof(object_type_name)) {
-			LOG_ERR("object-type name too long: %d", next_len);
+			LOG_ERR("key: object-type name too long: %d", next_len);
 			return -EINVAL;
 		}
 		memcpy(object_type_name, path, next_len);
@@ -279,9 +346,9 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
 	/* object-instance */
 	path = next;
 	next_len = settings_name_next(path, &next);
-	if (next) {
+	if (path) {
 		if (next_len + 1 > sizeof(object_instance_name)) {
-			LOG_ERR("object-instance name too long: %d", next_len);
+			LOG_ERR("key: object-instance name too long: %d", next_len);
 			return -EINVAL;
 		}
 		memcpy(object_instance_name, path, next_len);
@@ -296,9 +363,9 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
 	/* property-id */
 	path = next;
 	next_len = settings_name_next(path, &next);
-	if (next) {
+	if (path) {
 		if (next_len + 1 > sizeof(property_id_name)) {
-			LOG_ERR("property-id name too long: %d", next_len);
+			LOG_ERR("key: property-id name too long: %d", next_len);
 			return -EINVAL;
 		}
 		memcpy(property_id_name, path, next_len);
@@ -311,11 +378,12 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
 		return -EINVAL;
 	}
 	/* array-index - OPTIONAL */
+	key->array_index = BACNET_STORAGE_ARRAY_INDEX_NONE;
 	path = next;
 	next_len = settings_name_next(path, &next);
-	if (next) {
+	if (path) {
 		if (next_len + 1 > sizeof(array_index_name)) {
-			LOG_ERR("array-index name too long: %d", next_len);
+			LOG_ERR("key: array-index name too long: %d", next_len);
 			return -EINVAL;
 		}
 		memcpy(array_index_name, path, next_len);
@@ -324,9 +392,9 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
 		} else {
 			return -EINVAL;
 		}
-	} else {
-		key->array_index = BACNET_STORAGE_ARRAY_INDEX_NONE;
 	}
+	LOG_INF("key: decoded:%u/%u/%u/%u", key->object_type, key->object_instance,
+		key->property_id, key->array_index);
 
 	return 0;
 }
