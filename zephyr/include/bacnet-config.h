@@ -8,7 +8,7 @@
 #ifndef BACNET_PORTS_ZEPHYR_BACNET_CONFIG_H
 #define BACNET_PORTS_ZEPHYR_BACNET_CONFIG_H
 
-#if ! defined BACNET_CONFIG_H || ! BACNET_CONFIG_H
+#if !defined BACNET_CONFIG_H || !BACNET_CONFIG_H
 #error bacnet-config.h included outside of BACNET_CONFIG_H control
 #endif
 
