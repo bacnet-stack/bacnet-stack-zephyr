@@ -4,6 +4,8 @@ sample:
 common:
   platform_allow:
     - nucleo_f429zi
+    - rpi_pico
+    - adafruit_grand_central_m4_express
   build_only: true
 
 tests:
