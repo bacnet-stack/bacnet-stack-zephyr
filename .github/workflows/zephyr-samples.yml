@@ -25,12 +25,6 @@ jobs:
           df -h
           sudo rm -rf /tmp/*
           df -h
-      - name: Docker prune
-        run: |
-          docker system df
-          docker system prune -af
-          docker system df
-          df -h
       - name: Checkout
         uses: actions/checkout@v4
         with:
