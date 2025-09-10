@@ -14,16 +14,23 @@ on:
 
 jobs:
   test:
-    name: Twister Tests
+    name: Twister Samples
     runs-on: ubuntu-22.04
     container: ghcr.io/zephyrproject-rtos/ci:v0.26-branch
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
-      - name: Check disk usage
-        run: df -h
-      - name: Clean up temporary files
-        run: sudo rm -rf /tmp/*
+      - name: Clean /tmp
+        run: |
+          df -h
+          sudo rm -rf /tmp/*
+          df -h
+      - name: Docker prune
+        run: |
+          docker system df
+          docker system prune -af
+          docker system df
+          df -h
       - name: Checkout
         uses: actions/checkout@v4
         with:
