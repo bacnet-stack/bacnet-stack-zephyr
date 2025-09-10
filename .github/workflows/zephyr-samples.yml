@@ -20,6 +20,10 @@ jobs:
     env:
       CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
+      - name: Check disk usage
+        run: df -h
+      - name: Clean up temporary files
+        run: sudo rm -rf /tmp/*
       - name: Checkout
         uses: actions/checkout@v4
         with:
