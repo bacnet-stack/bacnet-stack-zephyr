@@ -4,18 +4,16 @@
 TWISTER_EXE="../zephyr/scripts/twister"
 
 # Set the path to the test cases directory
-TEST_CASES_DIR="zephyr/tests"
+TEST_CASES_DIR="zephyr/samples"
 
 # Set the output directory for test results
-OUTPUT_DIR="twister-out.unit_testing"
-
-TWISTER_PLATFORM="unit_testing"
+OUTPUT_DIR="twister-out.samples"
 
 # Remove the output directory
 rm -rf "$OUTPUT_DIR"
 
 # Run twister with the specified test cases and output directory
-"$TWISTER_EXE" -O "$OUTPUT_DIR" -p "$TWISTER_PLATFORM" -T "$TEST_CASES_DIR"
+"$TWISTER_EXE" -O "$OUTPUT_DIR" -T "$TEST_CASES_DIR"
 
 # twister output directory cleanup files we do not archive
 find $OUTPUT_DIR -name 'CMakeFiles' -exec rm -rf {} \; 2>/dev/null

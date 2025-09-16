@@ -15,6 +15,10 @@ testing to produce robust C code.
 
 [![Actions Status](https://github.com/bacnet-stack/bacnet-stack-zephyr/actions/workflows/zephyr.yml/badge.svg)](https://github.com/bacnet-stack/bacnet-stack-zephyr/actions/workflows/zephyr.yml) GitHub Workflow: BACnet Stack Zephyr Twister Unit Tests
 
+[![Actions Status](https://github.com/bacnet-stack/bacnet-stack-zephyr/actions/workflows/zephyr-samples.yml/badge.svg)](https://github.com/bacnet-stack/bacnet-stack-zephyr/actions/workflows/zephyr-samples.yml) GitHub Workflow: BACnet Stack Samples Built
+
+[![Actions Status](https://github.com/bacnet-stack/bacnet-stack-zephyr/workflows/CodeQL/badge.svg)](https://github.com/bacnet-stack-zephyr/bacnet-stack/actions/workflows/codeql-analysis.yml) GitHub Workflow: CodeQL Analysis
+
 # What the code does
 
 The Zephyr OS integration offers a collection of samples in the zephyr/samples

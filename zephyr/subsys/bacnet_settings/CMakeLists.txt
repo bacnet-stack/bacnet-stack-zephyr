@@ -13,5 +13,6 @@ zephyr_library_sources(
   )
 
 zephyr_library_sources_ifdef(CONFIG_BACNET_SETTINGS_SHELL
-  bacnet_shell.c
+  bacnet_settings_shell.c
+  bacnet_storage_shell.c
   )
