@@ -39,6 +39,8 @@ if(NOT (CONFIG_BACDL_ETHERNET OR
   CONFIG_BACDL_ARCNET OR
   CONFIG_BACDL_BIP OR
   CONFIG_BACDL_BIP6 OR
+  CONFIG_BACDL_ZIGBEE OR
+  CONFIG_BACDL_BSC OR
   CONFIG_BACDL_CUSTOM OR
   CONFIG_BACDL_MULTIPLE OR
   CONFIG_BACDL_NONE OR
@@ -51,6 +53,8 @@ message(STATUS "BACNETSTACK: BACDL_BIP \"${CONFIG_BACDL_BIP}\"")
 message(STATUS "BACNETSTACK: BACDL_ARCNET \"${CONFIG_BACDL_ARCNET}\"")
 message(STATUS "BACNETSTACK: BACDL_MSTP \"${CONFIG_BACDL_MSTP}\"")
 message(STATUS "BACNETSTACK: BACDL_ETHERNET \"${CONFIG_BACDL_ETHERNET}\"")
+message(STATUS "BACNETSTACK: BACDL_ZIGBEE \"${CONFIG_BACDL_ZIGBEE}\"")
+message(STATUS "BACNETSTACK: BACDL_BSC \"${CONFIG_BACDL_BSC}\"")
 message(STATUS "BACNETSTACK: BACDL_CUSTOM \"${CONFIG_BACDL_CUSTOM}\"")
 message(STATUS "BACNETSTACK: BACDL_MULTIPLE \"${CONFIG_BACDL_MULTIPLE}\"")
 message(STATUS "BACNETSTACK: BACDL_NONE \"${CONFIG_BACDL_NONE}\"")
@@ -101,6 +105,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/bacerror.h
     ${BACNETSTACK_SRC}/bacnet/bacint.c
     ${BACNETSTACK_SRC}/bacnet/bacint.h
+    ${BACNETSTACK_SRC}/bacnet/baclog.c
+    ${BACNETSTACK_SRC}/bacnet/baclog.h
     ${BACNETSTACK_SRC}/bacnet/bacprop.c
     ${BACNETSTACK_SRC}/bacnet/bacprop.h
     ${BACNETSTACK_SRC}/bacnet/bacpropstates.c
@@ -119,12 +125,29 @@ set(BACNETSTACK_SRCS
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/h_bbmd6.h>
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/vmac.c>
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/vmac.h>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bvlc-sc.c>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bvlc-sc.h>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-socket.c>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-socket.h>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-util.h>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-util.c>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-hub-connector.h>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-hub-connector.c>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-hub-function.h>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-hub-function.c>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-node-switch.h>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-node-switch.c>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-node.h>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-node.c>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-datalink.h>
+    $<$<BOOL:${CONFIG_BACDL_BSC}>:${BACNETSTACK_SRC}/bacnet/datalink/bsc/bsc-datalink.c>
     ${BACNETSTACK_SRC}/bacnet/basic/binding/address.c
     ${BACNETSTACK_SRC}/bacnet/basic/binding/address.h
     ${BACNETSTACK_SRC}/bacnet/basic/npdu/h_npdu.c
     ${BACNETSTACK_SRC}/bacnet/basic/npdu/h_npdu.h
     ${BACNETSTACK_SRC}/bacnet/basic/npdu/h_routed_npdu.c
     ${BACNETSTACK_SRC}/bacnet/basic/npdu/h_routed_npdu.h
+    ${BACNETSTACK_SRC}/bacnet/basic/npdu/s_router.c
     ${BACNETSTACK_SRC}/bacnet/basic/npdu/s_router.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/access_credential.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/access_door.h
@@ -132,11 +155,14 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/object/access_rights.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/access_user.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/access_zone.h
+    ${BACNETSTACK_SRC}/bacnet/basic/object/acc.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/ai.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/ao.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/av.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/bacfile.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/bi.h
+    ${BACNETSTACK_SRC}/bacnet/basic/object/bitstring_value.h
+    ${BACNETSTACK_SRC}/bacnet/basic/object/blo.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/bo.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/bv.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/calendar.h
@@ -151,6 +177,7 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/object/lc.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/lo.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/lsp.h
+    ${BACNETSTACK_SRC}/bacnet/basic/object/lsz.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/ms-input.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/mso.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/msv.h
@@ -159,7 +186,9 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/object/objects.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/osv.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/piv.h
+    ${BACNETSTACK_SRC}/bacnet/basic/object/program.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/schedule.h
+    ${BACNETSTACK_SRC}/bacnet/basic/object/structured_view.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/time_value.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/trendlog.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_alarm_ack.h
@@ -200,6 +229,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_ts.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_ucov.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_upt.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_whoami.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_whoami.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_whohas.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_whohas.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_whois.c
@@ -210,13 +241,19 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_wpm.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_write_group.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_write_group.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_youare.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_youare.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_abort.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_ack_alarm.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_arfs.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_awfs.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_cevent.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_cov.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_create_object.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_create_object.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_dcc.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_delete_object.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_delete_object.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_error.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_get_alarm_sum.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_get_event.h
@@ -241,10 +278,20 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_whois.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_wp.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_wpm.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_write_group.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_write_group.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_youare.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_youare.h
     ${BACNETSTACK_SRC}/bacnet/basic/services.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bigend.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bigend.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/datetime_mstimer.c
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/bramfs.c
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/bramfs.h
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/bsramfs.c
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/bsramfs.h
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/color_rgb.c
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/color_rgb.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/days.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/days.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/debug.c
@@ -279,6 +326,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/config.h
     ${BACNETSTACK_SRC}/bacnet/cov.c
     ${BACNETSTACK_SRC}/bacnet/cov.h
+    ${BACNETSTACK_SRC}/bacnet/create_object.c
+    ${BACNETSTACK_SRC}/bacnet/create_object.h
     ${BACNETSTACK_SRC}/bacnet/credential_authentication_factor.c
     ${BACNETSTACK_SRC}/bacnet/credential_authentication_factor.h
     ${BACNETSTACK_SRC}/bacnet/dailyschedule.c
@@ -310,6 +359,9 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/datetime.h
     ${BACNETSTACK_SRC}/bacnet/dcc.c
     ${BACNETSTACK_SRC}/bacnet/dcc.h
+    ${BACNETSTACK_SRC}/bacnet/delete_object.c
+    ${BACNETSTACK_SRC}/bacnet/delete_object.h
+    ${BACNETSTACK_SRC}/bacnet/event.c
     ${BACNETSTACK_SRC}/bacnet/event.h
     ${BACNETSTACK_SRC}/bacnet/get_alarm_sum.c
     ${BACNETSTACK_SRC}/bacnet/get_alarm_sum.h
@@ -341,10 +393,6 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/ptransfer.h
     ${BACNETSTACK_SRC}/bacnet/rd.c
     ${BACNETSTACK_SRC}/bacnet/rd.h
-    ${BACNETSTACK_SRC}/bacnet/secure_connect.c
-    ${BACNETSTACK_SRC}/bacnet/secure_connect.h
-    ${BACNETSTACK_SRC}/bacnet/special_event.c
-    ${BACNETSTACK_SRC}/bacnet/special_event.h
     ${BACNETSTACK_SRC}/bacnet/readrange.c
     ${BACNETSTACK_SRC}/bacnet/readrange.h
     ${BACNETSTACK_SRC}/bacnet/reject.c
@@ -353,11 +401,17 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/rp.h
     ${BACNETSTACK_SRC}/bacnet/rpm.c
     ${BACNETSTACK_SRC}/bacnet/rpm.h
+    ${BACNETSTACK_SRC}/bacnet/secure_connect.c
+    ${BACNETSTACK_SRC}/bacnet/secure_connect.h
+    ${BACNETSTACK_SRC}/bacnet/special_event.c
+    ${BACNETSTACK_SRC}/bacnet/special_event.h
     ${BACNETSTACK_SRC}/bacnet/timestamp.c
     ${BACNETSTACK_SRC}/bacnet/timestamp.h
     ${BACNETSTACK_SRC}/bacnet/timesync.c
     ${BACNETSTACK_SRC}/bacnet/timesync.h
     ${BACNETSTACK_SRC}/bacnet/version.h
+    ${BACNETSTACK_SRC}/bacnet/whoami.c
+    ${BACNETSTACK_SRC}/bacnet/whoami.h
     ${BACNETSTACK_SRC}/bacnet/weeklyschedule.c
     ${BACNETSTACK_SRC}/bacnet/weeklyschedule.h
     ${BACNETSTACK_SRC}/bacnet/whohas.c
@@ -370,6 +424,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/wpm.h
     ${BACNETSTACK_SRC}/bacnet/write_group.c
     ${BACNETSTACK_SRC}/bacnet/write_group.h
+    ${BACNETSTACK_SRC}/bacnet/youare.c
+    ${BACNETSTACK_SRC}/bacnet/youare.h
     )
 
 message(STATUS "BACNETSTACK: CONFIG_BACNET_BASIC_OBJECT_DEVICE_SERVER \"${CONFIG_BACNET_BASIC_OBJECT_DEVICE_SERVER}\"")
@@ -380,7 +436,7 @@ message(STATUS "BACNETSTACK: CONFIG_BACNET_BASIC_OBJECT_ANALOG_INPUT \"${CONFIG_
 set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/h_bbmd6.c>
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/vmac.c>
-    ${BACNETSTACK_SRC}/bacnet/basic/npdu/s_router.c
+    $<$<BOOL:${CONFIG_BACDL_ZIGBEE}>:${BACNETSTACK_SRC}/bacnet/basic/bzll/bzllvmac.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_basic.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_device.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port.c>
@@ -508,11 +564,13 @@ zephyr_compile_definitions(
   # datalink API
   $<$<BOOL:${CONFIG_BACDL_NONE}>:BACDL_NONE>
   $<$<BOOL:${CONFIG_BACDL_ALL}>:BACAPP_ALL>
+  $<$<BOOL:${CONFIG_BACDL_BSC}>:BACDL_BSC>
   $<$<BOOL:${CONFIG_BACDL_BIP}>:BACDL_BIP>
   $<$<BOOL:${CONFIG_BACDL_BIP_PORT}>:BACDL_BIP_PORT=${CONFIG_BACDL_BIP_PORT}>
   $<$<BOOL:${CONFIG_MAX_BBMD_ENTRIES}>:MAX_BBMD_ENTRIES=${CONFIG_MAX_BBMD_ENTRIES}>
   $<$<BOOL:${CONFIG_MAX_FD_ENTRIES}>:MAX_FD_ENTRIES=${CONFIG_MAX_FD_ENTRIES}>
   $<$<BOOL:${CONFIG_BACDL_BIP6}>:BACDL_BIP6>
+  $<$<BOOL:${CONFIG_BACDL_ZIGBEE}>:BACDL_ZIGBEE>
   $<$<BOOL:${CONFIG_BACDL_ARCNET}>:BACDL_ARCNET>
   $<$<BOOL:${CONFIG_BACDL_MSTP}>:BACDL_MSTP>
   $<$<BOOL:${CONFIG_BACDL_ETHERNET}>:BACDL_ETHERNET>
@@ -554,13 +612,13 @@ zephyr_compile_definitions(
   $<$<BOOL:${CONFIG_BACAPP_XY_COLOR}>:BACAPP_XY_COLOR>
   $<$<BOOL:${CONFIG_BACAPP_COLOR_COMMAND}>:BACAPP_COLOR_COMMAND>
   $<$<BOOL:${CONFIG_BACAPP_WEEKLY_SCHEDULE}>:BACAPP_WEEKLY_SCHEDULE>
+  $<$<BOOL:${CONFIG_BACAPP_CALENDAR_ENTRY}>:BACAPP_CALENDAR_ENTRY>
+  $<$<BOOL:${CONFIG_BACAPP_SPECIAL_EVENT}>:BACAPP_SPECIAL_EVENT>
   $<$<BOOL:${CONFIG_BACAPP_HOST_N_PORT}>:BACAPP_HOST_N_PORT>
   $<$<BOOL:${CONFIG_BACAPP_DEVICE_OBJECT_PROPERTY_REFERENCE}>:BACAPP_DEVICE_OBJECT_PROPERTY_REFERENCE>
   $<$<BOOL:${CONFIG_BACAPP_DEVICE_OBJECT_REFERENCE}>:BACAPP_DEVICE_OBJECT_REFERENCE>
   $<$<BOOL:${CONFIG_BACAPP_OBJECT_PROPERTY_REFERENCE}>:BACAPP_OBJECT_PROPERTY_REFERENCE>
   $<$<BOOL:${CONFIG_BACAPP_DESTINATION}>:BACAPP_DESTINATION>
-  $<$<BOOL:${CONFIG_BACAPP_CALENDAR_ENTRY}>:BACAPP_CALENDAR_ENTRY>
-  $<$<BOOL:${CONFIG_BACAPP_SPECIAL_EVENT}>:BACAPP_SPECIAL_EVENT>
   $<$<BOOL:${CONFIG_BACAPP_BDT_ENTRY}>:BACAPP_BDT_ENTRY>
   $<$<BOOL:${CONFIG_BACAPP_FDT_ENTRY}>:BACAPP_FDT_ENTRY>
   $<$<BOOL:${CONFIG_BACAPP_ACTION_COMMAND}>:BACAPP_ACTION_COMMAND>
@@ -568,9 +626,6 @@ zephyr_compile_definitions(
   $<$<BOOL:${CONFIG_BACAPP_SHED_LEVEL}>:BACAPP_SHED_LEVEL>
   $<$<BOOL:${CONFIG_BACAPP_ACCESS_RULE}>:BACAPP_ACCESS_RULE>
   $<$<BOOL:${CONFIG_BACAPP_CHANNEL_VALUE}>:BACAPP_CHANNEL_VALUE>
-
-
-
-
-
-  )
+  $<$<BOOL:${CONFIG_LOG_RECORD}>:BACAPP_LOG_RECORD>
+  $<$<BOOL:${CONFIG_BACAPP_SECURE_CONNECT}>:BACAPP_SECURE_CONNECT>
+)

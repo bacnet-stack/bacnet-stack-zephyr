@@ -85,6 +85,16 @@ config BACDL_BIP6
     help
       Enable BACnet BIP6
 
+config BACDL_ZIGBEE
+    bool "BACnet ZIGBEE datalink"
+    help
+      Enable BACnet ZIGBEE datalink
+
+config BACDL_BSC
+    bool "BACnet Secure Connect datalink"
+    help
+      Enable BACnet Secure Connect datalink
+
 config BACDL_NONE
     bool "BACnet without datalink"
     help
@@ -328,6 +338,18 @@ config BACAPP_CHANNEL_VALUE
     default false
     help
        BACnet data types supported for WriteProperty: BACAPP_CHANNEL_VALUE
+
+config BACAPP_LOG_RECORD
+    bool "BACnet data types supported for WriteProperty: BACAPP_LOG_RECORD"
+    default false
+    help
+       BACnet data types supported for WriteProperty: BACAPP_LOG_RECORD
+
+config BACAPP_SECURE_CONNECT
+    bool "BACnet data types supported for WriteProperty: BACAPP_SECURE_CONNECT"
+    default false
+    help
+       BACnet data types supported for WriteProperty: BACAPP_SECURE_CONNECT
 
 config BACAPP_PRINT_ENABLED
     bool "BACnet app print"
