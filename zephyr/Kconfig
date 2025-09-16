@@ -85,6 +85,16 @@ config BACDL_BIP6
     help
       Enable BACnet BIP6
 
+config BACDL_ZIGBEE
+    bool "BACnet ZIGBEE datalink"
+    help
+      Enable BACnet ZIGBEE datalink
+
+config BACDL_BSC
+    bool "BACnet Secure Connect datalink"
+    help
+      Enable BACnet Secure Connect datalink
+
 config BACDL_NONE
     bool "BACnet without datalink"
     help
@@ -328,6 +338,18 @@ config BACAPP_CHANNEL_VALUE
     default false
     help
        BACnet data types supported for WriteProperty: BACAPP_CHANNEL_VALUE
+
+config BACAPP_LOG_RECORD
+    bool "BACnet data types supported for WriteProperty: BACAPP_LOG_RECORD"
+    default false
+    help
+       BACnet data types supported for WriteProperty: BACAPP_LOG_RECORD
+
+config BACAPP_SECURE_CONNECT
+    bool "BACnet data types supported for WriteProperty: BACAPP_SECURE_CONNECT"
+    default false
+    help
+       BACnet data types supported for WriteProperty: BACAPP_SECURE_CONNECT
 
 config BACAPP_PRINT_ENABLED
     bool "BACnet app print"
@@ -640,6 +662,48 @@ config BACNET_BASIC_OBJECT_TRENDLOG
     default false
     help
         Use the BACnet basic trendlog object
+
+config BACNET_BASIC_DEVICE_OBJECT_VERSION
+    string "BACnet Device default Object Version string"
+    default "1.0.0"
+    help
+        BACnet Device Object Version string
+
+config BACNET_BASIC_DEVICE_OBJECT_NAME
+    string "BACnet Device default Object Name string"
+    default "BACnet Device"
+    help
+        BACnet Device Object Name string
+
+config BACNET_BASIC_DEVICE_DESCRIPTION
+    string "BACnet Device default Description string"
+    default "BACnet Device"
+    help
+        BACnet Device default Description string
+
+config BACNET_BASIC_DEVICE_LOCATION_NAME
+    string "BACnet Device default Location Name string"
+    default "BACnet Device"
+    help
+        BACnet Device default Location Name string
+
+config BACNET_BASIC_COV_SUBSCRIPTIONS_SIZE
+    int "BACnet Device maximum number of COV Subscriptions"
+    default 0
+    help
+        BACnet Device maximum number of COV Subscriptions
+
+config BACNET_BASIC_COV_ADDRESSES_SIZE
+    int "BACnet Device maximum number of COV Addresses"
+    default 0
+    help
+        BACnet Device maximum number of COV Addresses
+
+config BACNET_BASIC_DEVICE_SERIAL_NUMBER
+    string "BACnet Device default Serial Number string"
+    default "BACnet Device"
+    help
+        BACnet Device default Serial Number string
 
 # MINIMAL CONFIG_NET_RX_STACK_SIZE
 config NET_TX_STACK_SIZE
