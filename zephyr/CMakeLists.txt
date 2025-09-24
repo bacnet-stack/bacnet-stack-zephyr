@@ -274,6 +274,7 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_ts.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_uevent.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_upt.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_whoami.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_whohas.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_whohas.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_whois.c
@@ -282,7 +283,6 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_wpm.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_write_group.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_write_group.h
-    ${BACNETSTACK_SRC}/bacnet/basic/service/s_youare.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_youare.h
     ${BACNETSTACK_SRC}/bacnet/basic/services.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bigend.c
@@ -522,8 +522,10 @@ set(BACNETSTACK_BASIC_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_ts.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_uevent.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_upt.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_whoami.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_wp.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/s_wpm.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/s_youare.c
     )
 
 #
