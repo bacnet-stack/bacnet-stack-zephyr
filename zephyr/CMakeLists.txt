@@ -197,10 +197,12 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf_a.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_awf.h
-    ${BACNETSTACK_SRC}/bacnet/basic/service/h_ccov.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_ccov.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_ccov.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_cov.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_cov.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_create_object.h
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_delete_object.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_dcc.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_dcc.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_gas_a.h
@@ -487,6 +489,8 @@ set(BACNETSTACK_BASIC_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf_a.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_awf.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_create_object.c
+    ${BACNETSTACK_SRC}/bacnet/basic/service/h_delete_object.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_gas_a.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_get_alarm_sum.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_getevent_a.c
