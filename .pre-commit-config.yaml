@@ -24,6 +24,7 @@ repos:
       - id: end-of-file-fixer
         exclude: '.*\.(cproj|vcxproj.*|props)$'
       - id: check-yaml
+        files: \.(yaml|yml)$ # This regex ensures both .yaml and .yml files are checked
         args: [
             # for .clang-format
             --allow-multiple-documents,
