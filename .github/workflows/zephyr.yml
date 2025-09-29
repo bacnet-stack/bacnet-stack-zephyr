@@ -34,9 +34,3 @@ jobs:
         run: |
           pwd
           ./unittest.sh
-
-      - name: Archive Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit_testing
-          path: bacnet/twister-out.unit_testing

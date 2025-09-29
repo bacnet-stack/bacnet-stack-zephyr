@@ -12,9 +12,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/net/net_if.h>
-#include <zephyr/net/net_ip.h>
 #include <zephyr/net/socket.h>
-#include <zephyr/net/socket_select.h>
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
 /* BACnet Stack API */
@@ -324,8 +322,8 @@ uint16_t bip_receive(
 
     /* see if there is a packet for us */
     if (zsock_select(max + 1, &read_fds, NULL, NULL, &select_timeout) > 0) {
-        socket =
-            FD_ISSET(BIP_Socket, &read_fds) ? BIP_Socket : BIP_Broadcast_Socket;
+        socket = ZSOCK_FD_ISSET(BIP_Socket, &read_fds) ? BIP_Socket
+                                                       : BIP_Broadcast_Socket;
         received_bytes = zsock_recvfrom(
             socket, (char *)&npdu[0], max_npdu, 0, (struct sockaddr *)&sin,
             &sin_len);

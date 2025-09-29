@@ -39,9 +39,3 @@ jobs:
         run: |
           pwd
           ./samples.sh
-
-      - name: Archive Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: samples
-          path: bacnet/twister-out.samples
