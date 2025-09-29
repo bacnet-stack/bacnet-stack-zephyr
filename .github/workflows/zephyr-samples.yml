@@ -23,8 +23,10 @@ jobs:
           docker system prune -a --volumes
 
       - uses: actions/checkout@v3
+
       - name: Run Zephyr Container
         uses: docker://ghcr.io/zephyrproject-rtos/ci:v0.26-branch
         with:
-          args: ./samples.sh
+          entrypoint: /bin/sh
+          args: -c ./samples.sh
 
