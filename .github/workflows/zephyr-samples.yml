@@ -16,32 +16,15 @@ jobs:
   test:
     name: Twister Samples
     runs-on: ubuntu-22.04
-    container: ghcr.io/zephyrproject-rtos/ci:v0.26-branch
-    env:
-      CMAKE_PREFIX_PATH: /opt/toolchains
     steps:
-      - name: Clean /tmp
+      - name: Free file system space
         run: |
-          df -h
-          sudo rm -rf /tmp/*
-          df -h
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          path: bacnet
-      - name: Initialize
-        working-directory: bacnet
-        run: |
-          west init -l .
-          west update
-      - name: Twister Tests samples
-        working-directory: bacnet
-        run: |
-          pwd
-          ./samples.sh
+          rm -rf /opt/hostedtoolcache
+          docker system prune -a --volumes
 
-      - name: Archive Test Results
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v3
+      - name: Run Zephyr Container
+        uses: docker://ghcr.io/zephyrproject-rtos/ci:v0.26-branch
         with:
-          name: samples
-          path: bacnet/twister-out.samples
+          args: ./samples.sh
+
