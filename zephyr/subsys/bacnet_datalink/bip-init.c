@@ -13,6 +13,7 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/net/net_if.h>
 #include <zephyr/net/socket.h>
+#include <zephyr/version.h>
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
 /* BACnet Stack API */
@@ -403,6 +404,12 @@ int bip_send_pdu(
     return bvlc_send_pdu(dest, npdu_data, pdu, pdu_len);
 }
 
+#if ZEPHYR_VERSION_CODE >= ZEPHYR_VERSION(4, 2, 0)
+typedef uint64_t mgmt_event_t;
+#else
+typedef uint32_t mgmt_event_t;
+#endif
+
 struct wait_data {
     struct k_sem sem;
     struct net_mgmt_event_callback cb;
@@ -410,7 +417,7 @@ struct wait_data {
 
 static void event_cb_handler(
     struct net_mgmt_event_callback *cb,
-    uint32_t mgmt_event,
+    mgmt_event_t mgmt_event,
     struct net_if *iface)
 {
     struct wait_data *wait = CONTAINER_OF(cb, struct wait_data, cb);
@@ -420,7 +427,7 @@ static void event_cb_handler(
     }
 }
 
-static void wait_for_net_event(struct net_if *iface, uint32_t event)
+static void wait_for_net_event(struct net_if *iface, mgmt_event_t event)
 {
     struct wait_data wait;
 
