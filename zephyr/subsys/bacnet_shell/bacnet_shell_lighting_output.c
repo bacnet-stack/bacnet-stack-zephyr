@@ -21,14 +21,17 @@ cmd_lighting_output_value_print(const struct shell *shell, uint32_t instance)
 {
     float value = 0.0f;
     unsigned priority = 0;
+    bool overridden = false;
 
     if (Lighting_Output_Valid_Instance(instance) == false) {
         return;
     }
     value = Lighting_Output_Present_Value(instance);
     priority = Lighting_Output_Present_Value_Priority(instance);
+    overridden = Lighting_Output_Overridden_Status(instance);
     shell_print(
-        shell, "lighting-output:%u %f%%@%d", instance, (double)value, priority);
+        shell, "lighting-output:%u %f%%@%d %s", instance, (double)value,
+        priority, (overridden ? "overridden" : ""));
 }
 
 static void
@@ -62,6 +65,7 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
     float priority_array[BACNET_MAX_PRIORITY + 1] = { 0.0f };
     bool is_relinquished[BACNET_MAX_PRIORITY + 1] = { false };
     unsigned long long_value;
+    bool overridden = false;
     char *end;
 
     if (argc > 1) {
@@ -85,11 +89,12 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
             is_relinquished[priority - 1] =
                 Lighting_Output_Priority_Array_Relinquished(instance, priority);
         }
+        overridden = Lighting_Output_Overridden_Status(instance);
         shell_print(
             shell,
             "lighting-output-%d "
             "{%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,"
-            "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f}",
+            "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f} %s",
             instance,
             cmd_priority_array_value(is_relinquished[0], priority_array[0]),
             cmd_priority_array_value(is_relinquished[1], priority_array[1]),
@@ -107,11 +112,78 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
             cmd_priority_array_value(is_relinquished[13], priority_array[13]),
             cmd_priority_array_value(is_relinquished[14], priority_array[14]),
             cmd_priority_array_value(is_relinquished[15], priority_array[15]),
-            (double)priority_array[BACNET_MAX_PRIORITY]);
+            (double)priority_array[BACNET_MAX_PRIORITY],
+            (overridden ? "overridden" : ""));
     } else {
         shell_help(shell);
         return;
     }
+}
+
+static void
+lighting_output_track_sub_cmd(const struct shell *shell, int argc, char **argv)
+{
+    uint32_t instance = 0;
+    unsigned long long_value;
+    char *end;
+
+    if (argc > 1) {
+        /* <instance> */
+        long_value = strtoul(argv[1], &end, 0);
+        if (end == argv[1]) {
+            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
+            return;
+        }
+        instance = (uint32_t)long_value;
+        if (Lighting_Output_Valid_Instance(instance) == false) {
+            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
+            return;
+        }
+        shell_print(
+            shell, "lighting-output-%d %.1f", instance,
+            (double)Lighting_Output_Tracking_Value(instance));
+    } else {
+        shell_help(shell);
+        return;
+    }
+}
+
+static void lighting_output_override_sub_cmd(
+    const struct shell *shell, int argc, char **argv)
+{
+    uint32_t instance = 0;
+    unsigned long long_value;
+    float float_value = 0.0f;
+    double double_value;
+    char *end;
+
+    if (argc > 1) {
+        /* <instance> */
+        long_value = strtoul(argv[1], &end, 0);
+        if (end == argv[1]) {
+            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
+            return;
+        }
+        instance = (uint32_t)long_value;
+        if (Lighting_Output_Valid_Instance(instance) == false) {
+            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
+            return;
+        }
+    } else {
+        shell_help(shell);
+        return;
+    }
+    if (argc > 2) {
+        /* <level in percent>*/
+        double_value = strtod(argv[2], &end);
+        if (end == argv[2]) {
+            shell_error(shell, "argv[2]=%s invalid percentage", argv[2]);
+            return;
+        }
+        float_value = (float)double_value;
+        Lighting_Output_Overridden_Momentary(instance, float_value);
+    }
+    cmd_lighting_output_value_print(shell, instance);
 }
 
 static void
@@ -678,6 +750,18 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         blink,
         &lighting_output_blink_sub_cmd,
         "<warn|warn_off|warn_relinquish>",
+        NULL),
+    SHELL_COND_CMD(
+        CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
+        track,
+        &lighting_output_track_sub_cmd,
+        "<instance>",
+        NULL),
+    SHELL_COND_CMD(
+        CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
+        override,
+        &lighting_output_override_sub_cmd,
+        "<instance>",
         NULL),
     SHELL_SUBCMD_SET_END);
 
