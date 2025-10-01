@@ -13,20 +13,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Twister Samples
+  run-image:
     runs-on: ubuntu-22.04
+    permissions:
+      packages: read # Required to pull private images from GHCR
     steps:
+      - name: Show File System Info
+        run: |
+          docker version
+          docker system info
+          docker system df
+          docker images
+          docker ps --all
       - name: Free file system space
         run: |
-          rm -rf /opt/hostedtoolcache
-          docker system prune -a --volumes
-
-      - uses: actions/checkout@v3
-
-      - name: Run Zephyr Container
-        uses: docker://ghcr.io/zephyrproject-rtos/ci:v0.26-branch
-        with:
-          entrypoint: /bin/sh
-          args: -c ./samples.sh
-
+          echo "== Remove all unused containers, networks, images"
+          echo "== (both dangling and unused), and optionally, volumes."
+          set -e
+          sudo docker system prune --all --filter "until=720h" --force
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Run Docker image from GHCR
+        run: docker run --rm ghcr.io/zephyrproject-rtos/ci:v0.26-branch samples.sh
