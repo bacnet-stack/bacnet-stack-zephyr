@@ -31,13 +31,9 @@ jobs:
           docker system df
       - name: Delete unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
-      - uses: actions/checkout@v3
-      - name: Show Present Working Directory
-        run: |
-          echo $(pwd)
-          ls -al
       - name: Pull Docker image from GHCR
         run: docker pull ghcr.io/zephyrproject-rtos/ci:v0.26-branch
+      - uses: actions/checkout@v3
       - name: Run Docker image from GHCR
         env:
           DOCKER_RUN_TARGET: "/workspace/westinit.sh && /workspace/samples.sh"

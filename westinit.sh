@@ -4,7 +4,7 @@
 ln -s "$PWD" "${PWD%/*}/bacnet"
 cd -P .
 # setup our build environment
-pip3 install --upgrade west>=1.2.0
+echo $PWD
+ls -al
 west init -l .
 west update > /dev/null 2>&1
-west zephyr-export
