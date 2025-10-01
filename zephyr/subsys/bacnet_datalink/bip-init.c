@@ -12,9 +12,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/net/net_if.h>
-#include <zephyr/net/net_ip.h>
 #include <zephyr/net/socket.h>
-#include <zephyr/net/socket_select.h>
+#include <zephyr/version.h>
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
 /* BACnet Stack API */
@@ -324,8 +323,8 @@ uint16_t bip_receive(
 
     /* see if there is a packet for us */
     if (zsock_select(max + 1, &read_fds, NULL, NULL, &select_timeout) > 0) {
-        socket =
-            FD_ISSET(BIP_Socket, &read_fds) ? BIP_Socket : BIP_Broadcast_Socket;
+        socket = ZSOCK_FD_ISSET(BIP_Socket, &read_fds) ? BIP_Socket
+                                                       : BIP_Broadcast_Socket;
         received_bytes = zsock_recvfrom(
             socket, (char *)&npdu[0], max_npdu, 0, (struct sockaddr *)&sin,
             &sin_len);
@@ -405,6 +404,12 @@ int bip_send_pdu(
     return bvlc_send_pdu(dest, npdu_data, pdu, pdu_len);
 }
 
+#if ZEPHYR_VERSION_CODE >= ZEPHYR_VERSION(4, 2, 0)
+typedef uint64_t mgmt_event_t;
+#else
+typedef uint32_t mgmt_event_t;
+#endif
+
 struct wait_data {
     struct k_sem sem;
     struct net_mgmt_event_callback cb;
@@ -412,7 +417,7 @@ struct wait_data {
 
 static void event_cb_handler(
     struct net_mgmt_event_callback *cb,
-    uint32_t mgmt_event,
+    mgmt_event_t mgmt_event,
     struct net_if *iface)
 {
     struct wait_data *wait = CONTAINER_OF(cb, struct wait_data, cb);
@@ -422,7 +427,7 @@ static void event_cb_handler(
     }
 }
 
-static void wait_for_net_event(struct net_if *iface, uint32_t event)
+static void wait_for_net_event(struct net_if *iface, mgmt_event_t event)
 {
     struct wait_data wait;
 
