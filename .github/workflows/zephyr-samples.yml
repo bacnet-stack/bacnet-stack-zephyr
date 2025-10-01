@@ -32,6 +32,10 @@ jobs:
       - name: Delete unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
       - uses: actions/checkout@v3
+      - name: West Update
+        run: |
+          west init -l .
+          west update
       - name: Show Present Working Directory
         run: | 
           echo $(pwd)
