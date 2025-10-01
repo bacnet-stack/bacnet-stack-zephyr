@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the path to the twister executable
-TWISTER_EXE="../zephyr/scripts/twister"
+TWISTER_EXE="west twister"
 
 # Set the path to the test cases directory
 TEST_CASES_DIR="zephyr/samples"
