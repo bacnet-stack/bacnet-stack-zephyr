@@ -1,6 +1,6 @@
 permissions:
   contents: read
-name: Zephyr OS Tests
+name: Zephyr OS Unit Tests and Sample Builds
 # For Zephyr 3.7 LTS, use the v0.26-branch
 # or the latest v0.26.x release Docker image.
 # Docker image was built on Ubuntu 22.04
@@ -13,24 +13,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Twister Tests
+  run-image:
     runs-on: ubuntu-22.04
-    container: ghcr.io/zephyrproject-rtos/ci:v0.26-branch
-    env:
-      CMAKE_PREFIX_PATH: /opt/toolchains
+    permissions:
+      packages: read # Required to pull private images from GHCR
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          path: bacnet
-      - name: Initialize
-        working-directory: bacnet
+      - name: Show File System Info
         run: |
-          west init -l .
-          west update
-      - name: Twister Tests unit_testing
-        working-directory: bacnet
+          docker system df
+          docker images
+      - name: Free file system space
         run: |
-          pwd
-          ./unittest.sh
+          echo "== Remove all unused containers, networks, images"
+          echo "== (both dangling and unused), and optionally, volumes."
+          set -e
+          sudo docker system prune --all --filter "until=720h" --force
+          docker system df
+      - name: Delete unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
+      - name: Pull Docker image from GHCR
+        run: docker pull ghcr.io/zephyrproject-rtos/ci:v0.26-branch
+      - uses: actions/checkout@v3
+      - name: Run Docker image from GHCR
+        env:
+          DOCKER_RUN_TARGET: "/bacnet/west-ci.sh && /bacnet/samples.sh && /bacnet/unittest.sh"
+          ZEPHYR_CONTAINER: "ghcr.io/zephyrproject-rtos/ci:v0.26-branch"
+        run: |
+          ls -alh
+          echo "== Run Docker image from GHCR"
+          docker run --rm -v "$(pwd):/bacnet" "$ZEPHYR_CONTAINER" /bin/bash -c "$DOCKER_RUN_TARGET"
