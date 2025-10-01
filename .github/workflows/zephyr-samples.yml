@@ -31,6 +31,7 @@ jobs:
           docker system df
       - name: Delete unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
+      - uses: actions/checkout@v3
       - name: Show Present Working Directory
         run: | 
           echo $(pwd)
