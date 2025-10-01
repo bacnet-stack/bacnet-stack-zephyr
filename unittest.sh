@@ -4,7 +4,7 @@
 TWISTER_EXE="../zephyr/scripts/twister"
 
 # Set the path to the test cases directory
-TEST_CASES_DIR="zephyr/tests"
+TEST_CASES_DIR="./zephyr/tests"
 
 # Set the output directory for test results
 OUTPUT_DIR="twister-out.unit_testing"
