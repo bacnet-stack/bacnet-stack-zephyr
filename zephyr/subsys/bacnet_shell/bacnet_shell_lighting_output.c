@@ -185,7 +185,7 @@ cmd_lighting_output_override(const struct shell *shell, int argc, char **argv)
         return -EINVAL;
     }
     if (argc > 2) {
-        if (bacnet_strnicmp(argv[3], "clear", 5) == 0) {
+        if (bacnet_strnicmp(argv[2], "clear", 5) == 0) {
             /* clear the override */
             Lighting_Output_Overridden_Clear(instance);
             return cmd_lighting_output_value_print(shell, instance);
@@ -783,7 +783,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         override,
         NULL,
-        "<instance> <level percent> [clear|momentary]",
+        "<instance> <clear|<level percent> [momentary]>",
         cmd_lighting_output_override),
     SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
