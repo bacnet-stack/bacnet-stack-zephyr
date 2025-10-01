@@ -15,7 +15,7 @@
 #include "bacnet/bactext.h"
 #include "bacnet/datetime.h"
 
-static void cmd_date_time(const struct shell *shell, int argc, char **argv)
+static int cmd_date_time(const struct shell *shell, int argc, char **argv)
 {
     BACNET_DATE bdate = { 0 };
     BACNET_TIME btime = { 0 };
@@ -32,15 +32,17 @@ static void cmd_date_time(const struct shell *shell, int argc, char **argv)
                 datetime_timesync(&bdate, &btime, false);
             } else {
                 shell_print(shell, " date time format: YYYY/MM/DD HH:MM:SS.hh");
-                return;
+                return -EINVAL;
             }
         }
         datetime_local(&bdate, &btime, &utc_offset_minutes, &dst_active);
         datetime_date_to_ascii(&bdate, date_string, sizeof(date_string));
         datetime_time_to_ascii(&btime, time_string, sizeof(time_string));
         shell_print(shell, "%s %s", date_string, time_string);
+        return 0;
     } else {
         shell_help(shell);
+        return -EINVAL;
     }
 }
 

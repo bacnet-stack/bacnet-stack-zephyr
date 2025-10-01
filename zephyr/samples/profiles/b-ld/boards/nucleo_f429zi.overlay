@@ -4,6 +4,35 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/delete-node/ &storage_partition;
+
+/ {
+  leds {
+    status = "disabled";
+  };
+
+  pwmleds {
+    compatible = "pwm-leds";
+    green_pwm_led: green_pwm_led {
+      pwms = <&pwm3 3 PWM_MSEC(20) PWM_POLARITY_NORMAL>;
+    };
+  };
+  aliases {
+    pwm-led0 = &green_pwm_led;
+  };
+};
+
+&timers3 {
+    status = "okay";
+    st,prescaler = <64>;
+    /* User LD1 GREEN */
+    pwm3: pwm {
+        status = "okay";
+        pinctrl-0 = <&tim3_ch3_pb0>;
+        pinctrl-names = "default";
+    };
+};
+
 &flash0 {
   partitions {
     /* Set 48KB of storage at the beginning of bank2 in order to have 3 sectors smaller than 32K
