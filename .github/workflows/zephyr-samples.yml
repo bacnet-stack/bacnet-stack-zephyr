@@ -20,18 +20,15 @@ jobs:
     steps:
       - name: Show File System Info
         run: |
-          docker version
-          docker system info
           docker system df
           docker images
-          docker ps --all
       - name: Free file system space
         run: |
           echo "== Remove all unused containers, networks, images"
           echo "== (both dangling and unused), and optionally, volumes."
           set -e
           sudo docker system prune --all --filter "until=720h" --force
-      - name: Log in to GHCR
-        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Pull Docker image from GHCR
+        run: docker pull ghcr.io/zephyrproject-rtos/ci:v0.26-branch
       - name: Run Docker image from GHCR
         run: docker run --rm ghcr.io/zephyrproject-rtos/ci:v0.26-branch samples.sh
