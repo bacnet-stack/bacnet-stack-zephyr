@@ -6,7 +6,11 @@
  * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/devicetree.h>
+#include <zephyr/drivers/led.h>
 #include <zephyr/random/random.h>
+#include <zephyr/sys/util.h>
 #include <stdint.h>
 #include <stdlib.h>
 /* BACnet Stack defines - first */
@@ -38,6 +42,11 @@ static const uint32_t Device_Instance = 260125;
 /* object instances */
 static const uint32_t Lighting_Instance = 1;
 
+#define LED_PWM_NODE_ID DT_COMPAT_GET_ANY_STATUS_OKAY(pwm_leds)
+const char *led_label[] = { DT_FOREACH_CHILD_SEP_VARGS(
+    LED_PWM_NODE_ID, DT_PROP_OR, (, ), label, NULL) };
+const int num_leds = ARRAY_SIZE(led_label);
+
 /**
  * @brief BACnet Lighting Output tracking value handler
  * @param object-instance [in] The object-instance number of the object
@@ -46,7 +55,10 @@ static const uint32_t Lighting_Instance = 1;
 void BACnet_Lighting_Output_Tracking_Value_Handler(
     uint32_t object_instance, float old_value, float value)
 {
-    uint16_t steps = 0;
+    uint8_t steps = 0;
+    int err;
+    uint8_t led;
+    const struct device *led_pwm;
 
     (void)old_value;
     if (object_instance != Lighting_Instance) {
@@ -54,16 +66,35 @@ void BACnet_Lighting_Output_Tracking_Value_Handler(
     }
     /* Tracking value are 0.0 and 1.0-100.0 normalized */
     if (isgreaterequal(value, 1.0) && islessequal(value, 100.0)) {
-        steps = linear_interpolate(1.0, value, 100.0, 1, UINT16_MAX);
+        steps = (uint8_t)linear_interpolate(1.0, value, 100.0, 1, 100.0);
     } else if (isgreater(value, 100.0)) {
-        steps = UINT16_MAX;
+        steps = 100;
     } else {
         steps = 0;
     }
     LOG_INF(
         "Lighting Output[%lu]: value=%f step=%u/%u",
         (unsigned long)object_instance, (double)value, (unsigned)steps,
-        (unsigned)UINT16_MAX);
+        (unsigned)UINT8_MAX);
+    /* hardware control */
+    led_pwm = DEVICE_DT_GET(LED_PWM_NODE_ID);
+    if (!device_is_ready(led_pwm)) {
+        LOG_ERR("Device %s is not ready", led_pwm->name);
+        return;
+    }
+    if (!num_leds) {
+        LOG_ERR("No LEDs found for %s", led_pwm->name);
+        return;
+    }
+    if (object_instance > 0U) {
+        led = object_instance - 1U;
+    }
+    err = led_set_brightness(led_pwm, led, steps);
+    if (err < 0) {
+        LOG_ERR(
+            "Failed to set brightness of LED %u to %u: %d", (unsigned)led,
+            (unsigned)steps, err);
+    }
 }
 
 /**
