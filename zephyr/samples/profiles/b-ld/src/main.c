@@ -90,6 +90,11 @@ void BACnet_Lighting_Output_Tracking_Value_Handler(
         led = object_instance - 1U;
     }
     err = led_set_brightness(led_pwm, led, steps);
+    if (err < 0) {
+        LOG_ERR(
+            "Failed to set brightness of LED %u to %u: %d", (unsigned)led,
+            (unsigned)steps, err);
+    }
 }
 
 /**
