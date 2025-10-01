@@ -28,7 +28,10 @@ jobs:
           echo "== (both dangling and unused), and optionally, volumes."
           set -e
           sudo docker system prune --all --filter "until=720h" --force
+          docker system df
+      - name: Delete unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
       - name: Pull Docker image from GHCR
         run: docker pull ghcr.io/zephyrproject-rtos/ci:v0.26-branch
       - name: Run Docker image from GHCR
-        run: docker run --rm ghcr.io/zephyrproject-rtos/ci:v0.26-branch samples.sh
+        run: docker run --rm --rm -v "$(pwd):/workspace" ghcr.io/zephyrproject-rtos/ci:v0.26-branch /bin/bash /workspace/samples.sh
