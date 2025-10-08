@@ -9,5 +9,5 @@
 #include "bacnet/basic/object/nc.h"
 
 #if defined(INTRINSIC_REPORTING)
-    OBJECT_FUNCTIONS(Notification_Class, NOTIFICATION_CLASS_INFO);
+OBJECT_FUNCTIONS(Notification_Class, NOTIFICATION_CLASS_INFO);
 #endif

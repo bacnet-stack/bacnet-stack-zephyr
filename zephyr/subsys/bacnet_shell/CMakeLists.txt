@@ -12,6 +12,8 @@ zephyr_library_sources_ifdef(CONFIG_BACNETSTACK_BACNET_SHELL
 )
 
 zephyr_library_sources_ifdef(CONFIG_BACNETSTACK_BACNET_BASIC_SHELL
+  bacnet_shell_datetime.c
+  bacnet_shell_lighting_output.c
   bacnet_shell_objects.c
   bacnet_shell_packets.c
   bacnet_shell_uptime.c
