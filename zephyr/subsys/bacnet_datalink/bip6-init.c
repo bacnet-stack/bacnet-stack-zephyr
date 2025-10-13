@@ -223,7 +223,7 @@ void bip6_get_my_address(BACNET_ADDRESS *addr)
  *
  * @param addr - network IPv6 address
  */
-bool bip6_set_addr(BACNET_IP6_ADDRESS *addr)
+bool bip6_set_addr(const BACNET_IP6_ADDRESS *addr)
 {
     return bvlc6_address_copy(&BIP6_Addr, addr);
 }
@@ -243,7 +243,7 @@ bool bip6_get_addr(BACNET_IP6_ADDRESS *addr)
  *
  * @param addr - network IPv6 address
  */
-bool bip6_set_broadcast_addr(BACNET_IP6_ADDRESS *addr)
+bool bip6_set_broadcast_addr(const BACNET_IP6_ADDRESS *addr)
 {
     return bvlc6_address_copy(&BIP6_Broadcast_Addr, addr);
 }
@@ -269,7 +269,7 @@ bool bip6_get_broadcast_addr(BACNET_IP6_ADDRESS *addr)
  * @return Upon successful completion, returns the number of bytes sent.
  *  Otherwise, -1 shall be returned and errno set to indicate the error.
  */
-int bip6_send_mpdu(BACNET_IP6_ADDRESS *dest, uint8_t *mtu, uint16_t mtu_len)
+int bip6_send_mpdu(const BACNET_IP6_ADDRESS *dest, const uint8_t *mtu, uint16_t mtu_len)
 {
     struct sockaddr_in6 bvlc_dest = { 0 };
     uint16_t addr16[8];
@@ -522,7 +522,7 @@ bool bip6_init(char *ifname)
         sizeof(struct in6_addr));
     /* Let system not choose the interface */
     join_request.ipv6mr_ifindex = BIP6_Socket_Scope_Id;
-    status = setsockopt(
+    status = zsock_setsockopt(
         BIP6_Socket, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &join_request,
         sizeof(join_request));
     if (status < 0) {
