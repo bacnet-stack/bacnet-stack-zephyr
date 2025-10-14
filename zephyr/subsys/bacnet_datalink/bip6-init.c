@@ -51,31 +51,11 @@ static char ipv6_addr_str[] = "";
 static char *inet6_ntoa(struct in6_addr *a)
 {
 #if CONFIG_BACNETSTACK_LOG_LEVEL
-    uint8_t x = 0;
-    uint8_t d = 0;
-    uint8_t non_zero_count = 0;
-
     /* Avoid overwhelming the logging system */
     while (log_buffered_cnt()) {
         k_sleep(K_MSEC(1));
     }
-
-    for (x = 0; x < IP6_ADDRESS_MAX; x += 2) {
-        if (a->s6_addr[x] | a->s6_addr[x + 1]) {
-            non_zero_count++;
-            d += snprintf(
-                &ipv6_addr_str[d], sizeof(ipv6_addr_str), "%02X%02X",
-                a->s6_addr[x], a->s6_addr[x + 1]);
-        }
-
-        if (x < 14) {
-            d += snprintf(&ipv6_addr_str[d], sizeof(ipv6_addr_str), ":");
-        }
-    }
-
-    if (!non_zero_count) {
-        snprintf(&ipv6_addr_str[0], sizeof(ipv6_addr_str), "undefined");
-    }
+    net_addr_ntop(AF_INET6, a, &ipv6_addr_str[0], sizeof(ipv6_addr_str));
 #endif
     return &ipv6_addr_str[0];
 }
