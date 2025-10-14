@@ -50,21 +50,6 @@ static char ipv4_addr_str[16] = { 0 };
 static char ipv4_addr_str[] = "";
 #endif
 
-/**
- * @brief Return a string representation of an IPv4 address
- * @param a - IPv4 address
- * @return Pointer to global string
- */
-char *inet_ntoa(struct in_addr *a)
-{
-    if (IS_ENABLED(CONFIG_BACNETSTACK_LOG_LEVEL)) {
-        snprintf(
-            ipv4_addr_str, sizeof(ipv4_addr_str), "%d.%d.%d.%d", a->s4_addr[0],
-            a->s4_addr[1], a->s4_addr[2], a->s4_addr[3]);
-    }
-
-    return &ipv4_addr_str[0];
-}
 
 /**
  * @brief Print the IPv4 address with debug info
@@ -78,7 +63,8 @@ static void debug_print_ipv4(
     const unsigned int count)
 {
     LOG_DBG(
-        "%s %s:%hu (%u bytes)", str, inet_ntoa((struct in_addr *)&addr),
+        "%s %s:%hu (%u bytes)", str,
+        net_addr_ntop(AF_INET, addr, ipv4_addr_str, sizeof(ipv4_addr_str)),
         ntohs(port), count);
 }
 
