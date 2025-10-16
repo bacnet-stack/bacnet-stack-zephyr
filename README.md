@@ -59,25 +59,36 @@ of the following ways:
 
     `west init -m https://github.com/bacnet-stack/bacnet-stack-zephyr --mr default $my_workspace`
 
-  - Note that as Zephyr OS versions change, their API often changes.
-    This library will use the following methods to accommodate the changes:
-    1. Use defines from <zephyr/version.h> for API changes:
-       ```
-       #if ZEPHYR_VERSION_CODE >= ZEPHYR_VERSION(4,2,0)
-       typedef uint64_t mgmt_event_t;
-       #else
-       typedef uint32_t mgmt_event_t;
-       #endif
-       ```
-    2. In CMakeLists.txt via trying to load specific versions of the Zephyr
-       package or checking using:
-       ```
-       if ("${KERNEL_VERSION_STRING}" VERSION_GREATER_EQUAL "4.2.0")
-       # Do stuff...
-       endif()
-       ```
-    3. In Kconfig by using 2 above and trying to load specific versions
-       of the Zephyr plugin and updating CONF_FILE accordingly.
+# Backward Compatible Samples and Applications
+
+Note that as Zephyr OS versions change, their API often changes.
+This library will use the following methods to accommodate the changes:
+
+1. Use defines from <zephyr/version.h> for API changes:
+    ```
+    #if ZEPHYR_VERSION_CODE >= ZEPHYR_VERSION(4,2,0)
+    typedef uint64_t mgmt_event_t;
+    #else
+    typedef uint32_t mgmt_event_t;
+    #endif
+    ```
+2. In CMakeLists.txt via trying to load specific versions of the Zephyr
+    package or checking using:
+    ```
+    if ("${KERNEL_VERSION_STRING}" VERSION_GREATER_EQUAL "4.2.0")
+    # Do stuff...
+    endif()
+    ```
+3. In Kconfig by using 2 above and trying to load specific versions
+    of the Zephyr plugin and updating CONF_FILE accordingly.
+4. In .dts, .dtsi or .overlay files, use KERNEL_VERSION_NUMBER or
+    KERNEL_VERSION_MAJOR defines. The C preprocessor is run on all
+    devicetree files to expand macro references.
+    ```
+    #if KERNEL_VERSION_MAJOR < 4
+    /delete-node/ &storage_partition;
+    #endif
+    ```
 
 ## Hello BACnet Stack
 

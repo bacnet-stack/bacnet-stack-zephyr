@@ -38,6 +38,8 @@ The git repository is hosted at the following site:
 * Changed gitignore to ignore the build folder.
 
 ### Added
+* Added KERNEL_VERSION_MAJOR check in samples DTS overlay files to handle
+  changes in Zephyr OS version 4
 * Added BACDL ZIGBEE and BSC datalink defines to Kconfig & CMakeLists.txt (#35)
 * Added baclog, you-are, who-am-i, create-object, delete-object, write-group,
   bramfs, bsramfs, and color-rgb modules to cmake. (#35)
