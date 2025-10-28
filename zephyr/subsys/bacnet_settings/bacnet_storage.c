@@ -249,7 +249,7 @@ int bacnet_storage_load(void)
 {
     int rc = 0;
 
-    rc = settings_load();
+    rc = settings_load_subtree(bacnet_storage_handler.name);
     if (rc) {
         LOG_ERR("settings_load failed (err %d)", rc);
         return rc;
