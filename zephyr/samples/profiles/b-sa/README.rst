@@ -1,4 +1,4 @@
-.. _b-ss_sample:
+.. _b-sa_sample:
 
 BACnet Profile B-SA Sample
 ##########################

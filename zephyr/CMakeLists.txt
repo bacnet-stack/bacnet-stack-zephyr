@@ -93,6 +93,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/bacaddr.h
     ${BACNETSTACK_SRC}/bacnet/bacapp.c
     ${BACNETSTACK_SRC}/bacnet/bacapp.h
+    ${BACNETSTACK_SRC}/bacnet/bacaudit.c
+    ${BACNETSTACK_SRC}/bacnet/bacaudit.h
     ${BACNETSTACK_SRC}/bacnet/bacdcode.c
     ${BACNETSTACK_SRC}/bacnet/bacdcode.h
     ${BACNETSTACK_SRC}/bacnet/bacdef.h
@@ -190,6 +192,7 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/object/schedule.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/structured_view.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/time_value.h
+    ${BACNETSTACK_SRC}/bacnet/basic/object/timer.h
     ${BACNETSTACK_SRC}/bacnet/basic/object/trendlog.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_alarm_ack.h
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_apdu.c
@@ -407,6 +410,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/secure_connect.h
     ${BACNETSTACK_SRC}/bacnet/special_event.c
     ${BACNETSTACK_SRC}/bacnet/special_event.h
+    ${BACNETSTACK_SRC}/bacnet/timer_value.c
+    ${BACNETSTACK_SRC}/bacnet/timer_value.h
     ${BACNETSTACK_SRC}/bacnet/timestamp.c
     ${BACNETSTACK_SRC}/bacnet/timestamp.h
     ${BACNETSTACK_SRC}/bacnet/timesync.c
@@ -454,6 +459,7 @@ set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_ANALOG_INPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/ai.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_ANALOG_OUTPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/ao.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_ANALOG_VALUE}>:${BACNETSTACK_SRC}/bacnet/basic/object/av.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_AUDIT_LOG}>:${BACNETSTACK_SRC}/bacnet/basic/object/auditlog.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_FILE}>:${BACNETSTACK_SRC}/bacnet/basic/object/bacfile.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_BINARY_INPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/bi.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_BINARY_OUTPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/bo.c>
@@ -484,6 +490,7 @@ set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_SCHEDULE}>:${BACNETSTACK_SRC}/bacnet/basic/object/schedule.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_STRUCTURED_VIEW}>:${BACNETSTACK_SRC}/bacnet/basic/object/structured_view.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_TIME_VALUE}>:${BACNETSTACK_SRC}/bacnet/basic/object/time_value.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_TIMER}>:${BACNETSTACK_SRC}/bacnet/basic/object/timer.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_TRENDLOG}>:${BACNETSTACK_SRC}/bacnet/basic/object/trendlog.c>
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_alarm_ack.c
     ${BACNETSTACK_SRC}/bacnet/basic/service/h_arf_a.c

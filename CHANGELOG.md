@@ -15,10 +15,18 @@ The git repository is hosted at the following site:
 ### Security
 
 ### Removed
-* Removed BACnet basic objects and server framework into BACnet libraray
-  and removed zephyr version.
+* Removed zephyr version of the BACnet basic objects and server framework
+  and placed them into BACnet Protocol Stack library.
 
 ### Fixed
+* Fixed compile in BACnet/IP subsys using CONFIG_POSIX_API=y. (#47)
+* Fixed missing const in bip6-init.c and used zsock API.
+  Replaced inet_ntoa with net_addr_ntop. Removed unnecessary select NET_SOCKETS_POSIX_NAMES. (#46)
+* Fixed the BACnet light override clear shell command. (#44)
+* Fixed our interface to Zephyr net manager API changes in v4.2.0. (#40)
+* Fixed samples: subsys: nvs: stm32 overlays fixup.
+  Don't try to delete storage partitions that doesn't exist anymore. (#39)
+* Fixed warning from using FD_ISSET instead of ZSOCK_FD_ISSET. (#37)
 * Fixed readme for sample projects. Fixed JSON for bacnet objects
   sub command in shell. (#31)
 * Fixed network port object all datalink builds. (#26)
@@ -28,6 +36,8 @@ The git repository is hosted at the following site:
   to avoid stack overflow.
 
 ### Changed
+* Change the settings restore to load only BACnet settings by using
+  bacnet_storage_handler.name feature.
 * Changed the number of sample board builds for twister to reduce minutes.
 * Changed pipeline to use container ghcr.io/zephyrproject-rtos/ci:v0.26-branch
   and build tests and samples using twister for Zephyr OS version 3.7 LTS
@@ -38,8 +48,14 @@ The git repository is hosted at the following site:
 * Changed gitignore to ignore the build folder.
 
 ### Added
+* Added BACnet Application Specific Control (B-ASC) sample. (#51)
+* Added timer and audit-log objects to basic server. (#51)
+* Added Model_Name config to the Kconfig for basic BACnet device. (#50)
 * Added KERNEL_VERSION_MAJOR check in samples DTS overlay files to handle
-  changes in Zephyr OS version 4
+  changes in Zephyr OS version 4. (#48)
+* Added shell command for lighting output overridden and tracking value. (#41)
+* Added BACnet zephyr shell for device date, time, and lighting
+  output object. (#36)
 * Added BACDL ZIGBEE and BSC datalink defines to Kconfig & CMakeLists.txt (#35)
 * Added baclog, you-are, who-am-i, create-object, delete-object, write-group,
   bramfs, bsramfs, and color-rgb modules to cmake. (#35)
