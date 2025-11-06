@@ -667,6 +667,12 @@ config BACNET_BASIC_DEVICE_OBJECT_VERSION
     help
         BACnet Device Object Version string
 
+config BACNET_BASIC_DEVICE_MODEL_NAME
+    string "BACnet Device Model Name string"
+    default "GNU Basic Server Model 42"
+    help
+        BACnet Device Model Name string
+
 config BACNET_BASIC_DEVICE_OBJECT_NAME
     string "BACnet Device default Object Name string"
     default "BACnet Device"
@@ -699,7 +705,7 @@ config BACNET_BASIC_COV_ADDRESSES_SIZE
 
 config BACNET_BASIC_DEVICE_SERIAL_NUMBER
     string "BACnet Device default Serial Number string"
-    default "BACnet Device"
+    default "BACnetDMcN56RBkeDJuNfxn3M44tfC2Y"
     help
         BACnet Device default Serial Number string
 
