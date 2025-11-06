@@ -122,6 +122,12 @@ A device application demonstrating configuration of a
 [BACnet Lighting Supervisor (B-LS) device profile](./zephyr/samples/profiles/b-ls/README.rst)
 that can be used with any supported boards.
 
+### Device Profile - BACnet Application Specific Controller (B-ASC)
+
+A device application demonstrating configuration of a
+[BACnet Application Specific Controller (B-ASC) device profile](./zephyr/samples/profiles/b-asc/README.rst)
+that can be used with any supported boards.
+
 # Coding Style and Guidelines
 
 See Zephyr Project [Coding Guidelines](https://docs.zephyrproject.org/latest/contribute/coding_guidelines/index.html)
