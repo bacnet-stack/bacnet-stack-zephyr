@@ -48,6 +48,8 @@ The git repository is hosted at the following site:
 * Changed gitignore to ignore the build folder.
 
 ### Added
+* Added all the basic object property value data types supported
+  for B-ASC sample. (#52)
 * Added BACnet Application Specific Control (B-ASC) sample. (#51)
 * Added timer and audit-log objects to basic server. (#51)
 * Added Model_Name config to the Kconfig for basic BACnet device. (#50)
