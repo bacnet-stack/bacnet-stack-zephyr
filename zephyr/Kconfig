@@ -137,7 +137,8 @@ config BACAPP_TYPES_EXTRA
        CALENDAR_ENTRY, SPECIAL_EVENT, HOST_N_PORT,
        DEVICE_OBJECT_PROPERTY_REFERENCE, DEVICE_OBJECT_REFERENCE,
        OBJECT_PROPERTY_REFERENCE, DESTINATION, BDT_ENTRY, FDT_ENTRY,
-       ACTION_COMMAND, SCALE, SHED_LEVEL
+       ACTION_COMMAND, SCALE, SHED_LEVEL, ACCESS_RULE, CHANNEL_VALUE,
+       TIMER_VALUE, LOG_RECORD, and SECURE_CONNECT
 
 config BACAPP_NULL
     bool "BACnet data types supported for WriteProperty: NULL"
@@ -337,6 +338,12 @@ config BACAPP_CHANNEL_VALUE
     help
        BACnet data types supported for WriteProperty: BACAPP_CHANNEL_VALUE
 
+config BACAPP_TIMER_VALUE
+    bool "BACnet data types supported for WriteProperty: BACAPP_TIMER_VALUE"
+    default false
+    help
+       BACnet data types supported for WriteProperty: BACAPP_TIMER_VALUE
+
 config BACAPP_LOG_RECORD
     bool "BACnet data types supported for WriteProperty: BACAPP_LOG_RECORD"
     default false
@@ -360,6 +367,236 @@ config BACAPP_SNPRINTF_ENABLED
     default false
     help
         Enable BACnet app snprintf
+
+config CHANNEL_NUMERIC
+    bool "BACnet data types supported for BACnetChanneValue numeric"
+    default true
+    help
+       BACnet data types supported for BACnetChanneValue numeric include:
+       NULL, BOOLEAN, UNSIGNED, SIGNED, REAL, DOUBLE, ENUMERATED,
+       LIGHTING_COMMAND, COLOR_COMMAND, and XY_COLOR.
+
+config CHANNEL_VALUE_ALL
+    bool "BACnet data types supported for all BACnetChanneValue types"
+    default true
+    help
+       NULL, BOOLEAN, UNSIGNED, SIGNED, REAL, DOUBLE, ENUMERATED,
+       LIGHTING_COMMAND, COLOR_COMMAND, XY_COLOR, OBJECT_ID,
+       OCTET_STRING, CHARACTER_STRING, BIT_STRING, DATE, and TIME.
+
+config CHANNEL_NULL
+    bool "BACnet data types supported for BACnetChanneValue: NULL"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: NULL
+
+config CHANNEL_BOOLEAN
+    bool "BACnet data types supported for BACnetChanneValue: BOOLEAN"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: BOOLEAN
+
+config CHANNEL_UNSIGNED
+    bool "BACnet data types supported for BACnetChanneValue: UNSIGNED"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: UNSIGNED
+
+config CHANNEL_SIGNED
+    bool "BACnet data types supported for BACnetChanneValue: SIGNED"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: SIGNED
+
+config CHANNEL_REAL
+    bool "BACnet data types supported for BACnetChanneValue: REAL"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: REAL
+
+config CHANNEL_DOUBLE
+    bool "BACnet data types supported for BACnetChanneValue: DOUBLE"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: DOUBLE
+
+config CHANNEL_OCTET_STRING
+    bool "BACnet data types supported for BACnetChanneValue: OCTET_STRING"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: OCTET_STRING
+
+config CHANNEL_CHARACTER_STRING
+    bool "BACnet data types supported for BACnetChanneValue: CHARACTER_STRING"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: CHARACTER_STRING
+
+config CHANNEL_BIT_STRING
+    bool "BACnet data types supported for BACnetChanneValue: BIT_STRING"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: BIT_STRING
+
+config CHANNEL_ENUMERATED
+    bool "BACnet data types supported for BACnetChanneValue: ENUMERATED"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: ENUMERATED
+
+config CHANNEL_DATE
+    bool "BACnet data types supported for BACnetChanneValue: DATE"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: DATE
+
+config CHANNEL_TIME
+    bool "BACnet data types supported for BACnetChanneValue: TIME"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: TIME
+
+config CHANNEL_OBJECT_ID
+    bool "BACnet data types supported for BACnetChanneValue: OBJECT_ID"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: OBJECT_ID
+
+config CHANNEL_LIGHTING_COMMAND
+    bool "BACnet data types supported for BACnetChanneValue: LIGHTING_COMMAND"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: LIGHTING_COMMAND
+
+config CHANNEL_XY_COLOR
+    bool "BACnet data types supported for BACnetChanneValue: XY_COLOR"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: XY_COLOR
+
+config CHANNEL_COLOR_COMMAND
+    bool "BACnet data types supported for BACnetChanneValue: COLOR_COMMAND"
+    default false
+    help
+       BACnet data types supported for BACnetChanneValue: COLOR_COMMAND
+
+config BACNET_TIMER_VALUE_NUMERIC
+    bool "BACnet data types supported for BACnetTimerStateChangeValue numeric"
+    default true
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue numeric include:
+       NULL, BOOLEAN, UNSIGNED, SIGNED, REAL, DOUBLE, ENUMERATED, and NO_VALUE
+
+config BACNET_TIMER_VALUE_ALL
+    bool "BACnet data types supported for all BACnetTimerStateChangeValue types"
+    default true
+    help
+       BACnet data types supported for all BACnetTimerStateChangeValue types include:
+       NULL, BOOLEAN, UNSIGNED, SIGNED, REAL, DOUBLE, ENUMERATED, NO_VALUE,
+       OCTET_STRING, CHARACTER_STRING, BIT_STRING, DATE, TIME, OBJECT_ID,
+       DATETIME, CONSTRUCTED_VALUE, and LIGHTING_COMMAND
+
+config BACNET_TIMER_VALUE_NULL
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: NULL"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: NULL
+
+config BACNET_TIMER_VALUE_BOOLEAN
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: BOOLEAN"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: BOOLEAN
+
+config BACNET_TIMER_VALUE_UNSIGNED
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: UNSIGNED"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: UNSIGNED
+
+config BACNET_TIMER_VALUE_SIGNED
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: SIGNED"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: SIGNED
+
+config BACNET_TIMER_VALUE_REAL
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: REAL"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: REAL
+
+config BACNET_TIMER_VALUE_DOUBLE
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: DOUBLE"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: DOUBLE
+
+config BACNET_TIMER_VALUE_OCTET_STRING
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: OCTET_STRING"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: OCTET_STRING
+
+config BACNET_TIMER_VALUE_CHARACTER_STRING
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: CHARACTER_STRING"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: CHARACTER_STRING
+
+config BACNET_TIMER_VALUE_BIT_STRING
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: BIT_STRING"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: BIT_STRING
+
+config BACNET_TIMER_VALUE_ENUMERATED
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: ENUMERATED"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: ENUMERATED
+
+config BACNET_TIMER_VALUE_DATE
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: DATE"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: DATE
+
+config BACNET_TIMER_VALUE_TIME
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: TIME"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: TIME
+
+config BACNET_TIMER_VALUE_OBJECT_ID
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: OBJECT_ID"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: OBJECT_ID
+
+config BACNET_TIMER_VALUE_DATETIME
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: DATETIME"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: DATETIME
+
+config BACNET_TIMER_VALUE_LIGHTING_COMMAND
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: LIGHTING_COMMAND"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: LIGHTING_COMMAND
+
+config BACNET_TIMER_VALUE_NO_VALUE
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: NO_VALUE"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: NO_VALUE
+
+config BACNET_TIMER_VALUE_CONSTRUCTED_VALUE
+    bool "BACnet data types supported for BACnetTimerStateChangeValue: CONSTRUCTED_VALUE"
+    default false
+    help
+       BACnet data types supported for BACnetTimerStateChangeValue: CONSTRUCTED_VALUE
 
 config BACDL_BIP_PORT
     int "BACnet IPv4 UDP port"
