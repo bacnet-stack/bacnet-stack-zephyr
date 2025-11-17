@@ -647,6 +647,12 @@ config BACDL_BIP6_PORT
     help
         UDP port to listen on (default=47808)
 
+config BACNET_MAX_APDU
+    int "Maximum size of the APDU"
+    default 1476
+    help
+        Maximum size of the APDU (default=1476)
+
 config BACNET_MAX_TSM_TRANSACTIONS
     int "Number of initiated confirmed-message transactions"
     default 1
@@ -813,6 +819,12 @@ config BACNET_BASIC_OBJECT_LOAD_CONTROL
     default false
     help
         Use the BACnet basic load control object
+
+config BACNET_BASIC_OBJECT_LOOP
+    bool "Use the BACnet basic loop object"
+    default false
+    help
+        Use the BACnet basic loop object
 
 config BACNET_BASIC_OBJECT_LIGHTING_OUTPUT
     bool "Use the BACnet basic lighting output object"
