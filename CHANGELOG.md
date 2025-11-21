@@ -48,6 +48,10 @@ The git repository is hosted at the following site:
 * Changed gitignore to ignore the build folder.
 
 ### Added
+* Added "bacnet property" shell command with list, size, and value options.
+  The value option can list all the property values of any internal object,
+  and read or write any specific property values that are writable.
+  The output is in JSON format.
 * Added all the basic object property value data types supported
   for B-ASC sample. (#52)
 * Added BACnet Application Specific Control (B-ASC) sample. (#51)
