@@ -197,6 +197,122 @@ static void bacnet_shell_write_property_parameter_init(
 }
 
 /**
+ * @brief determine if the JSON string value requires quoations or not
+ * @param value string value to analyze
+ * @return true if the string requires quotations
+ */
+static bool cmd_json_is_quoted(const char *value)
+{
+    bool quotes = false;
+    int digit = 0, len = 0, decimal_points = 0;
+    bool digits_only = false;
+
+    /*  In JSON, the treatment of values as quoted or numeric
+        depends on their data type:
+        String values: Must always be enclosed in double quotes.
+        Numeric values: Should not be enclosed in double quotes.
+        They are represented directly as numbers
+        (integers or floating-point numbers).
+        Boolean values: true and false are keywords and are not quoted.
+        Null value: null is a keyword and is not quoted. */
+    if ((strcmp(value, "true") == 0) || (strcmp(value, "false") == 0) ||
+        (strcmp(value, "null") == 0)) {
+        quotes = false;
+    } else {
+        len = strlen(value);
+        if (len && (value[0] == '"')) {
+            /* already quoted */
+            quotes = false;
+        } else if (len) {
+            digits_only = true;
+            while (len) {
+                len--;
+                digit = value[len];
+                if (!isdigit(digit)) {
+                    if ((len == 0) && (value[len] == '-')) {
+                        /* negative sign could be numeric */
+                    } else if (value[len] == '.') {
+                        /* one decimal place could be numeric */
+                        decimal_points++;
+                        if (decimal_points > 1) {
+                            digits_only = false;
+                        }
+                    } else {
+                        digits_only = false;
+                    }
+                }
+            }
+            if (digits_only) {
+                quotes = false;
+            } else {
+                quotes = true;
+            }
+        } else {
+            /* empty value string */
+            quotes = true;
+        }
+    }
+
+    return quotes;
+}
+
+static int cmd_json_print_key_value(
+    const struct shell *sh,
+    const char *prefix,
+    const char *key,
+    const char *value,
+    const char *suffix,
+    const char *append)
+{
+    const char *isquoted = "";
+
+    if (cmd_json_is_quoted(value)) {
+        isquoted = "\"";
+    }
+    shell_print(
+        sh, "%s{\"%s\": %s%s%s}%s%s", prefix, key, isquoted, value, isquoted,
+        suffix, append);
+
+    return 0;
+}
+
+static int cmd_json_print_hex_dump(
+    const struct shell *sh,
+    const char *prefix,
+    const char *key,
+    const char *buffer,
+    int buffer_length,
+    const char *suffix,
+    const char *append)
+{
+    char str[(buffer_length * 2) + 1];
+    int i, s, slen;
+
+    s = 0;
+    for (i = 0; i < buffer_length; i++) {
+        slen = sprintf(&str[s], "%02x", buffer[i]);
+        s += slen;
+    }
+    cmd_json_print_key_value(sh, prefix, key, str, suffix, append);
+
+    return 0;
+}
+
+static int cmd_json_print_key_error(
+    const struct shell *sh,
+    const char *key,
+    const char *error_class,
+    const char *error_code,
+    const char *append)
+{
+    shell_print(
+        sh, "{\"%s\": {\"error-class\": %s}, {\"error-code\": %s}}%s", key,
+        error_class, error_code, append);
+
+    return 0;
+}
+
+/**
  * @brief Get or set a BACnet object property value
  * @param sh Shell
  * @return 0 on success, negative on failure
@@ -207,7 +323,7 @@ static int cmd_value_print(
     BACNET_APPLICATION_DATA_VALUE *value,
     int apdu_len,
     bool skip_print,
-    bool last)
+    const char *append)
 {
     BACNET_OBJECT_PROPERTY_VALUE object_value = { 0 };
     uint8_t *apdu;
@@ -215,13 +331,33 @@ static int cmd_value_print(
     bool first_value = true;
     bool last_value = false;
     bool list_value = false;
+    const char *prefix = "";
+    const char *suffix = "";
+    char name[80] = "";
 
+    if (apdu_len < 0) {
+        if (bactext_property_name_proprietary(rpdata->object_property)) {
+            cmd_json_print_key_error(
+                sh, bacnet_ultoa(rpdata->object_property, name, sizeof(name)),
+                bactext_error_class_name(rpdata->error_class),
+                bactext_error_code_name(rpdata->error_code), append);
+        } else {
+            cmd_json_print_key_error(
+                sh, bactext_property_name(rpdata->object_property),
+                bactext_error_class_name(rpdata->error_class),
+                bactext_error_code_name(rpdata->error_code), append);
+        }
+        return 0;
+    }
     apdu = rpdata->application_data;
     for (;;) {
         len = bacapp_decode_known_array_property(
             apdu, apdu_len, value, rpdata->object_type, rpdata->object_property,
             rpdata->array_index);
         if (len < 0) {
+            cmd_json_print_hex_dump(
+                sh, prefix, bactext_property_name(object_value.object_property),
+                apdu, apdu_len, suffix, append);
             break;
         }
         if (first_value && (len < apdu_len)) {
@@ -237,17 +373,29 @@ static int cmd_value_print(
         object_value.array_index = rpdata->array_index;
         object_value.value = value;
         if (!skip_print) {
+            if (first_value && list_value) {
+                prefix = "[";
+            } else {
+                prefix = "";
+            }
+            if (last_value && list_value) {
+                suffix = "]";
+            } else {
+                suffix = "";
+            }
             str_len = bacapp_snprintf_value(NULL, 0, &object_value);
             if (str_len > 0) {
                 char str[str_len + 1];
                 bacapp_snprintf_value(str, str_len + 1, &object_value);
-                shell_print(
-                    sh, "%s{\"%s\": \"%s\"}%s%s",
-                    (first_value && list_value) ? "[" : "",
+                cmd_json_print_key_value(
+                    sh, prefix,
                     bactext_property_name(object_value.object_property), str,
-                    (last_value && list_value) ? "]" : "", last ? "]" : ",");
+                    suffix, append);
             } else {
-                shell_hexdump(sh, apdu, apdu_len);
+                cmd_json_print_hex_dump(
+                    sh, prefix,
+                    bactext_property_name(object_value.object_property), apdu,
+                    len, suffix, append);
             }
         }
         first_value = false;
@@ -279,7 +427,7 @@ static int cmd_print_value_all(
     unsigned count = 0, index = 0, counter = 0;
     int apdu_len, err;
     bool skip_print = false;
-    bool last;
+    char *append = ",";
 
     if (!rpdata) {
         return -EINVAL;
@@ -290,7 +438,7 @@ static int cmd_print_value_all(
         pPropertyList.Proprietary.count;
     /* display the property-list as well formed JSON */
     shell_print(
-        sh, "{\"%s\":{\"%s\":%u},",
+        sh, "{\"%s\":\"(%s:%u)\",",
         bactext_property_name(PROP_OBJECT_IDENTIFIER),
         bactext_object_type_name(rpdata->object_type), rpdata->object_instance);
     shell_print(sh, "\"%s\": [", bactext_property_name(PROP_PROPERTY_LIST));
@@ -299,18 +447,10 @@ static int cmd_print_value_all(
         counter++;
         rpdata->object_property = pPropertyList.Required.pList[index];
         apdu_len = Device_Read_Property(rpdata);
-        if (apdu_len >= 0) {
-            if (counter == count) {
-                last = true;
-            }
-            err =
-                cmd_value_print(sh, rpdata, value, apdu_len, skip_print, last);
-        } else {
-            shell_print(
-                sh, "ReadProperty ERROR:%s:%s",
-                bactext_error_class_name(rpdata->error_class),
-                bactext_error_code_name(rpdata->error_code));
+        if (counter == count) {
+            append = "],";
         }
+        err = cmd_value_print(sh, rpdata, value, apdu_len, skip_print, append);
         index++;
     }
     index = 0;
@@ -318,18 +458,10 @@ static int cmd_print_value_all(
         counter++;
         rpdata->object_property = pPropertyList.Required.pList[index];
         apdu_len = Device_Read_Property(rpdata);
-        if (apdu_len >= 0) {
-            if (counter == count) {
-                last = true;
-            }
-            err =
-                cmd_value_print(sh, rpdata, value, apdu_len, skip_print, last);
-        } else {
-            shell_print(
-                sh, "ReadProperty ERROR:%s:%s",
-                bactext_error_class_name(rpdata->error_class),
-                bactext_error_code_name(rpdata->error_code));
+        if (counter == count) {
+            append = "],";
         }
+        err = cmd_value_print(sh, rpdata, value, apdu_len, skip_print, append);
         index++;
     }
     index = 0;
@@ -337,18 +469,10 @@ static int cmd_print_value_all(
         counter++;
         rpdata->object_property = pPropertyList.Required.pList[index];
         apdu_len = Device_Read_Property(rpdata);
-        if (apdu_len >= 0) {
-            if (counter == count) {
-                last = true;
-            }
-            err =
-                cmd_value_print(sh, rpdata, value, apdu_len, skip_print, last);
-        } else {
-            shell_print(
-                sh, "ReadProperty ERROR:%s:%s",
-                bactext_error_class_name(rpdata->error_class),
-                bactext_error_code_name(rpdata->error_code));
+        if (counter == count) {
+            append = "],";
         }
+        err = cmd_value_print(sh, rpdata, value, apdu_len, skip_print, append);
         index++;
     }
     shell_print(sh, "\"property-list-size\": %d}", count);
@@ -418,14 +542,7 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
         return 0;
     }
     apdu_len = Device_Read_Property(&rpdata);
-    if (apdu_len >= 0) {
-        err = cmd_value_print(sh, &rpdata, &value, apdu_len, skip_print, true);
-    } else {
-        shell_print(
-            sh, "ReadProperty ERROR:%s:%s",
-            bactext_error_class_name(rpdata.error_class),
-            bactext_error_code_name(rpdata.error_code));
-    }
+    err = cmd_value_print(sh, &rpdata, &value, apdu_len, skip_print, "");
     if (value_string) {
         /* WriteProperty */
         /* allow for optional priority using @ symbol for commandables */
@@ -467,11 +584,13 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
             status =
                 bacapp_parse_application_data(value.tag, value_string, &value);
         }
+#ifdef BACNET_SHELL_PROPERTY_DEBUG
         shell_print(
             sh, "Parsed %s-%u %s %s -> tag=%u %s",
             bactext_object_type_name(object_type), object_instance,
             bactext_property_name(object_property), value_string, value.tag,
             status ? "successfully" : "unsuccessfully");
+#endif
         if (status) {
             apdu_len = bacapp_encode_data(apdu, &value);
             if (apdu_len) {
@@ -481,16 +600,21 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
                 memcpy(&wpdata.application_data, apdu, apdu_len);
                 status = Device_Write_Property(&wpdata);
                 if (status) {
-                    shell_print(sh, "WriteProperty SUCCESS");
+                    cmd_json_print_key_error(
+                        sh, bactext_property_name(wpdata.object_property),
+                        bactext_error_class_name(ERROR_CLASS_PROPERTY),
+                        bactext_error_code_name(ERROR_CODE_SUCCESS), "");
                 } else {
-                    shell_print(
-                        sh, "WriteProperty ERROR:%s:%s",
+                    cmd_json_print_key_error(
+                        sh, bactext_property_name(wpdata.object_property),
                         bactext_error_class_name(wpdata.error_class),
-                        bactext_error_code_name(wpdata.error_code));
+                        bactext_error_code_name(wpdata.error_code), "");
                 }
             } else {
-                shell_print(
-                    sh, "WriteProperty failed to encode application data");
+                cmd_json_print_key_error(
+                    sh, bactext_property_name(object_property),
+                    bactext_error_class_name(ERROR_CLASS_PROPERTY),
+                    bactext_error_code_name(ERROR_CODE_UNEXPECTED_DATA), "");
             }
         }
     }
@@ -513,7 +637,7 @@ static int cmd_list(const struct shell *sh, size_t argc, char **argv)
     unsigned count = 0, index = 0, counter = 0;
     int err;
 
-    if (argc > 2) {
+    if ((argc == 2) || (argc == 3)) {
         err = bacnet_shell_object_type_instance_parse(
             sh, argc, argv, &object_type, &object_instance);
         if (err != 0) {
@@ -530,7 +654,7 @@ static int cmd_list(const struct shell *sh, size_t argc, char **argv)
         pPropertyList.Proprietary.count;
     /* display the property-list as well formed JSON */
     shell_print(
-        sh, "{\"%s\":{\"%s\":%u},",
+        sh, "{\"%s\":\"(%s:%u)\",",
         bactext_property_name(PROP_OBJECT_IDENTIFIER),
         bactext_object_type_name(object_type), object_instance);
     shell_print(sh, "\"%s\": [", bactext_property_name(PROP_PROPERTY_LIST));
@@ -576,16 +700,18 @@ static int cmd_size(const struct shell *sh, size_t argc, char **argv)
 {
     /* display the sizes as well formed JSON */
     shell_print(
-        sh, "{{\"read-property-data-size\": %lu},",
+        sh, "{\"read-property-data-size\": %lu,",
         (unsigned long)sizeof(BACNET_READ_PROPERTY_DATA));
     shell_print(
-        sh, "{\"write-property-data-size\": %lu},",
+        sh, "\"application-data-unit-size\": %lu,", (unsigned long)MAX_APDU);
+    shell_print(
+        sh, "\"write-property-data-size\": %lu,",
         (unsigned long)sizeof(BACNET_WRITE_PROPERTY_DATA));
     shell_print(
-        sh, "{\"application-data-value-size\": %lu},",
+        sh, "\"application-data-value-size\": %lu,",
         (unsigned long)sizeof(BACNET_APPLICATION_DATA_VALUE));
     shell_print(
-        sh, "{\"object-property-value-size\": %lu}}",
+        sh, "\"object-property-value-size\": %lu}",
         (unsigned long)sizeof(BACNET_OBJECT_PROPERTY_VALUE));
 
     return 0;
