@@ -312,6 +312,15 @@ static int cmd_json_print_key_error(
     return 0;
 }
 
+static char *
+bactext_name(const char *name, unsigned long value, char *buffer, size_t size)
+{
+    if (name) {
+        return bacnet_sprintf_to_ascii(buffer, size, "%s", name);
+    }
+    return bacnet_ultoa(value, buffer, size);
+}
+
 /**
  * @brief Get or set a BACnet object property value
  * @param sh Shell
@@ -333,20 +342,22 @@ static int cmd_value_print(
     bool list_value = false;
     const char *prefix = "";
     const char *suffix = "";
-    char name[80] = "";
+    char property_name[80] = "";
+    char class_name[80] = "";
+    char code_name[80] = "";
 
+    bactext_name(
+        bactext_property_name_default(rpdata->object_property, NULL),
+        rpdata->object_property, property_name, sizeof(property_name));
     if (apdu_len < 0) {
-        if (bactext_property_name_proprietary(rpdata->object_property)) {
-            cmd_json_print_key_error(
-                sh, bacnet_ultoa(rpdata->object_property, name, sizeof(name)),
-                bactext_error_class_name(rpdata->error_class),
-                bactext_error_code_name(rpdata->error_code), append);
-        } else {
-            cmd_json_print_key_error(
-                sh, bactext_property_name(rpdata->object_property),
-                bactext_error_class_name(rpdata->error_class),
-                bactext_error_code_name(rpdata->error_code), append);
-        }
+        bactext_name(
+            bactext_error_class_name_default(rpdata->error_class, NULL),
+            rpdata->error_class, class_name, sizeof(class_name));
+        bactext_name(
+            bactext_error_code_name_default(rpdata->error_code, NULL),
+            rpdata->error_code, code_name, sizeof(code_name));
+        cmd_json_print_key_error(
+            sh, property_name, class_name, code_name, append);
         return 0;
     }
     apdu = rpdata->application_data;
@@ -356,8 +367,7 @@ static int cmd_value_print(
             rpdata->array_index);
         if (len < 0) {
             cmd_json_print_hex_dump(
-                sh, prefix, bactext_property_name(object_value.object_property),
-                apdu, apdu_len, suffix, append);
+                sh, prefix, property_name, apdu, apdu_len, suffix, append);
             break;
         }
         if (first_value && (len < apdu_len)) {
@@ -388,14 +398,10 @@ static int cmd_value_print(
                 char str[str_len + 1];
                 bacapp_snprintf_value(str, str_len + 1, &object_value);
                 cmd_json_print_key_value(
-                    sh, prefix,
-                    bactext_property_name(object_value.object_property), str,
-                    suffix, append);
+                    sh, prefix, property_name, str, suffix, append);
             } else {
                 cmd_json_print_hex_dump(
-                    sh, prefix,
-                    bactext_property_name(object_value.object_property), apdu,
-                    len, suffix, append);
+                    sh, prefix, property_name, apdu, len, suffix, append);
             }
         }
         first_value = false;
@@ -507,6 +513,7 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
     bool null_value = false;
     bool skip_print = false;
     bool print_all_properties = false;
+    char property_name[80] = "";
 
     if ((argc == 2) || (argc == 3)) {
         err = bacnet_shell_object_type_instance_parse(
@@ -602,20 +609,24 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
                 wpdata.application_data_len = apdu_len;
                 memcpy(&wpdata.application_data, apdu, apdu_len);
                 status = Device_Write_Property(&wpdata);
+                bactext_name(
+                    bactext_property_name_default(wpdata.object_property, NULL),
+                    wpdata.object_property, property_name,
+                    sizeof(property_name));
                 if (status) {
                     cmd_json_print_key_error(
-                        sh, bactext_property_name(wpdata.object_property),
+                        sh, property_name,
                         bactext_error_class_name(ERROR_CLASS_PROPERTY),
                         bactext_error_code_name(ERROR_CODE_SUCCESS), "");
                 } else {
                     cmd_json_print_key_error(
-                        sh, bactext_property_name(wpdata.object_property),
+                        sh, property_name,
                         bactext_error_class_name(wpdata.error_class),
                         bactext_error_code_name(wpdata.error_code), "");
                 }
             } else {
                 cmd_json_print_key_error(
-                    sh, bactext_property_name(object_property),
+                    sh, property_name,
                     bactext_error_class_name(ERROR_CLASS_PROPERTY),
                     bactext_error_code_name(ERROR_CODE_UNEXPECTED_DATA), "");
             }
@@ -638,6 +649,7 @@ static int cmd_list(const struct shell *sh, size_t argc, char **argv)
     uint32_t object_instance = 0;
     struct special_property_list_t pPropertyList = { 0 };
     unsigned count = 0, index = 0, counter = 0;
+    char property_name[80] = "";
     int err;
 
     if ((argc == 2) || (argc == 3)) {
@@ -664,19 +676,25 @@ static int cmd_list(const struct shell *sh, size_t argc, char **argv)
     index = 0;
     while (pPropertyList.Required.pList[index] != -1) {
         counter++;
+        bactext_name(
+            bactext_property_name_default(
+                pPropertyList.Required.pList[index], NULL),
+            pPropertyList.Required.pList[index], property_name,
+            sizeof(property_name));
         shell_print(
-            sh, "\"%s\"%s",
-            bactext_property_name(pPropertyList.Required.pList[index]),
-            (counter == count) ? "]," : ",");
+            sh, "\"%s\"%s", property_name, (counter == count) ? "]," : ",");
         index++;
     }
     index = 0;
     while (pPropertyList.Optional.pList[index] != -1) {
         counter++;
+        bactext_name(
+            bactext_property_name_default(
+                pPropertyList.Optional.pList[index], NULL),
+            pPropertyList.Optional.pList[index], property_name,
+            sizeof(property_name));
         shell_print(
-            sh, "\"%s\"%s",
-            bactext_property_name(pPropertyList.Required.pList[index]),
-            (counter == count) ? "]," : ",");
+            sh, "\"%s\"%s", property_name, (counter == count) ? "]," : ",");
         index++;
     }
     index = 0;
