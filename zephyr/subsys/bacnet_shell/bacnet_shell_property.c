@@ -418,11 +418,10 @@ static int cmd_value_print(
  * @param argv Argument list
  * @return 0 on success, negative on failure
  */
-static int cmd_print_value_all(
-    const struct shell *sh,
-    BACNET_READ_PROPERTY_DATA *rpdata,
-    BACNET_APPLICATION_DATA_VALUE *value)
+static int
+cmd_print_value_all(const struct shell *sh, BACNET_READ_PROPERTY_DATA *rpdata)
 {
+    BACNET_APPLICATION_DATA_VALUE value = { 0 };
     struct special_property_list_t pPropertyList = { 0 };
     unsigned count = 0, index = 0, counter = 0;
     int apdu_len, err;
@@ -450,7 +449,8 @@ static int cmd_print_value_all(
         if (counter == count) {
             append = "],";
         }
-        err = cmd_value_print(sh, rpdata, value, apdu_len, skip_print, append);
+        bacapp_value_list_init(&value, 1);
+        err = cmd_value_print(sh, rpdata, &value, apdu_len, skip_print, append);
         index++;
     }
     index = 0;
@@ -461,7 +461,8 @@ static int cmd_print_value_all(
         if (counter == count) {
             append = "],";
         }
-        err = cmd_value_print(sh, rpdata, value, apdu_len, skip_print, append);
+        bacapp_value_list_init(&value, 1);
+        err = cmd_value_print(sh, rpdata, &value, apdu_len, skip_print, append);
         index++;
     }
     index = 0;
@@ -472,7 +473,8 @@ static int cmd_print_value_all(
         if (counter == count) {
             append = "],";
         }
-        err = cmd_value_print(sh, rpdata, value, apdu_len, skip_print, append);
+        bacapp_value_list_init(&value, 1);
+        err = cmd_value_print(sh, rpdata, &value, apdu_len, skip_print, append);
         index++;
     }
     shell_print(sh, "\"property-list-size\": %d}", count);
@@ -538,10 +540,11 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
     rpdata.object_property = object_property;
     rpdata.array_index = array_index;
     if (print_all_properties) {
-        cmd_print_value_all(sh, &rpdata, &value);
+        cmd_print_value_all(sh, &rpdata);
         return 0;
     }
     apdu_len = Device_Read_Property(&rpdata);
+    bacapp_value_list_init(&value, 1);
     err = cmd_value_print(sh, &rpdata, &value, apdu_len, skip_print, "");
     if (value_string) {
         /* WriteProperty */
