@@ -370,7 +370,7 @@ static int cmd_value_print(
                 sh, prefix, property_name, apdu, apdu_len, suffix, append);
             break;
         }
-        if (first_value && (len < apdu_len)) {
+        if (first_value && (len > 0) && (len < apdu_len)) {
             list_value = true;
         }
         if (len >= apdu_len) {
@@ -408,9 +408,13 @@ static int cmd_value_print(
         if (last_value) {
             break;
         }
-        apdu_len -= len;
-        if (apdu) {
-            apdu += len;
+        if (len > 0) {
+            apdu_len -= len;
+            if (apdu) {
+                apdu += len;
+            }
+        } else {
+            break;
         }
     }
 
