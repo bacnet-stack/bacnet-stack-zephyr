@@ -462,7 +462,7 @@ cmd_print_value_all(const struct shell *sh, BACNET_READ_PROPERTY_DATA *rpdata)
     index = 0;
     while (pPropertyList.Optional.pList[index] != -1) {
         counter++;
-        rpdata->object_property = pPropertyList.Required.pList[index];
+        rpdata->object_property = pPropertyList.Optional.pList[index];
         apdu_len = Device_Read_Property(rpdata);
         if (counter == count) {
             append = "],";
@@ -474,7 +474,7 @@ cmd_print_value_all(const struct shell *sh, BACNET_READ_PROPERTY_DATA *rpdata)
     index = 0;
     while (pPropertyList.Proprietary.pList[index] != -1) {
         counter++;
-        rpdata->object_property = pPropertyList.Required.pList[index];
+        rpdata->object_property = pPropertyList.Proprietary.pList[index];
         apdu_len = Device_Read_Property(rpdata);
         if (counter == count) {
             append = "],";
