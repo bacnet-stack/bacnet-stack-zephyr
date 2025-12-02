@@ -316,7 +316,7 @@ static char *
 bactext_name(const char *name, unsigned long value, char *buffer, size_t size)
 {
     if (name) {
-        return bacnet_sprintf_to_ascii(buffer, size, "%s", name);
+        return bacnet_snprintf_to_ascii(buffer, size, "%s", name);
     }
     return bacnet_ultoa(value, buffer, size);
 }
