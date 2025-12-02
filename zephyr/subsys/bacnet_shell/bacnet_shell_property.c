@@ -117,10 +117,9 @@ int bacnet_shell_property_parse(
     }
     err = bacnet_shell_object_type_instance_parse(
         sh, argc, argv, object_type, object_instance);
-    /* property can have [] to denote array */
     if (isalpha(argv[3][0])) {
-        /* choose a property by name */
-        scan_count = sscanf(argv[3], "%79s[%u]", name, &array_value);
+        /* choose a property by name with optional [] to denote array */
+        scan_count = sscanf(argv[3], "%79[^[][%u]", name, &array_value);
         if (scan_count < 1) {
             shell_error(sh, "parse: missing property: %s.", argv[3]);
             return -EINVAL;
@@ -308,6 +307,27 @@ static int cmd_json_print_key_error(
     shell_print(
         sh, "{\"%s\": {\"error-class\": %s}, {\"error-code\": %s}}%s", key,
         error_class, error_code, append);
+
+    return 0;
+}
+
+static int cmd_json_print_property_value_tag(
+    const struct shell *sh,
+    const char *property,
+    unsigned long array_index,
+    unsigned long priority,
+    unsigned long value_tag,
+    const char *value_string,
+    bool success,
+    const char *append)
+{
+    shell_print(
+        sh,
+        "{\"%s\": {\"array-index\": %lu}, {\"priority\": %lu}, "
+        "{\"value-tag\": \"%s\"}, {\"value\": \"%s\"}, {\"success\": %s}}%s",
+        property, array_index, priority,
+        bactext_application_tag_name(value_tag), value_string,
+        success ? "true" : "false", append);
 
     return 0;
 }
@@ -598,13 +618,10 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
             status =
                 bacapp_parse_application_data(value.tag, value_string, &value);
         }
-#ifdef BACNET_SHELL_PROPERTY_DEBUG
-        shell_print(
-            sh, "Parsed %s-%u %s %s -> tag=%u %s",
-            bactext_object_type_name(object_type), object_instance,
-            bactext_property_name(object_property), value_string, value.tag,
-            status ? "successfully" : "unsuccessfully");
-#endif
+        /* convert the property identifier into a string */
+        bactext_name(
+            bactext_property_name_default(object_property, NULL),
+            object_property, property_name, sizeof(property_name));
         if (status) {
             apdu_len = bacapp_encode_data(apdu, &value);
             if (apdu_len) {
@@ -613,15 +630,10 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
                 wpdata.application_data_len = apdu_len;
                 memcpy(&wpdata.application_data, apdu, apdu_len);
                 status = Device_Write_Property(&wpdata);
-                bactext_name(
-                    bactext_property_name_default(wpdata.object_property, NULL),
-                    wpdata.object_property, property_name,
-                    sizeof(property_name));
                 if (status) {
-                    cmd_json_print_key_error(
-                        sh, property_name,
-                        bactext_error_class_name(ERROR_CLASS_PROPERTY),
-                        bactext_error_code_name(ERROR_CODE_SUCCESS), "");
+                    cmd_json_print_property_value_tag(
+                        sh, property_name, array_index, priority, value.tag,
+                        value_string, status, "");
                 } else {
                     cmd_json_print_key_error(
                         sh, property_name,
@@ -634,6 +646,10 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
                     bactext_error_class_name(ERROR_CLASS_PROPERTY),
                     bactext_error_code_name(ERROR_CODE_UNEXPECTED_DATA), "");
             }
+        } else {
+            cmd_json_print_property_value_tag(
+                sh, property_name, array_index, priority, value.tag,
+                value_string, status, "");
         }
     }
 
