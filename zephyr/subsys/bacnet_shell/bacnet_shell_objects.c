@@ -13,6 +13,7 @@
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
 #include "bacnet/bactext.h"
+#include "bacnet/bacstr.h"
 #include "bacnet/bacapp.h"
 /* BACnet objects API */
 #include "bacnet/basic/object/device.h"
@@ -33,38 +34,35 @@ static int bacnet_object_instance_parse(
     uint16_t *r_object_type,
     uint32_t *r_object_instance)
 {
-    uint16_t object_type = 0;
+    uint32_t object_type = 0;
     uint32_t object_instance = 0;
-    unsigned unsigned_value = 0;
 
     if (argc < 2) {
         shell_error(sh, "parse: %s <object-type> <instance>", argv[0]);
         return -EINVAL;
     }
-    if (!bactext_object_type_strtol(argv[1], &unsigned_value)) {
+    if (!bactext_object_type_strtol(argv[1], &object_type)) {
         shell_error(sh, "parse: Invalid object-type: %s.", argv[1]);
         return -EINVAL;
     }
-    if (unsigned_value > BACNET_MAX_OBJECT) {
+    if (object_type > BACNET_MAX_OBJECT) {
         shell_error(
             sh, "parse: Invalid object-type: %s. Must be 0-%u.", argv[1],
             BACNET_MAX_OBJECT);
         return -EINVAL;
     }
-    object_type = (uint16_t)unsigned_value;
-    if (!bactext_strtoul(argv[2], &unsigned_value)) {
+    if (r_object_type) {
+        *r_object_type = (uint16_t)object_type;
+    }
+    if (!bacnet_string_to_uint32(argv[2], &object_instance)) {
         shell_error(sh, "parse: Invalid object-instance: %s.", argv[2]);
         return -EINVAL;
     }
-    if (unsigned_value > 4194303) {
+    if (object_instance > BACNET_MAX_INSTANCE) {
         shell_error(
-            sh, "parse: Invalid object-instance: %s. Must be 0-4194303.",
-            argv[2]);
+            sh, "parse: Invalid object-instance: %s. Must be 0-%d.", argv[2],
+            BACNET_MAX_INSTANCE);
         return -EINVAL;
-    }
-    object_instance = (uint32_t)unsigned_value;
-    if (r_object_type) {
-        *r_object_type = object_type;
     }
     if (r_object_instance) {
         *r_object_instance = object_instance;

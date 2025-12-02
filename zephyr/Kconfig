@@ -254,6 +254,12 @@ config BACAPP_WEEKLY_SCHEDULE
     help
        BACnet data types supported for WriteProperty: WEEKLY_SCHEDULE
 
+config BACNET_DAILY_SCHEDULE_TIME_VALUES_SIZE
+    int "Number of daily schedules for each of the 7 weekly schedules."
+    default 8
+    help
+        Number of daily schedules for each of the 7 weekly schedules. (default=8)
+
 config BACAPP_CALENDAR_ENTRY
     bool "BACnet data types supported for WriteProperty: CALENDAR_ENTRY"
     default false
@@ -647,6 +653,12 @@ config BACDL_BIP6_PORT
     help
         UDP port to listen on (default=47808)
 
+config BACNET_MAX_APDU_SIZE
+    int "Maximum size of the APDU"
+    default 1476
+    help
+        Maximum size of the APDU (default=1476)
+
 config BACNET_MAX_TSM_TRANSACTIONS
     int "Number of initiated confirmed-message transactions"
     default 1
@@ -813,6 +825,12 @@ config BACNET_BASIC_OBJECT_LOAD_CONTROL
     default false
     help
         Use the BACnet basic load control object
+
+config BACNET_BASIC_OBJECT_LOOP
+    bool "Use the BACnet basic loop object"
+    default false
+    help
+        Use the BACnet basic loop object
 
 config BACNET_BASIC_OBJECT_LIGHTING_OUTPUT
     bool "Use the BACnet basic lighting output object"
