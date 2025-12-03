@@ -275,6 +275,34 @@ static int cmd_json_print_key_value(
     return 0;
 }
 
+static int cmd_json_print_list_value(
+    const struct shell *sh,
+    const char *key,
+    const char *value,
+    bool first_value,
+    bool last_value,
+    const char *append)
+{
+    const char *isquoted = "";
+    const char *suffix = ",";
+
+    if (cmd_json_is_quoted(value)) {
+        isquoted = "\"";
+    }
+    if (first_value) {
+        shell_print(sh, "{\"%s\": [", key);
+    }
+    if (last_value) {
+        suffix = "]";
+    }
+    shell_print(sh, "%s%s%s%s", isquoted, value, isquoted, suffix);
+    if (last_value) {
+        shell_print(sh, "}%s", append);
+    }
+
+    return 0;
+}
+
 static int cmd_json_print_hex_dump(
     const struct shell *sh,
     const char *prefix,
@@ -305,7 +333,7 @@ static int cmd_json_print_key_error(
     const char *append)
 {
     shell_print(
-        sh, "{\"%s\": {\"error-class\": %s}, {\"error-code\": %s}}%s", key,
+        sh, "{\"%s\": {\"error-class\": %s, \"error-code\": %s}}%s", key,
         error_class, error_code, append);
 
     return 0;
@@ -323,8 +351,8 @@ static int cmd_json_print_property_value_tag(
 {
     shell_print(
         sh,
-        "{\"%s\": {\"array-index\": %lu}, {\"priority\": %lu}, "
-        "{\"value-tag\": \"%s\"}, {\"value\": \"%s\"}, {\"success\": %s}}%s",
+        "{\"%s\": {\"array-index\": %lu, \"priority\": %lu, "
+        "\"value-tag\": \"%s\", \"value\": \"%s\", \"success\": %s}}%s",
         property, array_index, priority,
         bactext_application_tag_name(value_tag), value_string,
         success ? "true" : "false", append);
@@ -403,22 +431,18 @@ static int cmd_value_print(
         object_value.array_index = rpdata->array_index;
         object_value.value = value;
         if (!skip_print) {
-            if (first_value && list_value) {
-                prefix = "[";
-            } else {
-                prefix = "";
-            }
-            if (last_value && list_value) {
-                suffix = "]";
-            } else {
-                suffix = "";
-            }
             str_len = bacapp_snprintf_value(NULL, 0, &object_value);
             if (str_len > 0) {
                 char str[str_len + 1];
                 bacapp_snprintf_value(str, str_len + 1, &object_value);
-                cmd_json_print_key_value(
-                    sh, prefix, property_name, str, suffix, append);
+                if (list_value) {
+                    cmd_json_print_list_value(
+                        sh, property_name, str, first_value, last_value,
+                        append);
+                } else {
+                    cmd_json_print_key_value(
+                        sh, prefix, property_name, str, suffix, append);
+                }
             } else {
                 cmd_json_print_hex_dump(
                     sh, prefix, property_name, apdu, len, suffix, append);
@@ -465,11 +489,11 @@ cmd_print_value_all(const struct shell *sh, BACNET_READ_PROPERTY_DATA *rpdata)
         rpdata->object_type, rpdata->object_instance, &pPropertyList);
     count = pPropertyList.Required.count + pPropertyList.Optional.count +
         pPropertyList.Proprietary.count;
-    /* display the property-list as well formed JSON */
     shell_print(
         sh, "{\"%s\":\"(%s:%u)\",",
         bactext_property_name(PROP_OBJECT_IDENTIFIER),
         bactext_object_type_name(rpdata->object_type), rpdata->object_instance);
+    /* display the list as well formed JSON */
     shell_print(sh, "\"%s\": [", bactext_property_name(PROP_PROPERTY_LIST));
     index = 0;
     while (pPropertyList.Required.pList[index] != -1) {
