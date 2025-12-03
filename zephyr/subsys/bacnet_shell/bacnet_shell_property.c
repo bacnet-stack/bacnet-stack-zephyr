@@ -409,11 +409,10 @@ static int cmd_value_print(
         return 0;
     }
     if (apdu_len == 0) {
-        cmd_json_print_key_value(
-            sh, "", property_name, "null", "", append);
+        cmd_json_print_key_value(sh, "", property_name, "null", "", append);
         /* set the tag if we know what it should be */
-        value->tag = bacapp_known_property_tag(rpdata->object_type,
-            rpdata->object_property);
+        value->tag = bacapp_known_property_tag(
+            rpdata->object_type, rpdata->object_property);
         return 0;
     }
     apdu = rpdata->application_data;

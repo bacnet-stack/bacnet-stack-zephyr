@@ -50,7 +50,6 @@ static char ipv4_addr_str[16] = { 0 };
 static char ipv4_addr_str[] = "";
 #endif
 
-
 /**
  * @brief Print the IPv4 address with debug info
  * @param str - debug info string
