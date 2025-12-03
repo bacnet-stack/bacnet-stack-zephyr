@@ -19,6 +19,9 @@ The git repository is hosted at the following site:
   and placed them into BACnet Protocol Stack library.
 
 ### Fixed
+* Fixed bacnet shell property value JSON for arrays and lists. (#54)
+* Fixed missing config defines. Added Loop object and MAX_APDU
+  to BACnet Kconfig options and CMakeLists.txt defines. (#53)
 * Fixed compile in BACnet/IP subsys using CONFIG_POSIX_API=y. (#47)
 * Fixed missing const in bip6-init.c and used zsock API.
   Replaced inet_ntoa with net_addr_ntop. Removed unnecessary select NET_SOCKETS_POSIX_NAMES. (#46)
@@ -51,7 +54,7 @@ The git repository is hosted at the following site:
 * Added "bacnet property" shell command with list, size, and value options.
   The value option can list all the property values of any internal object,
   and read or write any specific property values that are writable.
-  The output is in JSON format.
+  The output is in JSON format.(#52)
 * Added all the basic object property value data types supported
   for B-ASC sample. (#52)
 * Added BACnet Application Specific Control (B-ASC) sample. (#51)
