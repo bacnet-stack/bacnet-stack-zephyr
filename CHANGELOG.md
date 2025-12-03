@@ -19,6 +19,7 @@ The git repository is hosted at the following site:
   and placed them into BACnet Protocol Stack library.
 
 ### Fixed
+* Fixed bacnet shell property value JSON for empty arrays and lists. (#55)
 * Fixed bacnet shell property value JSON for arrays and lists. (#54)
 * Fixed missing config defines. Added Loop object and MAX_APDU
   to BACnet Kconfig options and CMakeLists.txt defines. (#53)
