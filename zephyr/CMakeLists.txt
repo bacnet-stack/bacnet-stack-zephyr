@@ -410,6 +410,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/rpm.h
     ${BACNETSTACK_SRC}/bacnet/secure_connect.c
     ${BACNETSTACK_SRC}/bacnet/secure_connect.h
+    ${BACNETSTACK_SRC}/bacnet/shed_level.c
+    ${BACNETSTACK_SRC}/bacnet/shed_level.h
     ${BACNETSTACK_SRC}/bacnet/special_event.c
     ${BACNETSTACK_SRC}/bacnet/special_event.h
     ${BACNETSTACK_SRC}/bacnet/timer_value.c
