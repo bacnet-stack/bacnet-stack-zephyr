@@ -51,31 +51,11 @@ static char ipv6_addr_str[] = "";
 static char *inet6_ntoa(struct in6_addr *a)
 {
 #if CONFIG_BACNETSTACK_LOG_LEVEL
-    uint8_t x = 0;
-    uint8_t d = 0;
-    uint8_t non_zero_count = 0;
-
     /* Avoid overwhelming the logging system */
     while (log_buffered_cnt()) {
         k_sleep(K_MSEC(1));
     }
-
-    for (x = 0; x < IP6_ADDRESS_MAX; x += 2) {
-        if (a->s6_addr[x] | a->s6_addr[x + 1]) {
-            non_zero_count++;
-            d += snprintf(
-                &ipv6_addr_str[d], sizeof(ipv6_addr_str), "%02X%02X",
-                a->s6_addr[x], a->s6_addr[x + 1]);
-        }
-
-        if (x < 14) {
-            d += snprintf(&ipv6_addr_str[d], sizeof(ipv6_addr_str), ":");
-        }
-    }
-
-    if (!non_zero_count) {
-        snprintf(&ipv6_addr_str[0], sizeof(ipv6_addr_str), "undefined");
-    }
+    net_addr_ntop(AF_INET6, a, &ipv6_addr_str[0], sizeof(ipv6_addr_str));
 #endif
     return &ipv6_addr_str[0];
 }
@@ -223,7 +203,7 @@ void bip6_get_my_address(BACNET_ADDRESS *addr)
  *
  * @param addr - network IPv6 address
  */
-bool bip6_set_addr(BACNET_IP6_ADDRESS *addr)
+bool bip6_set_addr(const BACNET_IP6_ADDRESS *addr)
 {
     return bvlc6_address_copy(&BIP6_Addr, addr);
 }
@@ -243,7 +223,7 @@ bool bip6_get_addr(BACNET_IP6_ADDRESS *addr)
  *
  * @param addr - network IPv6 address
  */
-bool bip6_set_broadcast_addr(BACNET_IP6_ADDRESS *addr)
+bool bip6_set_broadcast_addr(const BACNET_IP6_ADDRESS *addr)
 {
     return bvlc6_address_copy(&BIP6_Broadcast_Addr, addr);
 }
@@ -269,7 +249,8 @@ bool bip6_get_broadcast_addr(BACNET_IP6_ADDRESS *addr)
  * @return Upon successful completion, returns the number of bytes sent.
  *  Otherwise, -1 shall be returned and errno set to indicate the error.
  */
-int bip6_send_mpdu(BACNET_IP6_ADDRESS *dest, uint8_t *mtu, uint16_t mtu_len)
+int bip6_send_mpdu(
+    const BACNET_IP6_ADDRESS *dest, const uint8_t *mtu, uint16_t mtu_len)
 {
     struct sockaddr_in6 bvlc_dest = { 0 };
     uint16_t addr16[8];
@@ -522,7 +503,7 @@ bool bip6_init(char *ifname)
         sizeof(struct in6_addr));
     /* Let system not choose the interface */
     join_request.ipv6mr_ifindex = BIP6_Socket_Scope_Id;
-    status = setsockopt(
+    status = zsock_setsockopt(
         BIP6_Socket, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP, &join_request,
         sizeof(join_request));
     if (status < 0) {

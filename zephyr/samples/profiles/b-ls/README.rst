@@ -1,4 +1,4 @@
-.. _b-ss_sample:
+.. _b-ls_sample:
 
 BACnet Profile B-LS Sample
 ##########################
@@ -83,4 +83,3 @@ The shell is available on some boards via virtual communication port:
     {"object-identifier":{"channel":1}},
     {"object-identifier":{"binary-lighting-output":1}}],
     "object-list-size": 5}
-
