@@ -29,12 +29,37 @@
 #include "bacnet_osif/bacnet_log.h"
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
-/* select the UART peripheral */
-#define RS485_NODE DT_NODELABEL(arduino_serial)
-static const struct device *const uart_dev = DEVICE_DT_GET(RS485_NODE);
 static struct bacnet_driver_rs485 rs485_context;
 /* MS/TP port */
 static struct mstp_port_struct_t MSTP_Port;
+/* MS/TP Thread */
+static struct k_thread mstp_thread_data;
+K_THREAD_STACK_DEFINE(
+    mstp_thread_stack, CONFIG_BACNET_DATALINK_MSTP_STACK_SIZE);
+
+/* gather the RS485 UART peripherals */
+struct rs485_instance {
+    const struct device *dev;
+};
+#define RS485_COMPAT zephyr_modbus_serial
+#define RS485_DEV_INFO(node_id) { .dev = DEVICE_DT_GET(node_id) },
+static struct rs485_instance rs485_instances[] = { DT_FOREACH_STATUS_OKAY(
+    RS485_COMPAT, RS485_DEV_INFO) };
+
+#define RS485_COUNT ARRAY_SIZE(rs485_instances)
+
+/** Get the RS485 device instance by index */
+const struct device *rs485_device(uint8_t rs485_index)
+{
+    if (rs485_index < RS485_COUNT) {
+        if (!device_is_ready(rs485_instances[rs485_index].dev)) {
+            return NULL;
+        }
+        return rs485_instances[rs485_index].dev;
+    }
+
+    return NULL;
+}
 
 /** Initialize the driver hardware */
 static void rs485_init(void)
@@ -176,11 +201,7 @@ void mstp_init_port(uint8_t mac, uint32_t baud, uint8_t max_master)
 {
     int32_t result;
 
-	if (!device_is_ready(uart_dev)) {
-        LOG_ERR("UART device not found!");
-		return;
-	}
-    rs485_context.uart_dev = uart_dev;
+    rs485_context.uart_dev = rs485_device(0);
     rs485_context.iface_name = "RS485";
     rs485_context.config.uart_baud = baud;
     result = bacnet_driver_rs485_enable(&rs485_context);
@@ -201,16 +222,55 @@ void mstp_init_port(uint8_t mac, uint32_t baud, uint8_t max_master)
 }
 
 /**
+ * @brief handles recurring strictly timed task
+ * @brief timeout - number of milliseconds for datalink to wait for packet
+ * @note called by ISR or RTOS every timeout milliseconds
+ */
+static void mstp_task(unsigned int timeout)
+{
+    struct dlmstp_packet *pkt = NULL;
+    uint16_t pdu_len = 0;
+    BACNET_ADDRESS src = { 0 };
+
+    pdu_len = dlmstp_receive(
+        &src, &Receive_Buffer[0], sizeof(Receive_Buffer), timeout);
+    if (pdu_len) {
+        pkt = (void *)Ringbuf_Data_Peek(&Receive_PDU_Queue);
+        if (pkt) {
+            memcpy(pkt->pdu, Receive_Buffer, MAX_MPDU);
+            bacnet_address_copy(&pkt->address, &src);
+            pkt->pdu_len = pdu_len;
+            if (Ringbuf_Data_Put(&Receive_PDU_Queue, (volatile uint8_t *)pkt)) {
+                xSemaphoreGive(BACnet_PDU_Available);
+            }
+        }
+    }
+}
+
+/**
  * @brief BACnet MS/TP Thread
  */
 static void mstp_thread(void)
 {
 	LOG_INF("MS/TP: started");
-	mstp_data_init();
     for (;;) {
-        mstp_receive_frame();
-        mstp_check_for_timeout();
-        mstp_send_frame();
-        k_yield();
+        mstp_task(1);
+        k_sleep(K_MSEC(1));
     }
 }
+
+static int mstp_init(struct device *dev)
+{
+    ARG_UNUSED(dev);
+
+    k_thread_create(
+        &mstp_thread_data, mstp_thread_stack,
+        K_THREAD_STACK_SIZEOF(mstp_thread_stack),
+        (k_thread_entry_t)mstp_thread, NULL, NULL, NULL,
+        K_PRIO_PREEMPT(CONFIG_BACNET_DATALINK_MSTP_PRIO), 0, K_NO_WAIT);
+    k_thread_name_set(&mstp_thread_data, "MS/TP");
+    return 0;
+}
+
+SYS_INIT(
+    mstp_init, APPLICATION, CONFIG_BACNET_DATALINK_MSTP_APP_PRIORITY);

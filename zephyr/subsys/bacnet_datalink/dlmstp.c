@@ -31,45 +31,42 @@ LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 #define RS485_NODE DT_NODELABEL(arduino_serial)
 
-/** @brief Config structure
- *
- *  Define the public structure used for configuring the driver.
- *  Configuration must be done while the driver is disabled.
- */
-struct bacnet_datalink_mstp_config {
-    const struct device *const uart_dev;    struct bacnet_driver_rs485 rs485_context;
-    struct mstp_port_struct_t mstp_port;
-    struct dlmstp_statistics statistics;
-    DLMSTP_PACKET Receive_Buffer[CONFIG_BACNET_DATALINK_MSTP_RX_PACKET_COUNT];
-    RING_BUFFER Receive_Queue;
-};
-
-/* packet queues */
-static DLMSTP_PACKET Receive_Buffer[MSTP_RECEIVE_PACKET_COUNT];
-static RING_BUFFER Receive_Queue;
-/* mechanism to wait for a packet */
-static pthread_cond_t Receive_Packet_Flag;
-static pthread_mutex_t Receive_Packet_Mutex;
-static pthread_cond_t Received_Frame_Flag;
-static pthread_mutex_t Received_Frame_Mutex;
-static pthread_cond_t Master_Done_Flag;
-static pthread_mutex_t Master_Done_Mutex;
-static pthread_mutex_t Ring_Buffer_Mutex;
-static pthread_mutex_t Thread_Mutex;
-static pthread_t hThread;
-static struct timespec Clock_Get_Time_Start;
-static bool Thread_Run;
-/* local MS/TP port data - shared with RS-485 */
-static struct mstp_port_struct_t MSTP_Port;
-/* buffers needed by mstp port struct */
-static uint8_t TxBuffer[DLMSTP_MPDU_MAX];
-static uint8_t RxBuffer[DLMSTP_MPDU_MAX];
 /* data structure for MS/TP PDU Queue */
 struct mstp_pdu_packet {
     bool data_expecting_reply;
     uint8_t destination_mac;
     uint16_t length;
     uint8_t buffer[DLMSTP_MPDU_MAX];
+};
+
+/** @brief Config structure
+ *
+ *  Define the public structure used for configuring the driver.
+ *  Configuration must be done while the driver is disabled.
+ */
+struct bacnet_datalink_mstp_config {
+    const struct device *const uart_dev;
+    struct bacnet_driver_rs485 rs485_context;
+    struct mstp_port_struct_t MSTP_Port;
+    struct dlmstp_statistics statistics;
+    /* packet queues */
+    DLMSTP_PACKET Receive_Buffer[CONFIG_BACNET_DATALINK_MSTP_RX_PACKET_COUNT];
+    RING_BUFFER Receive_Queue;
+    /* mechanism to wait for a packet */
+    pthread_cond_t Receive_Packet_Flag;
+    pthread_mutex_t Receive_Packet_Mutex;
+    pthread_cond_t Received_Frame_Flag;
+    pthread_mutex_t Received_Frame_Mutex;
+    pthread_cond_t Master_Done_Flag;
+    pthread_mutex_t Master_Done_Mutex;
+    pthread_mutex_t Ring_Buffer_Mutex;
+    pthread_mutex_t Thread_Mutex;
+    pthread_t hThread;
+    struct timespec Clock_Get_Time_Start;
+    bool Thread_Run;
+    /* buffers needed by mstp port struct */
+    uint8_t TxBuffer[DLMSTP_MPDU_MAX];
+    uint8_t RxBuffer[DLMSTP_MPDU_MAX];
 };
 /* count must be a power of 2 for ringbuf library */
 #ifndef MSTP_PDU_PACKET_COUNT
@@ -184,144 +181,6 @@ uint16_t MSTP_Get_Send(struct mstp_port_struct_t *mstp_port, unsigned timeout)
     pthread_mutex_unlock(&Ring_Buffer_Mutex);
 
     return pdu_len;
-}
-
-/**
- * @brief Determine if the reply packet is the data expected
- * @param request_pdu - PDU of the data
- * @param request_pdu_len - number of bytes of PDU data
- * @param src_address - source address of the request
- * @param reply_pdu - PDU of the data
- * @param reply_pdu_len - number of bytes of PDU data
- * @param dest_address - the destination address for this data
- * @return true if the reply packet is the data expected
- */
-static bool dlmstp_compare_data_expecting_reply(
-    const uint8_t *request_pdu,
-    uint16_t request_pdu_len,
-    uint8_t src_address,
-    const uint8_t *reply_pdu,
-    uint16_t reply_pdu_len,
-    uint8_t dest_address)
-{
-    uint16_t offset;
-    /* One way to check the message is to compare NPDU
-       src, dest, along with the APDU type, invoke id.
-       Seems a bit overkill */
-    struct DER_compare_t {
-        BACNET_NPDU_DATA npdu_data;
-        BACNET_ADDRESS address;
-        uint8_t pdu_type;
-        uint8_t invoke_id;
-        uint8_t service_choice;
-    };
-    struct DER_compare_t request;
-    struct DER_compare_t reply;
-
-    /* unused parameters */
-    (void)request_pdu_len;
-    (void)reply_pdu_len;
-
-    /* decode the request data */
-    request.address.mac[0] = src_address;
-    request.address.mac_len = 1;
-    offset = (uint16_t)bacnet_npdu_decode(
-        request_pdu, request_pdu_len, NULL, &request.address,
-        &request.npdu_data);
-    if (request.npdu_data.network_layer_message) {
-        debug_printf("DLMSTP: DER Compare failed: "
-                     "Request is Network message.\n");
-        return false;
-    }
-    request.pdu_type = request_pdu[offset] & 0xF0;
-    if (request.pdu_type != PDU_TYPE_CONFIRMED_SERVICE_REQUEST) {
-        debug_printf("DLMSTP: DER Compare failed: "
-                     "Not Confirmed Request.\n");
-        return false;
-    }
-    request.invoke_id = request_pdu[offset + 2];
-    /* segmented message? */
-    if (request_pdu[offset] & BIT(3)) {
-        request.service_choice = request_pdu[offset + 5];
-    } else {
-        request.service_choice = request_pdu[offset + 3];
-    }
-    /* decode the reply data */
-    reply.address.mac[0] = dest_address;
-    reply.address.mac_len = 1;
-    offset = (uint16_t)bacnet_npdu_decode(
-        reply_pdu, reply_pdu_len, &reply.address, NULL, &reply.npdu_data);
-    if (reply.npdu_data.network_layer_message) {
-        debug_printf("DLMSTP: DER Compare failed: "
-                     "Reply is Network message.\n");
-        return false;
-    }
-    /* reply could be a lot of things:
-       confirmed, simple ack, abort, reject, error */
-    reply.pdu_type = reply_pdu[offset] & 0xF0;
-    switch (reply.pdu_type) {
-        case PDU_TYPE_SIMPLE_ACK:
-            reply.invoke_id = reply_pdu[offset + 1];
-            reply.service_choice = reply_pdu[offset + 2];
-            break;
-        case PDU_TYPE_COMPLEX_ACK:
-            reply.invoke_id = reply_pdu[offset + 1];
-            /* segmented message? */
-            if (reply_pdu[offset] & BIT(3)) {
-                reply.service_choice = reply_pdu[offset + 4];
-            } else {
-                reply.service_choice = reply_pdu[offset + 2];
-            }
-            break;
-        case PDU_TYPE_ERROR:
-            reply.invoke_id = reply_pdu[offset + 1];
-            reply.service_choice = reply_pdu[offset + 2];
-            break;
-        case PDU_TYPE_REJECT:
-        case PDU_TYPE_ABORT:
-        case PDU_TYPE_SEGMENT_ACK:
-            reply.invoke_id = reply_pdu[offset + 1];
-            break;
-        default:
-            /* A queued request, just look for another */
-            return false;
-    }
-    if (request.invoke_id != reply.invoke_id) {
-        /* Normal to have multiple replies queued, just look for another */
-        return false;
-    }
-    /* these don't have service choice included */
-    if ((request.pdu_type != PDU_TYPE_REJECT) &&
-        (request.pdu_type != PDU_TYPE_ABORT) &&
-        (request.pdu_type != PDU_TYPE_SEGMENT_ACK)) {
-        if (request.service_choice != reply.service_choice) {
-            debug_printf("DLMSTP: DER Compare failed: "
-                         "Service choice mismatch.\n");
-            return false;
-        }
-    }
-    if (request.npdu_data.protocol_version !=
-        reply.npdu_data.protocol_version) {
-        debug_printf("DLMSTP: DER Compare failed: "
-                     "NPDU Protocol Version mismatch.\n");
-        return false;
-    }
-#if 0
-    /* the NDPU priority doesn't get passed through the stack, and
-       all outgoing messages have NORMAL priority */
-    if (request.npdu_data.priority != reply.npdu_data.priority) {
-        debug_printf(
-            "DLMSTP: DER Compare failed: " "NPDU Priority mismatch.\n");
-        return false;
-    }
-#endif
-    if (!bacnet_address_same(&request.address, &reply.address)) {
-        debug_printf("DLMSTP: DER Compare failed: "
-                     "BACnet Address mismatch.\n");
-        return false;
-    }
-
-    return true;
 }
 
 /**
