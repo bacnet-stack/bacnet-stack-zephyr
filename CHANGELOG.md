@@ -15,7 +15,7 @@ The git repository is hosted at the following site:
 ### Security
 
 ### Removed
-* Removed zephyr version of the BACnet basic objects and server framework
+* Removed zephyr copy of the BACnet basic objects and server framework
   and placed them into BACnet Protocol Stack library.
 
 ### Fixed

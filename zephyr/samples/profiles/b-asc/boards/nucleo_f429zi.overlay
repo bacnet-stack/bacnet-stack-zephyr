@@ -3,9 +3,8 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#if KERNEL_VERSION_MAJOR < 4
+/* FIXME: remove 'delete-node' if building with Zephyr version 4 or later */
 /delete-node/ &storage_partition;
-#endif
 
 &flash0 {
   partitions {
