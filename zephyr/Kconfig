@@ -712,6 +712,12 @@ config BACNET_BASIC_SERVER_KSLEEP
     help
         BACnet Stack KSLEEP time in milliseconds
 
+config BACNET_BASIC_BACKUP_RESTORE
+    bool "Use the BACnet basic backup and restore"
+    default false
+    help
+        Use the BACnet basic backup and restore
+
 config BACNET_BASIC_OBJECTS_ACCESS
     bool "Use the BACnet basic access control objects"
     default false
