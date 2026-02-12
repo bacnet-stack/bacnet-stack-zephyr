@@ -81,14 +81,10 @@ This library will use the following methods to accommodate the changes:
     ```
 3. In Kconfig by using 2 above and trying to load specific versions
     of the Zephyr plugin and updating CONF_FILE accordingly.
-4. In .dts, .dtsi or .overlay files, use KERNEL_VERSION_NUMBER or
-    KERNEL_VERSION_MAJOR defines. The C preprocessor is run on all
-    devicetree files to expand macro references.
-    ```
-    #if KERNEL_VERSION_MAJOR < 4
-    /delete-node/ &storage_partition;
-    #endif
-    ```
+
+4. There is not a clean way to manage version breaking changes in
+   .dts, .dtsi or .overlay files since the device tree compile occurs
+   before the version.h file is generated.
 
 ## Hello BACnet Stack
 
