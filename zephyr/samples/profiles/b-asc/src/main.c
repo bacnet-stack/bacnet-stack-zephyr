@@ -17,6 +17,7 @@
 #include "bacnet/datetime.h"
 #include "bacnet/bactext.h"
 #include "bacnet/basic/services.h"
+#include "bacnet/basic/sys/bramfs.h"
 #include "bacnet/basic/sys/mstimer.h"
 #include "bacnet/basic/sys/linear.h"
 /* BACnet Stack basic device API -
@@ -99,6 +100,8 @@ static void BACnet_Device_Init_Handler(void *context)
 {
     BACNET_CREATE_OBJECT_DATA object_data = { 0 };
     unsigned int i = 0;
+    uint32_t instance;
+    const char *empty_data = "empty";
 
     (void)context;
     LOG_INF("BACnet Stack Initialized");
@@ -111,6 +114,21 @@ static void BACnet_Device_Init_Handler(void *context)
                 "Created object %s-%u\n", bactext_object_type_name(i),
                 (unsigned)object_data.object_instance);
         }
+    }
+    /* Backup and restore uses a file */
+    instance = bacfile_index_to_instance(0);
+    if (instance >= BACNET_MAX_INSTANCE) {
+        LOG_ERR("No file object instance available for backup/restore");
+    } else {
+        bacfile_pathname_set(instance, "bacnet.dat");
+        Device_Configuration_File_Set(0, instance);
+        /* use a RAM FS backend for this sample */
+        bacfile_ramfs_init();
+        bacfile_ramfs_write_stream_data(
+            bacfile_pathname(instance), 0, empty_data, strlen(empty_data));
+        LOG_INF(
+            "Backup/Restore file-%u path=%s", instance,
+            bacfile_pathname(instance));
     }
     /* initialize objects with default values for this basic sample */
     Device_Set_Object_Instance_Number(Device_Instance);
