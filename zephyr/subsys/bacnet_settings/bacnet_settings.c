@@ -183,14 +183,12 @@ static int bacnet_settings_restore(
 static int bacnet_storage_restore_handler(
     BACNET_STORAGE_KEY *key, const void *data, size_t data_len, void *context)
 {
-    bool status;
-    int err = 0;
+    int err = -EINVAL;
 
-    status = bacnet_settings_restore(
-        key->object_type, key->object_instance, key->property_id,
-        key->array_index, data, data_len, Restore_Callback, context);
-    if (!status) {
-        err = -EACCES;
+    if (key) {
+        err = bacnet_settings_restore(
+            key->object_type, key->object_instance, key->property_id,
+            key->array_index, data, data_len, Restore_Callback, context);
     }
 
     return err;
