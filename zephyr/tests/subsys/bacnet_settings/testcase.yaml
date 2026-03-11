@@ -1,0 +1,7 @@
+tests:
+  bacnet.subsys.bacnet_settings:
+    tags: bacnet
+    integration_platforms:
+      - native_sim
+    platform_allow:
+      - native_sim
