@@ -3,6 +3,16 @@
 # Set the path to the twister executable
 TWISTER_EXE="../zephyr/scripts/twister"
 
+# Set workspace virtual environment if available
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_VENV="$SCRIPT_DIR/../.venv"
+
+if [ -x "$WORKSPACE_VENV/bin/python3" ]; then
+    VENV_SITE="$($WORKSPACE_VENV/bin/python3 -c 'import site; print(site.getsitepackages()[0])')"
+    export PATH="$WORKSPACE_VENV/bin:$PATH"
+    export PYTHONPATH="$VENV_SITE${PYTHONPATH:+:$PYTHONPATH}"
+fi
+
 # Set the path to the test cases directory
 TEST_CASES_DIR="../bacnet/zephyr/tests"
 NATIVE_SIM_TEST_CASES_DIR="../bacnet/zephyr/tests/subsys/bacnet_settings"

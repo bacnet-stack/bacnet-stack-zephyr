@@ -37,6 +37,8 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/bacaddr.c
     ${BACNET_SRC}/bacdcode.c
     ${BACNET_SRC}/bacint.c
+    ${BACNET_SRC}/bactext.c
+    ${BACNET_SRC}/indtext.c
     ${BACNET_SRC}/bacstr.c
     ${BACNET_SRC}/bacreal.c
     )

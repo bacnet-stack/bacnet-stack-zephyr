@@ -64,7 +64,10 @@ ZTEST(bacnet_storage, test_key_encode_decode_roundtrip)
     memset(&out_key, 0, sizeof(out_key));
     rc = bacnet_storage_key_decode(path, &out_key);
     zassert_equal(rc, 0, NULL);
-    zassert_mem_equal(&in_key, &out_key, sizeof(BACNET_STORAGE_KEY), NULL);
+    zassert_equal(in_key.object_type, out_key.object_type, NULL);
+    zassert_equal(in_key.object_instance, out_key.object_instance, NULL);
+    zassert_equal(in_key.property_id, out_key.property_id, NULL);
+    zassert_equal(in_key.array_index, out_key.array_index, NULL);
 }
 
 ZTEST(bacnet_storage, test_key_parse)
@@ -98,8 +101,10 @@ ZTEST(bacnet_storage, test_handler_set_invokes_restore_callback)
         path, sizeof(sample), read_cb, (void *)sample);
     zassert_equal(rc, 0, NULL);
     zassert_true(restore_state.called, NULL);
-    zassert_mem_equal(
-        &restore_state.key, &key, sizeof(BACNET_STORAGE_KEY), NULL);
+    zassert_equal(restore_state.key.object_type, key.object_type, NULL);
+    zassert_equal(restore_state.key.object_instance, key.object_instance, NULL);
+    zassert_equal(restore_state.key.property_id, key.property_id, NULL);
+    zassert_equal(restore_state.key.array_index, key.array_index, NULL);
     zassert_equal(restore_state.len, sizeof(sample), NULL);
     zassert_mem_equal(restore_state.data, sample, sizeof(sample), NULL);
 }

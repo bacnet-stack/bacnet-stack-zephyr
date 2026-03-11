@@ -31,7 +31,26 @@ if(BOARD STREQUAL unit_testing)
 
   get_filename_component(BACNET_SRC ${BACNET_SRC_PATH} PATH)
   list(APPEND SOURCES
+    ${BACNET_SRC}/abort.c
+    ${BACNET_SRC}/bacaction.c
+    ${BACNET_SRC}/bacaddr.c
+    ${BACNET_SRC}/bacdcode.c
+    ${BACNET_SRC}/bacerror.c
     ${BACNET_SRC}/bacint.c
+    ${BACNET_SRC}/bacreal.c
+    ${BACNET_SRC}/bacstr.c
+    ${BACNET_SRC}/bactext.c
+    ${BACNET_SRC}/basic/service/h_apdu.c
+    ${BACNET_SRC}/basic/sys/bigend.c
+    ${BACNET_SRC}/basic/sys/debug.c
+    ${BACNET_SRC}/basic/tsm/tsm.c
+    ${BACNET_SRC}/dcc.c
+    ${BACNET_SRC}/indtext.c
+    ${BACNET_SRC}/proplist.c
+    ${BACNET_SRC}/reject.c
+    ${BACNET_SRC}/rp.c
+    ${BACNET_SRC}/whois.c
+    ${BACNET_TEST_PATH}/stubs.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
