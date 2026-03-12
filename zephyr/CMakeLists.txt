@@ -70,8 +70,9 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 #
 # sources
 #
-set(BACNETSTACK_SRC ../stack/src)
-set(BACNETSTACK_POSIX ../stack/ports/posix)
+set(BACNETSTACK_ROOT ${CMAKE_CURRENT_LIST_DIR}/../stack)
+set(BACNETSTACK_SRC ${BACNETSTACK_ROOT}/src)
+set(BACNETSTACK_POSIX ${BACNETSTACK_ROOT}/ports/posix)
 
 set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/abort.c
