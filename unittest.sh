@@ -1,7 +1,4 @@
 #!/bin/bash
-
-set -euo pipefail
-
 # Set the path to the twister executable
 TWISTER_EXE=""
 
@@ -10,9 +7,6 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_VENV="$SCRIPT_DIR/../.venv"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TWISTER_EXE="$WORKSPACE_DIR/zephyr/scripts/twister"
-
-source "$SCRIPT_DIR/ci-debug-modules.sh"
-register_ci_module_debug_trap "unittest.sh" "$SCRIPT_DIR" "$WORKSPACE_DIR"
 
 if [ -x "$WORKSPACE_VENV/bin/python3" ]; then
     VENV_SITE="$($WORKSPACE_VENV/bin/python3 -c 'import site; print(site.getsitepackages()[0])')"

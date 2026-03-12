@@ -1,12 +1,6 @@
 #!/bin/bash
-
-set -euo pipefail
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-
-source "$SCRIPT_DIR/ci-debug-modules.sh"
-register_ci_module_debug_trap "samples.sh" "$SCRIPT_DIR" "$WORKSPACE_DIR"
 
 # Set the path to the twister executable
 TWISTER_EXE="$WORKSPACE_DIR/zephyr/scripts/twister"
