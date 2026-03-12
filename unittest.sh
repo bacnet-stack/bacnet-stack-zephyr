@@ -1,11 +1,13 @@
 #!/bin/bash
 
 # Set the path to the twister executable
-TWISTER_EXE="../zephyr/scripts/twister"
+TWISTER_EXE=""
 
 # Set workspace virtual environment if available
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_VENV="$SCRIPT_DIR/../.venv"
+WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+TWISTER_EXE="$WORKSPACE_DIR/zephyr/scripts/twister"
 
 if [ -x "$WORKSPACE_VENV/bin/python3" ]; then
     VENV_SITE="$($WORKSPACE_VENV/bin/python3 -c 'import site; print(site.getsitepackages()[0])')"
@@ -14,12 +16,12 @@ if [ -x "$WORKSPACE_VENV/bin/python3" ]; then
 fi
 
 # Set the path to the test cases directory
-TEST_CASES_DIR="../bacnet/zephyr/tests"
-NATIVE_SIM_TEST_CASES_DIR="../bacnet/zephyr/tests/subsys/bacnet_settings"
+TEST_CASES_DIR="$SCRIPT_DIR/zephyr/tests"
+NATIVE_SIM_TEST_CASES_DIR="$SCRIPT_DIR/zephyr/tests/subsys/bacnet_settings"
 
 # Set the output directory for test results
-OUTPUT_DIR="twister-out.unit_testing"
-NATIVE_SIM_OUTPUT_DIR="twister-out.native_sim"
+OUTPUT_DIR="$SCRIPT_DIR/twister-out.unit_testing"
+NATIVE_SIM_OUTPUT_DIR="$SCRIPT_DIR/twister-out.native_sim"
 
 TWISTER_PLATFORM="unit_testing"
 NATIVE_SIM_PLATFORM="native_sim"
