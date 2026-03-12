@@ -18,6 +18,8 @@ string(REGEX REPLACE
   ${CMAKE_CURRENT_SOURCE_DIR})
 get_filename_component(BACNET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
+# Update include path for this module
+list(APPEND BACNET_INCLUDE ${BACNET_BASE}/src)
 
 if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
@@ -25,6 +27,13 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND SOURCES
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
+    )
+  get_filename_component(BACNET_SYS_SRC ${BACNET_SRC_PATH} PATH)
+  get_filename_component(BACNET_BASIC_SRC ${BACNET_SYS_SRC} PATH)
+  get_filename_component(BACNET_SRC ${BACNET_BASIC_SRC} PATH)
+  list(APPEND SOURCES
+    ${BACNET_SRC}/basic/sys/keylist.c
+    ${BACNET_SRC}/basic/sys/debug.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
