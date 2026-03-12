@@ -14,5 +14,5 @@ cd "$WORKSPACE_DIR"
 echo "$PWD"
 ls -al "$SCRIPT_DIR"
 west --version
-west init -l "$SCRIPT_DIR" --mf west-ci.yml .
+west init -l --mf west-ci.yml "$SCRIPT_DIR"
 west update > /dev/null 2>&1
