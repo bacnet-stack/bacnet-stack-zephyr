@@ -92,6 +92,8 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/basic/object/schedule.c
     ${BACNET_SRC}/basic/object/time_value.c
     ${BACNET_SRC}/basic/object/trendlog.c
+    ${BACNET_SRC}/shed_level.c
+    ${BACNET_SRC}/timer_value.c
     ${BACNET_SRC}/hostnport.c
     ${BACNET_SRC}/basic/service/h_apdu.c
     ${BACNET_SRC}/basic/service/h_cov.c

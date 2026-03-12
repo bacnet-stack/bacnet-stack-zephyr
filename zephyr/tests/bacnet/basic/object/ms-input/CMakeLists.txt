@@ -48,7 +48,7 @@ if(BOARD STREQUAL unit_testing)
   ${BACNET_SRC}/baclog.c
   ${BACNET_SRC}/bacreal.c
   ${BACNET_SRC}/bacstr.c
-${BACNET_SRC}/channel_value.c
+  ${BACNET_SRC}/channel_value.c
   ${BACNET_SRC}/datetime.c
   ${BACNET_SRC}/bacdevobjpropref.c
   ${BACNET_SRC}/bactext.c
@@ -58,6 +58,8 @@ ${BACNET_SRC}/channel_value.c
   ${BACNET_SRC}/proplist.c
   ${BACNET_SRC}/timestamp.c
   ${BACNET_SRC}/wp.c
+  ${BACNET_SRC}/shed_level.c
+  ${BACNET_SRC}/timer_value.c
   ${BACNET_SRC}/hostnport.c
   ${BACNET_SRC}/dailyschedule.c
   ${BACNET_SRC}/weeklyschedule.c
