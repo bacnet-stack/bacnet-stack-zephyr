@@ -42,3 +42,24 @@ jobs:
           ls -alh
           echo "== Run Docker image from GHCR"
           docker run --rm -v "$(pwd):/bacnet" "$ZEPHYR_CONTAINER" /bin/bash -c "$DOCKER_RUN_TARGET"
+      - name: Upload sample Twister results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: twister-out.samples
+          path: twister-out.samples
+          if-no-files-found: warn
+      - name: Upload unit_testing Twister results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: twister-out.unit_testing
+          path: twister-out.unit_testing
+          if-no-files-found: warn
+      - name: Upload native_sim Twister results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: twister-out.native_sim
+          path: twister-out.native_sim
+          if-no-files-found: warn
