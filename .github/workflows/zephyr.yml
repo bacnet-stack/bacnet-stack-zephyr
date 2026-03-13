@@ -44,21 +44,21 @@ jobs:
           docker run --rm -w /workspace -v "$(pwd):/workspace/bacnet" "$ZEPHYR_CONTAINER" /bin/bash -c "$DOCKER_RUN_TARGET"
       - name: Upload sample Twister results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: twister-out.samples
           path: twister-out.samples
           if-no-files-found: warn
       - name: Upload unit_testing Twister results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: twister-out.unit_testing
           path: twister-out.unit_testing
           if-no-files-found: warn
       - name: Upload subsys Twister results
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: twister-out.subsys
           path: twister-out.subsys
