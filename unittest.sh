@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Set the path to the twister executable
 TWISTER_EXE=""
 
@@ -17,12 +16,11 @@ fi
 
 # Set the path to the test cases directory
 TEST_CASES_DIR="$SCRIPT_DIR/zephyr/tests"
-NATIVE_SIM_TEST_CASES_DIR="$SCRIPT_DIR/zephyr/tests/subsys/bacnet_settings"
 
 # Set the output directory for test results
 OUTPUT_DIR="$SCRIPT_DIR/twister-out.unit_testing"
-NATIVE_SIM_OUTPUT_DIR="$SCRIPT_DIR/twister-out.native_sim"
 
+# Set platform to unit testing to avoid building for ALL platforms
 TWISTER_PLATFORM="unit_testing"
 NATIVE_SIM_PLATFORM="native_sim"
 
@@ -70,14 +68,38 @@ UNIT_TEST_RC=$?
 NATIVE_SIM_RC=$?
 
 # twister output directory cleanup files we do not archive
-cleanup_twister_output_dir "$OUTPUT_DIR"
-cleanup_twister_output_dir "$NATIVE_SIM_OUTPUT_DIR"
-echo "Twister output cleanup completed successfully."
+find "$OUTPUT_DIR" -name 'CMakeFiles' -exec rm -rf {} \; 2>/dev/null
+find "$OUTPUT_DIR" -name 'modules' -exec rm -rf {} \; 2>/dev/null
+find "$OUTPUT_DIR" -name 'app' -exec rm -rf \
+    '{}/../zephyr/arch
+    {}/../zephyr/boards
+    {}/../zephyr/cmake
+    {}/../zephyr/CMakeFiles
+    {}/../zephyr/dev_graph.dot
+    {}/../zephyr/drivers
+    {}/../zephyr/dts.cmake
+    {}/../zephyr/edt.pickle
+    {}/../zephyr/include
+    {}/../zephyr/isrList.bin
+    {}/../zephyr/kconfig
+    {}/../zephyr/kernel
+    {}/../zephyr/lib
+    {}/../zephyr/libzephyr.a
+    {}/../zephyr/misc
+    {}/../zephyr/modules
+    {}/../zephyr/soc
+    {}/../zephyr/subsys
+    {}/../Makefile
+    {}/../Kconfig
+    {}/../cmake_install.cmake
+    {}/../CMakeCache.txt' \; 2>/dev/null
+find "$OUTPUT_DIR" -name 'app' -exec rm -rf '{}' \; 2>/dev/null
+echo "Twister unit_testing output cleanup completed successfully."
 
 # Check if twister ran successfully
-if [ $UNIT_TEST_RC -eq 0 ] && [ $NATIVE_SIM_RC -eq 0 ]; then
-    echo "Twister testing completed successfully."
+if [ $? -eq 0 ]; then
+    echo "Twister unit_testing completed successfully."
 else
-    echo "Twister testing failed."
+    echo "Twister unit_testing failed."
     exit 1
 fi

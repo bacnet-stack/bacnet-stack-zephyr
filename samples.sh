@@ -1,10 +1,18 @@
 #!/bin/bash
-
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-
 # Set the path to the twister executable
+TWISTER_EXE=""
+
+# Set workspace virtual environment if available
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_VENV="$SCRIPT_DIR/../.venv"
+WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TWISTER_EXE="$WORKSPACE_DIR/zephyr/scripts/twister"
+
+if [ -x "$WORKSPACE_VENV/bin/python3" ]; then
+    VENV_SITE="$($WORKSPACE_VENV/bin/python3 -c 'import site; print(site.getsitepackages()[0])')"
+    export PATH="$WORKSPACE_VENV/bin:$PATH"
+    export PYTHONPATH="$VENV_SITE${PYTHONPATH:+:$PYTHONPATH}"
+fi
 
 # Set the path to the test cases directory
 TEST_CASES_DIR="$SCRIPT_DIR/zephyr/samples"
@@ -45,12 +53,12 @@ find "$OUTPUT_DIR" -name 'app' -exec rm -rf \
     {}/../cmake_install.cmake
     {}/../CMakeCache.txt' \; 2>/dev/null
 find "$OUTPUT_DIR" -name 'app' -exec rm -rf '{}' \; 2>/dev/null
-echo "Twister output cleanup completed successfully."
+echo "Twister samples output cleanup completed successfully."
 
 # Check if twister ran successfully
 if [ $? -eq 0 ]; then
-    echo "Twister testing completed successfully."
+    echo "Twister samples testing completed successfully."
 else
-    echo "Twister testing failed."
+    echo "Twister samples testing failed."
     exit 1
 fi

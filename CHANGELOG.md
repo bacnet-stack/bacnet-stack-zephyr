@@ -19,6 +19,10 @@ The git repository is hosted at the following site:
   and placed them into BACnet Protocol Stack library.
 
 ### Fixed
+* Fixed pipeline unit test and samples build by adding shed_level and
+  timer_value source files to various CMakeLists. Also fixed the
+  workspace path in the Docker container for building and save
+  the build logs as artifacts for debugging failures. (#61)
 * Fixed bacnet shell property value JSON for empty arrays and lists. (#55)
 * Fixed bacnet shell property value JSON for arrays and lists. (#54)
 * Fixed missing config defines. Added Loop object and MAX_APDU
