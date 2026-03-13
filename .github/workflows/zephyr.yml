@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Docker image from GHCR
         env:
-          DOCKER_RUN_TARGET: "/workspace/bacnet/west-ci.sh && /workspace/bacnet/samples.sh && /workspace/bacnet/unittest.sh"
+          DOCKER_RUN_TARGET: "/workspace/bacnet/west-ci.sh && /workspace/bacnet/samples.sh && /workspace/bacnet/unittest.sh && /workspace/bacnet/subsys.sh"
           ZEPHYR_CONTAINER: "ghcr.io/zephyrproject-rtos/ci:v0.26-branch"
         run: |
           ls -alh
