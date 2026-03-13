@@ -20,11 +20,14 @@ TEST_CASES_DIR="$SCRIPT_DIR/zephyr/tests"
 # Set the output directory for test results
 OUTPUT_DIR="$SCRIPT_DIR/twister-out.unit_testing"
 
+# Set platform to unit testing to avoid building for ALL platforms
+TWISTER_PLATFORM="unit_testing"
+
 # Remove the output directory
 rm -rf "$OUTPUT_DIR"
 
 # Run twister with the specified test cases and output directory
-"$TWISTER_EXE" -O "$OUTPUT_DIR" -T "$TEST_CASES_DIR"
+"$TWISTER_EXE" -O "$OUTPUT_DIR" -p "$TWISTER_PLATFORM" -T "$TEST_CASES_DIR"
 
 # twister output directory cleanup files we do not archive
 find "$OUTPUT_DIR" -name 'CMakeFiles' -exec rm -rf {} \; 2>/dev/null
