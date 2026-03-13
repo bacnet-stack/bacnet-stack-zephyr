@@ -25,6 +25,7 @@ rm -rf "$OUTPUT_DIR"
 
 # Run twister with the specified test cases and output directory
 "$TWISTER_EXE" -O "$OUTPUT_DIR" -T "$TEST_CASES_DIR"
+TWISTER_RC=$?
 
 # twister output directory cleanup files we do not archive
 find "$OUTPUT_DIR" -name 'CMakeFiles' -exec rm -rf {} \; 2>/dev/null
@@ -56,7 +57,7 @@ find "$OUTPUT_DIR" -name 'app' -exec rm -rf '{}' \; 2>/dev/null
 echo "Twister samples output cleanup completed successfully."
 
 # Check if twister ran successfully
-if [ $? -eq 0 ]; then
+if [ $TWISTER_RC -eq 0 ]; then
     echo "Twister samples testing completed successfully."
 else
     echo "Twister samples testing failed."
