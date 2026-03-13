@@ -2,6 +2,9 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+WORKSPACE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
 # setup our build environment
 cd "$WORKSPACE_DIR"
 

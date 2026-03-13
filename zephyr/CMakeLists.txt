@@ -70,7 +70,9 @@ set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 #
 # sources
 #
-set(BACNETSTACK_SRC ../stack/src)
+set(BACNETSTACK_ROOT ${CMAKE_CURRENT_LIST_DIR}/../stack)
+set(BACNETSTACK_SRC ${BACNETSTACK_ROOT}/src)
+set(BACNETSTACK_POSIX ${BACNETSTACK_ROOT}/ports/posix)
 
 set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/abort.c
@@ -544,12 +546,16 @@ set(BACNETSTACK_BASIC_SRCS
 #
 # add ports
 #
+set(BACNETSTACK_PORT_SRCS
+    $<$<BOOL:${CONFIG_BOARD_NATIVE_SIM}>:${BACNETSTACK_POSIX}/bacfile-posix.c>
+)
 
 message(STATUS "BACNETSTACK: building for Zephyr")
 
 list(
   APPEND BACNETSTACK_SRCS
       ${BACNETSTACK_BASIC_SRCS}
+      ${BACNETSTACK_PORT_SRCS}
 )
 
 zephyr_include_directories(include)
@@ -572,10 +578,11 @@ zephyr_library_sources(
 zephyr_include_directories(
   ${BACNETSTACK_PORT}
   ${BACNETSTACK_SRC}
+  $<$<BOOL:${CONFIG_BOARD_NATIVE_SIM}>:${BACNETSTACK_POSIX}>
   )
 
 zephyr_compile_definitions(
-  BACNET_CONFIG_H=1         # Use ports/zephyr/bacnet-config.h
+  BACNET_CONFIG_H=1
   BACNET_VENDOR_ID=${CONFIG_BACNET_VENDOR_IDENTIFIER}
   BACNET_VENDOR_NAME="${CONFIG_BACNET_VENDOR_NAME}"
   BACNET_PROTOCOL_REVISION=${CONFIG_BACNET_PROTOCOL_REVISION}

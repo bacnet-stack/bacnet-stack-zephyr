@@ -15,16 +15,50 @@ if [ -x "$WORKSPACE_VENV/bin/python3" ]; then
 fi
 
 # Set the path to the test cases directory
-TEST_CASES_DIR="$SCRIPT_DIR/zephyr/samples"
+TEST_CASES_DIR="$SCRIPT_DIR/zephyr/tests/subsys"
 
 # Set the output directory for test results
-OUTPUT_DIR="$SCRIPT_DIR/twister-out.samples"
+OUTPUT_DIR="$SCRIPT_DIR/twister-out.subsys"
+
+# Set platform to native_sim to run specific simulation tests
+TWISTER_PLATFORM="native_sim"
+
+cleanup_twister_output_dir() {
+    local output_dir="$1"
+
+    find "$output_dir" -name 'CMakeFiles' -exec rm -rf {} \; 2>/dev/null
+    find "$output_dir" -name 'modules' -exec rm -rf {} \; 2>/dev/null
+    find "$output_dir" -name 'app' -exec rm -rf \
+        '{}/../zephyr/arch
+        {}/../zephyr/boards
+        {}/../zephyr/cmake
+        {}/../zephyr/CMakeFiles
+        {}/../zephyr/dev_graph.dot
+        {}/../zephyr/drivers
+        {}/../zephyr/dts.cmake
+        {}/../zephyr/edt.pickle
+        {}/../zephyr/include
+        {}/../zephyr/isrList.bin
+        {}/../zephyr/kconfig
+        {}/../zephyr/kernel
+        {}/../zephyr/lib
+        {}/../zephyr/libzephyr.a
+        {}/../zephyr/misc
+        {}/../zephyr/modules
+        {}/../zephyr/soc
+        {}/../zephyr/subsys
+        {}/../Makefile
+        {}/../Kconfig
+        {}/../cmake_install.cmake
+        {}/../CMakeCache.txt' \; 2>/dev/null
+    find "$output_dir" -name 'app' -exec rm -rf '{}' \; 2>/dev/null
+}
 
 # Remove the output directory
 rm -rf "$OUTPUT_DIR"
 
-# Run twister with the specified test cases and output directory
-"$TWISTER_EXE" -O "$OUTPUT_DIR" -T "$TEST_CASES_DIR"
+# Run twister for native_sim-only functional subsys tests
+"$TWISTER_EXE" -O "$OUTPUT_DIR" -p "$TWISTER_PLATFORM" -T "$TEST_CASES_DIR"
 TWISTER_RC=$?
 
 # twister output directory cleanup files we do not archive
@@ -54,12 +88,12 @@ find "$OUTPUT_DIR" -name 'app' -exec rm -rf \
     {}/../cmake_install.cmake
     {}/../CMakeCache.txt' \; 2>/dev/null
 find "$OUTPUT_DIR" -name 'app' -exec rm -rf '{}' \; 2>/dev/null
-echo "Twister samples output cleanup completed successfully."
+echo "Twister native_sim output cleanup completed successfully."
 
 # Check if twister ran successfully
 if [ $TWISTER_RC -eq 0 ]; then
-    echo "Twister samples testing completed successfully."
+    echo "Twister native_sim completed successfully."
 else
-    echo "Twister samples testing failed."
+    echo "Twister native_sim failed."
     exit 1
 fi
