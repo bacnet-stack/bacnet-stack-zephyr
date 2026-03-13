@@ -21,12 +21,17 @@ get_filename_component(BACNET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 # Update include path for this module
 list(APPEND BACNET_INCLUDE ${BACNET_BASE}/src)
 
+set(TEST_OBJECT_SRC ${BACNET_BASE}/test/bacnet/basic/object/test)
+list(APPEND TEST_OBJECT_INCLUDE ${TEST_OBJECT_SRC})
+
 if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
-  list(APPEND INCLUDE ${BACNET_INCLUDE})
+  file(RELATIVE_PATH TEST_OBJECT_INCLUDE $ENV{ZEPHYR_BASE} ${TEST_OBJECT_SRC})
+  list(APPEND INCLUDE ${BACNET_INCLUDE} ${TEST_OBJECT_INCLUDE})
   list(APPEND SOURCES
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
+    ${TEST_OBJECT_SRC}/property_test.c
     )
 
   get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)
@@ -47,12 +52,16 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/datetime.c
     ${BACNET_SRC}/timestamp.c
     ${BACNET_SRC}/basic/sys/days.c
+    ${BACNET_SRC}/basic/sys/keylist.c
     ${BACNET_SRC}/bacdevobjpropref.c
     ${BACNET_SRC}/bactext.c
     ${BACNET_SRC}/indtext.c
     ${BACNET_SRC}/lighting.c
     ${BACNET_SRC}/proplist.c
     ${BACNET_SRC}/wp.c
+    ${BACNET_SRC}/proplist.c
+    ${BACNET_SRC}/shed_level.c
+    ${BACNET_SRC}/timer_value.c
     ${BACNET_SRC}/hostnport.c
     ${BACNET_SRC}/dailyschedule.c
     ${BACNET_SRC}/weeklyschedule.c
@@ -70,9 +79,12 @@ else()
   find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
   project(${BACNET_NAME})
 
-  target_include_directories(app PRIVATE ${BACNET_INCLUDE})
+  target_include_directories(app PRIVATE
+    ${BACNET_INCLUDE}
+    ${TEST_OBJECT_INCLUDE})
   target_sources(app PRIVATE
     ${BACNET_TEST_PATH}/src/main.c
+    ${TEST_OBJECT_SRC}/property_test.c
     )
 endif()
 

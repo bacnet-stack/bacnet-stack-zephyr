@@ -36,9 +36,30 @@ jobs:
       - uses: actions/checkout@v3
       - name: Run Docker image from GHCR
         env:
-          DOCKER_RUN_TARGET: "/bacnet/west-ci.sh && /bacnet/samples.sh && /bacnet/unittest.sh"
+          DOCKER_RUN_TARGET: "/workspace/bacnet/west-ci.sh && /workspace/bacnet/samples.sh && /workspace/bacnet/unittest.sh"
           ZEPHYR_CONTAINER: "ghcr.io/zephyrproject-rtos/ci:v0.26-branch"
         run: |
           ls -alh
           echo "== Run Docker image from GHCR"
-          docker run --rm -v "$(pwd):/bacnet" "$ZEPHYR_CONTAINER" /bin/bash -c "$DOCKER_RUN_TARGET"
+          docker run --rm -w /workspace -v "$(pwd):/workspace/bacnet" "$ZEPHYR_CONTAINER" /bin/bash -c "$DOCKER_RUN_TARGET"
+      - name: Upload sample Twister results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: twister-out.samples
+          path: twister-out.samples
+          if-no-files-found: warn
+      - name: Upload unit_testing Twister results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: twister-out.unit_testing
+          path: twister-out.unit_testing
+          if-no-files-found: warn
+      - name: Upload native_sim Twister results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: twister-out.native_sim
+          path: twister-out.native_sim
+          if-no-files-found: warn

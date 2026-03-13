@@ -58,6 +58,8 @@ if(BOARD STREQUAL unit_testing)
   ${BACNET_SRC}/proplist.c
   ${BACNET_SRC}/timestamp.c
   ${BACNET_SRC}/wp.c
+  ${BACNET_SRC}/shed_level.c
+  ${BACNET_SRC}/timer_value.c
   ${BACNET_SRC}/hostnport.c
   ${BACNET_SRC}/dailyschedule.c
   ${BACNET_SRC}/weeklyschedule.c

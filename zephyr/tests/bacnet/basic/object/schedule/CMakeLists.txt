@@ -32,6 +32,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
     ${TEST_OBJECT_SRC}/property_test.c
+    ${TEST_OBJECT_SRC}/device_mock.c
     )
 
   get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)
@@ -60,6 +61,8 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/proplist.c
     ${BACNET_SRC}/wp.c
     ${BACNET_SRC}/bactimevalue.c
+    ${BACNET_SRC}/shed_level.c
+    ${BACNET_SRC}/timer_value.c
     ${BACNET_SRC}/hostnport.c
     ${BACNET_SRC}/dailyschedule.c
     ${BACNET_SRC}/weeklyschedule.c
@@ -83,6 +86,7 @@ else()
   target_sources(app PRIVATE
     ${BACNET_TEST_PATH}/src/main.c
     ${TEST_OBJECT_SRC}/property_test.c
+    ${TEST_OBJECT_SRC}/device_mock.c
     )
 endif()
 
