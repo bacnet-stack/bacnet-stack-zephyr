@@ -33,7 +33,7 @@ jobs:
         run: rm -rf /opt/hostedtoolcache
       - name: Pull Docker image from GHCR
         run: docker pull ghcr.io/zephyrproject-rtos/ci:v0.26-branch
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - name: Run Docker image from GHCR
         env:
           DOCKER_RUN_TARGET: "/workspace/bacnet/west-ci.sh && /workspace/bacnet/samples.sh && /workspace/bacnet/unittest.sh && /workspace/bacnet/subsys.sh"
