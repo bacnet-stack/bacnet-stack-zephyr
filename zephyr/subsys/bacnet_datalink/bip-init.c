@@ -385,7 +385,6 @@ int bip_send_pdu(
     uint8_t *pdu,
     unsigned pdu_len)
 {
-    dest->net = BACNET_BROADCAST_NETWORK;
     return bvlc_send_pdu(dest, npdu_data, pdu, pdu_len);
 }
 
