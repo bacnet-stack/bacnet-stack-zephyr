@@ -630,7 +630,14 @@ bool bip_init(char *ifname)
     int sock_fd;
     struct sockaddr_in sin = { 0 };
 
-    bip_set_interface(ifname);
+    /* Only call bip_set_interface() if we don't have an address yet.
+     * On re-init after bip_cleanup() (port change / enable-disable cycle)
+     * BIP_Address is already populated from the initial DHCP assignment, so
+     * calling bip_set_interface() again would try to re-add a MANUAL address
+     * on top of the DHCP one and corrupt the interface netmask. */
+    if (BIP_Address.s_addr == 0) {
+        bip_set_interface(ifname);
+    }
 
     if (BIP_Address.s_addr == 0) {
         LOG_ERR(
@@ -679,13 +686,18 @@ void bip_cleanup(void)
 {
     LOG_DBG("bip_cleanup()");
 
-    memset(&BIP_Address, 0, sizeof(BIP_Address));
-    memset(&BIP_Broadcast_Addr, 0, sizeof(BIP_Broadcast_Addr));
-
+    /* Only close the sockets — preserve BIP_Address and BIP_Broadcast_Addr so
+     * that a subsequent bip_init() takes the static (non-blocking) path in
+     * bip_set_interface() instead of blocking on wait_for_net_event() again. */
     if (BIP_Socket != -1) {
         zsock_close(BIP_Socket);
     }
     BIP_Socket = -1;
+
+    if (BIP_Broadcast_Socket != -1) {
+        zsock_close(BIP_Broadcast_Socket);
+    }
+    BIP_Broadcast_Socket = -1;
 
     return;
 }
