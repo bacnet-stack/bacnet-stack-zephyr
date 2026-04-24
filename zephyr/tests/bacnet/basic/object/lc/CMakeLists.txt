@@ -28,6 +28,15 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
     ${BACNET_TEST_PATH}/stubs.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/proplist.c
+    ${BACNET_BASE}/src/bacnet/bacerror.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/keylist.c
+    ${BACNET_BASE}/src/bacnet/rp.c
+    ${BACNET_BASE}/src/bacnet/basic/object/lc.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
+    ${BACNET_BASE}/src/bacnet/cov.c
     )
 
   get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)

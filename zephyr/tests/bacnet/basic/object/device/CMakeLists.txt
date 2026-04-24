@@ -28,6 +28,36 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
     ${BACNET_TEST_PATH}/stubs.c
+    ${BACNET_BASE}/src/bacnet/basic/object/access_user.c
+    ${BACNET_BASE}/src/bacnet/basic/object/lsz.c
+    ${BACNET_BASE}/src/bacnet/basic/object/access_rights.c
+    ${BACNET_BASE}/src/bacnet/credential_authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/basic/object/access_point.c
+    ${BACNET_BASE}/src/bacnet/delete_object.c
+    ${BACNET_BASE}/src/bacnet/basic/object/device.c
+    ${BACNET_BASE}/src/bacnet/basic/object/blo.c
+    ${BACNET_BASE}/src/bacnet/basic/object/loop.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
+    ${BACNET_BASE}/src/bacnet/basic/object/bitstring_value.c
+    ${BACNET_BASE}/src/bacnet/assigned_access_rights.c
+    ${BACNET_BASE}/src/bacnet/basic/object/structured_view.c
+    ${BACNET_BASE}/src/bacnet/basic/object/auditlog.c
+    ${BACNET_BASE}/src/bacnet/arf.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/linear.c
+    ${BACNET_BASE}/src/bacnet/property.c
+    ${BACNET_BASE}/src/bacnet/bacaudit.c
+    ${BACNET_BASE}/src/bacnet/basic/object/credential_data_input.c
+    ${BACNET_BASE}/src/bacnet/datalink/bvlc6.c
+    ${BACNET_BASE}/src/bacnet/basic/object/access_credential.c
+    ${BACNET_BASE}/src/bacnet/create_object.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/lighting_command.c
+    ${BACNET_BASE}/src/bacnet/basic/object/access_door.c
+    ${BACNET_BASE}/src/bacnet/basic/object/bacfile.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/basic/object/timer.c
+    ${BACNET_BASE}/src/bacnet/basic/object/program.c
+    ${BACNET_BASE}/src/bacnet/basic/object/access_zone.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
     )
 
   get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)

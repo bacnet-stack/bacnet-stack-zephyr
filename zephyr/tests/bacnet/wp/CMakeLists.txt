@@ -27,6 +27,9 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND SOURCES
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
+    ${BACNET_BASE}/src/bacnet/wp.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
     )
 
   get_filename_component(BACNET_SRC ${BACNET_SRC_PATH} PATH)
