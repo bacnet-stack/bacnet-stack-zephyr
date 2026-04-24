@@ -25,6 +25,8 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND SOURCES
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")

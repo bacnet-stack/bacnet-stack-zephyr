@@ -25,6 +25,7 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND SOURCES
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
+    ${BACNET_BASE}/src/bacnet/indtext.c
     )
   get_filename_component(BACNET_SRC ${BACNET_SRC_PATH} PATH)
   list(APPEND SOURCES

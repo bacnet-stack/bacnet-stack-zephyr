@@ -27,6 +27,12 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND SOURCES
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/assigned_access_rights.c
+    ${BACNET_BASE}/src/bacnet/credential_authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/basic/object/access_credential.c
+    ${BACNET_BASE}/src/bacnet/basic/object/access_zone.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
     )
 
   get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)

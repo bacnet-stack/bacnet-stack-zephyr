@@ -33,6 +33,11 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_TEST_PATH}/src/main.c
     ${TEST_OBJECT_SRC}/device_mock.c
     ${TEST_OBJECT_SRC}/property_test.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/color_rgb.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/basic/object/lo.c
+    ${BACNET_BASE}/src/bacnet/bacerror.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
     )
 
   get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)
@@ -79,6 +84,7 @@ if(BOARD STREQUAL unit_testing)
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
   find_package(Zephyr COMPONENTS unittest REQUIRED HINTS $ENV{ZEPHYR_BASE})
   project(${BACNET_NAME})
+  target_link_libraries(testbinary PRIVATE m)
 else()
   find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
   project(${BACNET_NAME})

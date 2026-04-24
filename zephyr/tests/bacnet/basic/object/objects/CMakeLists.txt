@@ -27,6 +27,7 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND SOURCES
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
+    ${BACNET_BASE}/src/bacnet/basic/object/objects.c
     )
 
   get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)
@@ -64,6 +65,8 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/basic/sys/bigend.c
     ${BACNET_SRC}/bactimevalue.c
     ${BACNET_SRC}/secure_connect.c
+    ${BACNET_SRC}/authentication_factor.c
+    ${BACNET_SRC}/authentication_factor_format.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
