@@ -34,6 +34,11 @@ if(BOARD STREQUAL unit_testing)
     ${TEST_OBJECT_SRC}/datetime_local.c
     ${TEST_OBJECT_SRC}/property_test.c
     ${TEST_OBJECT_SRC}/device_mock.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/basic/object/time_value.c
+    ${BACNET_BASE}/src/bacnet/memcopy.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
+    ${BACNET_BASE}/src/bacnet/cov.c
     )
 
   get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)
