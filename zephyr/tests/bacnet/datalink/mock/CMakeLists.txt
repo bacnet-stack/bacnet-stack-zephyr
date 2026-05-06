@@ -33,6 +33,12 @@ if(BOARD STREQUAL unit_testing)
 
   list(APPEND SOURCES
     ${BACNET_DATALINK_SRC}/datalink.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/days.c
     )
 
   add_definitions(-DBACDL_ALL=1)

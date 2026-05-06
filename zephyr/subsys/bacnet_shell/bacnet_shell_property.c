@@ -35,7 +35,7 @@ int bacnet_shell_object_type_instance_parse(
 {
     uint32_t found_index = 0;
 
-    if (argc < 1) {
+    if (argc < 2) {
         shell_help(sh);
         return -EINVAL;
     }
@@ -58,7 +58,7 @@ int bacnet_shell_object_type_instance_parse(
         if (object_instance) {
             *object_instance = Device_Object_Instance_Number();
         }
-    } else if (argc > 1) {
+    } else if (argc > 2) {
         if (!bacnet_string_to_uint32(argv[2], &found_index)) {
             shell_error(
                 sh,
@@ -312,14 +312,20 @@ static int cmd_json_print_hex_dump(
     const char *suffix,
     const char *append)
 {
-    char str[(buffer_length * 2) + 1];
+    size_t str_size = ((size_t)buffer_length * 2U) + 1U;
+    char str[str_size];
     int i, s, slen;
 
     s = 0;
     for (i = 0; i < buffer_length; i++) {
-        slen = sprintf(&str[s], "%02x", buffer[i]);
+        unsigned byte = (unsigned)(unsigned char)buffer[i];
+        slen = sprintf(&str[s], "%02x", byte);
+        if (slen != 2) {
+            break;
+        }
         s += slen;
     }
+    str[s] = '\0';
     cmd_json_print_key_value(sh, prefix, key, str, suffix, append);
 
     return 0;
@@ -569,6 +575,7 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
     bool skip_print = false;
     bool print_all_properties = false;
     char property_name[80] = "";
+    size_t application_data_len = 0;
 
     if ((argc == 2) || (argc == 3)) {
         err = bacnet_shell_object_type_instance_parse(
@@ -658,8 +665,10 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
             if (apdu_len) {
                 bacnet_shell_write_property_parameter_init(&wpdata, &rpdata, 0);
                 wpdata.priority = priority;
-                wpdata.application_data_len = apdu_len;
-                memcpy(&wpdata.application_data, apdu, apdu_len);
+                application_data_len =
+                    min(apdu_len, sizeof(wpdata.application_data));
+                wpdata.application_data_len = application_data_len;
+                memcpy(&wpdata.application_data, apdu, application_data_len);
                 status = Device_Write_Property(&wpdata);
                 if (status) {
                     cmd_json_print_property_value_tag(

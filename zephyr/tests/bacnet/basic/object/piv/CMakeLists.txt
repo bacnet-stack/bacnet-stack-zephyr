@@ -32,6 +32,9 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC_PATH}.c
     ${BACNET_TEST_PATH}/src/main.c
     ${TEST_OBJECT_SRC}/property_test.c
+    ${BACNET_BASE}/src/bacnet/basic/object/piv.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
     )
 
   get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)
