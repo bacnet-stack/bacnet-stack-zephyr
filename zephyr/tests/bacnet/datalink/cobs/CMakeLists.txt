@@ -25,9 +25,8 @@ if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
   list(APPEND INCLUDE ${BACNET_INCLUDE})
   list(APPEND SOURCES
-    ${BACNET_SRC_PATH}.c
+    ${BACNET_BASE}/src/bacnet/datalink/cobs.c
     ${BACNET_TEST_PATH}/src/main.c
-    ${BACNET_DATALINK_SRC}/cobs.c
     )
 
   add_definitions(-DBACDL_MSTP=1)

@@ -29,15 +29,13 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND INCLUDE ${BACNET_INCLUDE})
 
   file(GLOB SRC_TEST ${BACNET_TEST_PATH}/src/*.c)
-  list(APPEND SOURCES ${SRC_TEST} )
-
   list(APPEND SOURCES
-    ${BACNET_DATALINK_SRC}/datalink.c
-    ${BACNET_BASE}/src/bacnet/bacint.c
-    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
-    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/datalink/datalink.c
     ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
     ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
     ${BACNET_BASE}/src/bacnet/basic/sys/days.c
     )
 

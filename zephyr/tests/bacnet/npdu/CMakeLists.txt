@@ -25,33 +25,28 @@ if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
   list(APPEND INCLUDE ${BACNET_INCLUDE})
   list(APPEND SOURCES
-    ${BACNET_SRC_PATH}.c
-    ${BACNET_TEST_PATH}/src/main.c
     ${BACNET_BASE}/src/bacnet/npdu.c
-    )
-
-  get_filename_component(BACNET_SRC ${BACNET_SRC_PATH} PATH)
-  list(APPEND SOURCES
-    ${BACNET_SRC}/abort.c
-    ${BACNET_SRC}/bacaction.c
-    ${BACNET_SRC}/bacaddr.c
-    ${BACNET_SRC}/bacdcode.c
-    ${BACNET_SRC}/bacerror.c
-    ${BACNET_SRC}/bacint.c
-    ${BACNET_SRC}/bacreal.c
-    ${BACNET_SRC}/bacstr.c
-    ${BACNET_SRC}/bactext.c
-    ${BACNET_SRC}/basic/service/h_apdu.c
-    ${BACNET_SRC}/basic/sys/bigend.c
-    ${BACNET_SRC}/basic/sys/debug.c
-    ${BACNET_SRC}/basic/tsm/tsm.c
-    ${BACNET_SRC}/dcc.c
-    ${BACNET_SRC}/indtext.c
-    ${BACNET_SRC}/proplist.c
-    ${BACNET_SRC}/reject.c
-    ${BACNET_SRC}/rp.c
-    ${BACNET_SRC}/whois.c
+    ${BACNET_BASE}/src/bacnet/abort.c
+    ${BACNET_BASE}/src/bacnet/bacaction.c
+    ${BACNET_BASE}/src/bacnet/bacaddr.c
+    ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacerror.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
+    ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/bactext.c
+    ${BACNET_BASE}/src/bacnet/basic/service/h_apdu.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
+    ${BACNET_BASE}/src/bacnet/basic/tsm/tsm.c
+    ${BACNET_BASE}/src/bacnet/dcc.c
+    ${BACNET_BASE}/src/bacnet/indtext.c
+    ${BACNET_BASE}/src/bacnet/proplist.c
+    ${BACNET_BASE}/src/bacnet/reject.c
+    ${BACNET_BASE}/src/bacnet/rp.c
+    ${BACNET_BASE}/src/bacnet/whois.c
     ${BACNET_TEST_PATH}/stubs.c
+    ${BACNET_TEST_PATH}/src/main.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
