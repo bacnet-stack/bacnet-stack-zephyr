@@ -25,26 +25,17 @@ if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
   list(APPEND INCLUDE ${BACNET_INCLUDE})
   list(APPEND SOURCES
-    ${BACNET_SRC_PATH}.c
-    ${BACNET_TEST_PATH}/src/main.c
-    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
     ${BACNET_BASE}/src/bacnet/datalink/bvlc.c
-    )
-
-  get_filename_component(BACNET_DATALINK_SRC ${BACNET_SRC_PATH} PATH)
-  get_filename_component(BACNET_SRC ${BACNET_DATALINK_SRC} PATH)
-  list(APPEND SOURCES
-    ${BACNET_SRC}/bacdcode.c
-    ${BACNET_SRC}/bacstr.c
-    ${BACNET_SRC}/bacint.c
-    ${BACNET_SRC}/bacreal.c
-    ${BACNET_SRC}/datetime.c
-    ${BACNET_SRC}/timestamp.c
-    ${BACNET_SRC}/basic/sys/days.c
-    ${BACNET_SRC}/bacdevobjpropref.c
-    ${BACNET_SRC}/hostnport.c
-    ${BACNET_SRC}/bactext.c
-    ${BACNET_SRC}/indtext.c
+    ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
+    ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/bactext.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/days.c
+    ${BACNET_BASE}/src/bacnet/hostnport.c
+    ${BACNET_BASE}/src/bacnet/indtext.c
+    ${BACNET_TEST_PATH}/src/main.c
     )
 
   # BIP Options
