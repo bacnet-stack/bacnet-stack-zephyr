@@ -25,45 +25,42 @@ if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
   list(APPEND INCLUDE ${BACNET_INCLUDE})
   list(APPEND SOURCES
-    ${BACNET_SRC_PATH}.c
-    ${BACNET_TEST_PATH}/src/main.c
-    ${BACNET_BASE}/src/bacnet/authentication_factor.c
     ${BACNET_BASE}/src/bacnet/rpm.c
+    ${BACNET_BASE}/src/bacnet/access_rule.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor.c
     ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
-    )
-
-  get_filename_component(BACNET_SRC ${BACNET_SRC_PATH} PATH)
-  list(APPEND SOURCES
-    ${BACNET_SRC}/access_rule.c
-    ${BACNET_SRC}/bacaction.c
-    ${BACNET_SRC}/bacaddr.c
-    ${BACNET_SRC}/bacapp.c
-    ${BACNET_SRC}/bacdcode.c
-    ${BACNET_SRC}/bacdest.c
-    ${BACNET_SRC}/bacint.c
-    ${BACNET_SRC}/baclog.c
-    ${BACNET_SRC}/bacreal.c
-    ${BACNET_SRC}/bacstr.c
-    ${BACNET_SRC}/channel_value.c
-    ${BACNET_SRC}/datetime.c
-    ${BACNET_SRC}/timestamp.c
-    ${BACNET_SRC}/basic/sys/days.c
-    ${BACNET_SRC}/bacdevobjpropref.c
-    ${BACNET_SRC}/bactext.c
-    ${BACNET_SRC}/indtext.c
-    ${BACNET_SRC}/lighting.c
-    ${BACNET_SRC}/bacerror.c
-    ${BACNET_SRC}/memcopy.c
-    ${BACNET_SRC}/shed_level.c
-    ${BACNET_SRC}/timer_value.c
-    ${BACNET_SRC}/hostnport.c
-    ${BACNET_SRC}/dailyschedule.c
-    ${BACNET_SRC}/weeklyschedule.c
-    ${BACNET_SRC}/calendar_entry.c
-    ${BACNET_SRC}/special_event.c
-    ${BACNET_SRC}/basic/sys/bigend.c
-    ${BACNET_SRC}/bactimevalue.c
-    ${BACNET_SRC}/secure_connect.c
+    ${BACNET_BASE}/src/bacnet/bacaction.c
+    ${BACNET_BASE}/src/bacnet/bacaddr.c
+    ${BACNET_BASE}/src/bacnet/bacapp.c
+    ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacdest.c
+    ${BACNET_BASE}/src/bacnet/bacdevobjpropref.c
+    ${BACNET_BASE}/src/bacnet/abort.c
+    ${BACNET_BASE}/src/bacnet/bacerror.c
+    ${BACNET_BASE}/src/bacnet/reject.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
+    ${BACNET_BASE}/src/bacnet/baclog.c
+    ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/bactext.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
+    ${BACNET_BASE}/src/bacnet/datetime.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/days.c
+    ${BACNET_BASE}/src/bacnet/indtext.c
+    ${BACNET_BASE}/src/bacnet/hostnport.c
+    ${BACNET_BASE}/src/bacnet/lighting.c
+    ${BACNET_BASE}/src/bacnet/shed_level.c
+    ${BACNET_BASE}/src/bacnet/timer_value.c
+    ${BACNET_BASE}/src/bacnet/timestamp.c
+    ${BACNET_BASE}/src/bacnet/memcopy.c
+    ${BACNET_BASE}/src/bacnet/weeklyschedule.c
+    ${BACNET_BASE}/src/bacnet/bactimevalue.c
+    ${BACNET_BASE}/src/bacnet/dailyschedule.c
+    ${BACNET_BASE}/src/bacnet/calendar_entry.c
+    ${BACNET_BASE}/src/bacnet/special_event.c
+    ${BACNET_BASE}/src/bacnet/channel_value.c
+    ${BACNET_BASE}/src/bacnet/secure_connect.c
+    ${BACNET_TEST_PATH}/src/main.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
