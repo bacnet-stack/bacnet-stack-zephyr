@@ -10,7 +10,6 @@
 #define BACNET_STORAGE_H
 
 #include <stddef.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <errno.h>
