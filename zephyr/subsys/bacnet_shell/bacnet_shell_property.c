@@ -117,7 +117,7 @@ int bacnet_shell_property_parse(
     }
     err = bacnet_shell_object_type_instance_parse(
         sh, argc, argv, object_type, object_instance);
-    if (isalpha(argv[3][0])) {
+    if (isalpha((unsigned char)argv[3][0])) {
         /* choose a property by name with optional [] to denote array */
         scan_count = sscanf(argv[3], "%79[^[][%u]", name, &array_value);
         if (scan_count < 1) {
