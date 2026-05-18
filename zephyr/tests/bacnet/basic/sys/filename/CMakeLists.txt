@@ -27,6 +27,7 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND SOURCES
     ${BACNET_BASE}/src/bacnet/basic/sys/filename.c
     ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/state_name.c
     ${BACNET_TEST_PATH}/src/main.c
     )
 

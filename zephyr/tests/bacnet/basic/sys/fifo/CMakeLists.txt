@@ -23,6 +23,7 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND INCLUDE ${BACNET_INCLUDE})
   list(APPEND SOURCES
     ${BACNET_BASE}/src/bacnet/basic/sys/fifo.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/state_name.c
     ${BACNET_TEST_PATH}/src/main.c
     )
 
