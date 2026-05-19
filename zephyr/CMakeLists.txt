@@ -325,6 +325,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/sys/ringbuf.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/sbuf.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/sbuf.h
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/state_name.c
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/state_name.h
     ${BACNETSTACK_SRC}/bacnet/basic/tsm/tsm.c
     ${BACNETSTACK_SRC}/bacnet/basic/tsm/tsm.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bits.h
