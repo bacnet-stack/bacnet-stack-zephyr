@@ -65,6 +65,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_BASE}/src/bacnet/basic/sys/days.c
     ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
     ${BACNET_BASE}/src/bacnet/basic/sys/keylist.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/state_name.c
     ${BACNET_TEST_PATH}/src/main.c
     ${BACNET_BASE}/test/bacnet/basic/object/test/property_test.c
     )
