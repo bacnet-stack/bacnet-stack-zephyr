@@ -24,6 +24,11 @@ if(BOARD STREQUAL unit_testing)
   list(APPEND SOURCES
     ${BACNET_BASE}/src/bacnet/basic/sys/fifo.c
     ${BACNET_BASE}/src/bacnet/basic/sys/state_name.c
+    ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
+    ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/keylist.c
     ${BACNET_TEST_PATH}/src/main.c
     )
 

@@ -28,6 +28,11 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_BASE}/src/bacnet/basic/sys/filename.c
     ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
     ${BACNET_BASE}/src/bacnet/basic/sys/state_name.c
+    ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
+    ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/keylist.c
     ${BACNET_TEST_PATH}/src/main.c
     )
 
