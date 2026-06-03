@@ -1,0 +1,26 @@
+# Kconfig - Subsystem configuration options
+#
+# @author Luiz Santana <luiz.santana@dsr-corporation.com>
+# @date May 2026
+# @copyright SPDX-License-Identifier: Apache-2.0
+menuconfig BACNET_DATALINK_SETTINGS
+    bool "BACNET_DATALINK_SETTINGS"
+    default y if BACNETSTACK
+    help
+      This option enables BACnet datalink settings.
+
+if BACNET_DATALINK_SETTINGS
+
+    config BZLL_NODE_TIME_TO_LIVE_S
+        int "BZLL node time-to-live in the VMAC table"
+        default 600
+        help
+           Time in seconds to keep a node in the VMAC table before it must be updated.
+
+    config BZLL_SCAN_NODES_INTERVAL_S
+        int "BZLL interval for scanning the Zigbee network for BACnet nodes and updating the VMAC table"
+        default 3600
+        help
+           Time interval in seconds between scans of the Zigbee network for BACnet nodes to update the VMAC table.
+
+endif # BACNET_DATALINK_SETTINGS

@@ -325,6 +325,8 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/sys/ringbuf.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/sbuf.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/sbuf.h
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/state_name.c
+    ${BACNETSTACK_SRC}/bacnet/basic/sys/state_name.h
     ${BACNETSTACK_SRC}/bacnet/basic/tsm/tsm.c
     ${BACNETSTACK_SRC}/bacnet/basic/tsm/tsm.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bits.h
@@ -451,11 +453,13 @@ set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/h_bbmd6.c>
     $<$<BOOL:${CONFIG_BACDL_BIP6}>:${BACNETSTACK_SRC}/bacnet/basic/bbmd6/vmac.c>
     $<$<BOOL:${CONFIG_BACDL_ZIGBEE}>:${BACNETSTACK_SRC}/bacnet/basic/bzll/bzllvmac.c>
+    $<$<BOOL:${CONFIG_BACDL_ZIGBEE}>:${BACNETSTACK_SRC}/bacnet/basic/bzll/h_bzll.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_basic.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_device.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_ipv4.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_ipv4.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_SERVER}>:${BACNETSTACK_SRC}/bacnet/basic/server/bacnet_port_bzll.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_credential.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_door.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECTS_ACCESS}>:${BACNETSTACK_SRC}/bacnet/basic/object/access_point.c>
@@ -587,6 +591,8 @@ zephyr_compile_definitions(
   BACNET_VENDOR_NAME="${CONFIG_BACNET_VENDOR_NAME}"
   BACNET_PROTOCOL_REVISION=${CONFIG_BACNET_PROTOCOL_REVISION}
   BACNET_STACK_DEPRECATED_DISABLE=1
+  $<$<BOOL:${CONFIG_BZLL_NODE_TIME_TO_LIVE_S}>:BZLL_NODE_TIME_TO_LIVE_S=${CONFIG_BZLL_NODE_TIME_TO_LIVE_S}>
+  $<$<BOOL:${CONFIG_BZLL_SCAN_NODES_INTERVAL_S}>:BZLL_SCAN_NODES_INTERVAL_S=${CONFIG_BZLL_SCAN_NODES_INTERVAL_S}>
   # datalink API
   $<$<BOOL:${CONFIG_BACDL_NONE}>:BACDL_NONE>
   $<$<BOOL:${CONFIG_BACDL_ALL}>:BACAPP_ALL>

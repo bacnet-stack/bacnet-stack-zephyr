@@ -117,7 +117,7 @@ int bacnet_shell_property_parse(
     }
     err = bacnet_shell_object_type_instance_parse(
         sh, argc, argv, object_type, object_instance);
-    if (isalpha(argv[3][0])) {
+    if (isalpha((unsigned char)argv[3][0])) {
         /* choose a property by name with optional [] to denote array */
         scan_count = sscanf(argv[3], "%79[^[][%u]", name, &array_value);
         if (scan_count < 1) {
@@ -571,6 +571,8 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
     uint32_t found_index = 0;
     long priority = BACNET_NO_PRIORITY;
     char *value_string = NULL;
+    char *tag_string = NULL;
+    long property_tag = 0;
     bool null_value = false;
     bool skip_print = false;
     bool print_all_properties = false;
@@ -601,7 +603,11 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
         value_string = argv[4];
         skip_print = true;
     }
-    /* ReadProperty */
+    if (argc > 5) {
+        /* optional tag for WriteProperty */
+        tag_string = argv[5];
+    }
+    /* ReadProperty data configuration */
     rpdata.application_data = &apdu[0];
     rpdata.application_data_len = sizeof(apdu);
     rpdata.object_type = object_type;
@@ -612,11 +618,29 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
         cmd_print_value_all(sh, &rpdata);
         return 0;
     }
-    apdu_len = Device_Read_Property(&rpdata);
     bacapp_value_list_init(&value, 1);
-    err = cmd_value_print(sh, &rpdata, &value, apdu_len, skip_print, "");
+    if (!tag_string) {
+        /* perform ReadProperty if no tag is provided */
+        apdu_len = Device_Read_Property(&rpdata);
+        if ((apdu_len < 0) && (rpdata.array_index != BACNET_ARRAY_ALL) &&
+            (rpdata.array_index != 1) &&
+            (rpdata.error_code == ERROR_CODE_INVALID_ARRAY_INDEX) &&
+            (value_string)) {
+            /* try another index that might exist to automatically
+               determine the tag for writing when trying to
+               extend a resizable array. */
+            rpdata.array_index = 1;
+            apdu_len = Device_Read_Property(&rpdata);
+        }
+        err = cmd_value_print(sh, &rpdata, &value, apdu_len, skip_print, "");
+    }
     if (value_string) {
-        /* WriteProperty */
+        /* == WriteProperty == */
+        if ((apdu_len < 0) && (!tag_string)) {
+            /* ReadProperty error occurred, and we cannot proceed with
+               WriteProperty without a user provided tag */
+            return -EINVAL;
+        }
         /* allow for optional priority using @ symbol for commandables */
         if (property_list_commandable_member(object_type, object_property)) {
             /* search the new_text for the @ symbol */
@@ -643,6 +667,14 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
         if (null_value) {
             value.tag = BACNET_APPLICATION_TAG_NULL;
             status = true;
+        } else if (tag_string) {
+            if (bactext_application_tag_strtol(tag_string, &found_index)) {
+                property_tag = (long)found_index;
+            } else {
+                property_tag = strtol(tag_string, NULL, 0);
+            }
+            status = bacapp_parse_application_data(
+                property_tag, value_string, &value);
         } else if (value.tag == BACNET_APPLICATION_TAG_ENUMERATED) {
             status = bactext_object_property_strtoul(
                 (BACNET_OBJECT_TYPE)object_type,
@@ -664,6 +696,7 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
             apdu_len = bacapp_encode_data(apdu, &value);
             if (apdu_len) {
                 bacnet_shell_write_property_parameter_init(&wpdata, &rpdata, 0);
+                wpdata.array_index = array_index;
                 wpdata.priority = priority;
                 application_data_len =
                     min(apdu_len, sizeof(wpdata.application_data));
@@ -806,7 +839,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         value,
         NULL,
         "<object type> <object instance> "
-        "<property id>[array index] [value]",
+        "<property id>[array index] [value] [tag]",
         cmd_value),
     SHELL_SUBCMD_SET_END);
 

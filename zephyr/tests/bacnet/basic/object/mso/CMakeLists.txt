@@ -29,53 +29,47 @@ if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH TEST_OBJECT_INCLUDE $ENV{ZEPHYR_BASE} ${TEST_OBJECT_SRC})
   list(APPEND INCLUDE ${BACNET_INCLUDE} ${TEST_OBJECT_INCLUDE})
   list(APPEND SOURCES
-    ${BACNET_SRC_PATH}.c
-    ${BACNET_TEST_PATH}/src/main.c
-    ${TEST_OBJECT_SRC}/property_test.c
-    ${BACNET_BASE}/src/bacnet/authentication_factor.c
-    ${BACNET_BASE}/src/bacnet/memcopy.c
-    ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
     ${BACNET_BASE}/src/bacnet/basic/object/mso.c
-  )
-
-  get_filename_component(BACNET_OBJECT_SRC ${BACNET_SRC_PATH} PATH)
-  get_filename_component(BACNET_BASIC_SRC ${BACNET_OBJECT_SRC} PATH)
-  get_filename_component(BACNET_SRC ${BACNET_BASIC_SRC} PATH)
-  list(APPEND SOURCES
-    ${BACNET_SRC}/access_rule.c
-    ${BACNET_SRC}/bacaction.c
-    ${BACNET_SRC}/bacaddr.c
-    ${BACNET_SRC}/bacapp.c
-    ${BACNET_SRC}/bacdcode.c
-    ${BACNET_SRC}/bacdest.c
-    ${BACNET_SRC}/bacint.c
-    ${BACNET_SRC}/baclog.c
-    ${BACNET_SRC}/bacreal.c
-    ${BACNET_SRC}/bacstr.c
-    ${BACNET_SRC}/channel_value.c
-    ${BACNET_SRC}/datetime.c
-    ${BACNET_SRC}/bacdevobjpropref.c
-    ${BACNET_SRC}/bactext.c
-    ${BACNET_SRC}/cov.c
-    ${BACNET_SRC}/indtext.c
-    ${BACNET_SRC}/lighting.c
-    ${BACNET_SRC}/proplist.c
-    ${BACNET_SRC}/timestamp.c
-    ${BACNET_SRC}/wp.c
-    ${BACNET_SRC}/shed_level.c
-    ${BACNET_SRC}/timer_value.c
-    ${BACNET_SRC}/hostnport.c
-    ${BACNET_SRC}/dailyschedule.c
-    ${BACNET_SRC}/weeklyschedule.c
-    ${BACNET_SRC}/calendar_entry.c
-    ${BACNET_SRC}/special_event.c
-    ${BACNET_SRC}/bactimevalue.c
-    ${BACNET_SRC}/basic/sys/bigend.c
-    ${BACNET_SRC}/basic/sys/days.c
-    ${BACNET_SRC}/basic/sys/debug.c
-    ${BACNET_SRC}/basic/sys/keylist.c
-    ${BACNET_SRC}/secure_connect.c
-  )
+    ${BACNET_BASE}/src/bacnet/access_rule.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor.c
+    ${BACNET_BASE}/src/bacnet/authentication_factor_format.c
+    ${BACNET_BASE}/src/bacnet/bacaction.c
+    ${BACNET_BASE}/src/bacnet/bacaddr.c
+    ${BACNET_BASE}/src/bacnet/bacapp.c
+    ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacdest.c
+    ${BACNET_BASE}/src/bacnet/bacdevobjpropref.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
+    ${BACNET_BASE}/src/bacnet/baclog.c
+    ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/bactext.c
+    ${BACNET_BASE}/src/bacnet/cov.c
+    ${BACNET_BASE}/src/bacnet/datetime.c
+    ${BACNET_BASE}/src/bacnet/indtext.c
+    ${BACNET_BASE}/src/bacnet/hostnport.c
+    ${BACNET_BASE}/src/bacnet/lighting.c
+    ${BACNET_BASE}/src/bacnet/proplist.c
+    ${BACNET_BASE}/src/bacnet/memcopy.c
+    ${BACNET_BASE}/src/bacnet/shed_level.c
+    ${BACNET_BASE}/src/bacnet/timer_value.c
+    ${BACNET_BASE}/src/bacnet/timestamp.c
+    ${BACNET_BASE}/src/bacnet/wp.c
+    ${BACNET_BASE}/src/bacnet/weeklyschedule.c
+    ${BACNET_BASE}/src/bacnet/bactimevalue.c
+    ${BACNET_BASE}/src/bacnet/dailyschedule.c
+    ${BACNET_BASE}/src/bacnet/calendar_entry.c
+    ${BACNET_BASE}/src/bacnet/special_event.c
+    ${BACNET_BASE}/src/bacnet/channel_value.c
+    ${BACNET_BASE}/src/bacnet/secure_connect.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/days.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/keylist.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/state_name.c
+    ${BACNET_TEST_PATH}/src/main.c
+    ${BACNET_BASE}/test/bacnet/basic/object/test/property_test.c
+    )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
   find_package(Zephyr COMPONENTS unittest REQUIRED HINTS $ENV{ZEPHYR_BASE})

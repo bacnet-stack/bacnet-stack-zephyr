@@ -25,16 +25,15 @@ if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
   list(APPEND INCLUDE ${BACNET_INCLUDE})
   list(APPEND SOURCES
-    ${BACNET_SRC_PATH}.c
-    ${BACNET_TEST_PATH}/src/main.c
     ${BACNET_BASE}/src/bacnet/basic/sys/filename.c
-    )
-  get_filename_component(BACNET_SYS_SRC ${BACNET_SRC_PATH} PATH)
-  get_filename_component(BACNET_BASIC_SRC ${BACNET_SYS_SRC} PATH)
-  get_filename_component(BACNET_SRC ${BACNET_BASIC_SRC} PATH)
-  list(APPEND SOURCES
-    ${BACNET_SRC}/basic/sys/keylist.c
-    ${BACNET_SRC}/basic/sys/debug.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/state_name.c
+    ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
+    ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/keylist.c
+    ${BACNET_TEST_PATH}/src/main.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")

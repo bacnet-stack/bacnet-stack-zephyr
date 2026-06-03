@@ -4,6 +4,7 @@
 
 comment "BACnet Subsystems"
 
+rsource "bacnet_datalink/Kconfig"
 rsource "bacnet_settings/Kconfig"
 rsource "bacnet_shell/Kconfig"
 rsource "object/Kconfig"

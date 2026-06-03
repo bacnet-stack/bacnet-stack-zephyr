@@ -323,7 +323,7 @@ bool bacnet_settings_value_parse(
         return false;
     }
     /* convert the string value into a tagged union value */
-    if (isalpha(value_string[0])) {
+    if (isalpha((unsigned char)value_string[0])) {
         if (property_list_commandable_member(object_type, property_id) &&
             (bacnet_strnicmp(value_string, "NULL", 4) == 0)) {
             /* check for case insensitive NULL string */

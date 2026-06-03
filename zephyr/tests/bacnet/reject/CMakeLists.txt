@@ -18,19 +18,17 @@ string(REGEX REPLACE
   ${CMAKE_CURRENT_SOURCE_DIR})
 get_filename_component(BACNET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
-
 if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
   list(APPEND INCLUDE ${BACNET_INCLUDE})
   list(APPEND SOURCES
-    ${BACNET_SRC_PATH}.c
-    ${BACNET_TEST_PATH}/src/main.c
-    ${BACNET_BASE}/src/bacnet/bacint.c
     ${BACNET_BASE}/src/bacnet/reject.c
-    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
-    ${BACNET_BASE}/src/bacnet/bacstr.c
     ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/bacint.c
     ${BACNET_BASE}/src/bacnet/bacreal.c
+    ${BACNET_BASE}/src/bacnet/bacstr.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
+    ${BACNET_TEST_PATH}/src/main.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")

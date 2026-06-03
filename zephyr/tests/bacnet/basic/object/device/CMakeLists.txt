@@ -130,6 +130,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_SRC}/basic/service/h_wp.c
     ${BACNET_SRC}/basic/sys/bigend.c
     ${BACNET_SRC}/basic/sys/keylist.c
+    ${BACNET_SRC}/basic/sys/state_name.c
     ${BACNET_SRC}/basic/tsm/tsm.c
     ${BACNET_SRC}/datalink/bvlc.c
     ${BACNET_SRC}/dailyschedule.c

@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <zephyr/shell/shell.h>
 #include <bacnet_settings/bacnet_storage.h>
+#include <stdio.h>
 
 static const char Storage_Base_Name[] = CONFIG_BACNET_STORAGE_BASE_NAME;
 
