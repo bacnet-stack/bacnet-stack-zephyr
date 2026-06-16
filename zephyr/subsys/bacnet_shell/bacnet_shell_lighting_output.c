@@ -166,8 +166,10 @@ cmd_lighting_output_override(const struct shell *shell, int argc, char **argv)
     unsigned long long_value;
     float float_value = 0.0f;
     double double_value;
+    float ramp_value = 0.0f;
     char *end;
 
+    /* <instance> <clear|ramp <percent> <rate>|<percent> [momentary] */
     if (argc > 1) {
         /* <instance> */
         long_value = strtoul(argv[1], &end, 0);
@@ -189,6 +191,23 @@ cmd_lighting_output_override(const struct shell *shell, int argc, char **argv)
             /* clear the override */
             Lighting_Output_Overridden_Clear(instance);
             return cmd_lighting_output_value_print(shell, instance);
+        } else if (bacnet_strnicmp(argv[2], "ramp", 4) == 0) {
+            /* <level in percent>*/
+            double_value = strtod(argv[3], &end);
+            if (end == argv[3]) {
+                shell_error(shell, "argv[3]=%s invalid percentage", argv[3]);
+                return -EINVAL;
+            }
+            float_value = (float)double_value;
+            /* <ramp in percent per second>*/
+            double_value = strtod(argv[4], &end);
+            if (end == argv[4]) {
+                shell_error(shell, "argv[4]=%s invalid ramp rate", argv[4]);
+                return -EINVAL;
+            }
+            ramp_value = (float)double_value;
+            /* ramp the override */
+            Lighting_Output_Overridden_Ramp(instance, float_value, ramp_value);
         } else {
             /* <level in percent>*/
             double_value = strtod(argv[2], &end);
@@ -197,19 +216,19 @@ cmd_lighting_output_override(const struct shell *shell, int argc, char **argv)
                 return -EINVAL;
             }
             float_value = (float)double_value;
+            if (argc > 3) {
+                if (bacnet_strnicmp(argv[3], "momentary", 9) == 0) {
+                    /* momentarily override the value */
+                    Lighting_Output_Overridden_Momentary(instance, float_value);
+                } else {
+                    shell_help(shell);
+                    return -EINVAL;
+                }
+            } else {
+                /* set the override without momentary */
+                Lighting_Output_Overridden_Set(instance, float_value);
+            }
         }
-    }
-    if (argc > 3) {
-        if (bacnet_strnicmp(argv[3], "momentary", 9) == 0) {
-            /* momentarily override the value */
-            Lighting_Output_Overridden_Momentary(instance, float_value);
-        } else {
-            shell_help(shell);
-            return -EINVAL;
-        }
-    } else {
-        /* set the override */
-        Lighting_Output_Overridden_Set(instance, float_value);
     }
     return cmd_lighting_output_value_print(shell, instance);
 }
@@ -783,7 +802,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         override,
         NULL,
-        "<instance> <clear|<level percent> [momentary]>",
+        "<instance> <clear|ramp <percent> <rate>|<percent> [momentary]",
         cmd_lighting_output_override),
     SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
