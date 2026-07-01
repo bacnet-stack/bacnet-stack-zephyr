@@ -42,10 +42,11 @@ static const uint32_t Device_Instance = 260125;
 /* object instances */
 static const uint32_t Lighting_Instance = 1;
 
+#define HAS_PWM_LEDS DT_HAS_COMPAT_STATUS_OKAY(pwm_leds)
+#if HAS_PWM_LEDS
 #define LED_PWM_NODE_ID DT_COMPAT_GET_ANY_STATUS_OKAY(pwm_leds)
-const char *led_label[] = { DT_FOREACH_CHILD_SEP_VARGS(
-    LED_PWM_NODE_ID, DT_PROP_OR, (, ), label, NULL) };
-const int num_leds = ARRAY_SIZE(led_label);
+#define NUM_LEDS DT_NUM_CHILD_STATUS_OKAY(LED_PWM_NODE_ID)
+#endif
 
 /**
  * @brief BACnet Lighting Output tracking value handler
@@ -56,9 +57,6 @@ void BACnet_Lighting_Output_Tracking_Value_Handler(
     uint32_t object_instance, float old_value, float value)
 {
     uint8_t steps = 0;
-    int err;
-    uint8_t led;
-    const struct device *led_pwm;
 
     (void)old_value;
     if (object_instance != Lighting_Instance) {
@@ -76,13 +74,18 @@ void BACnet_Lighting_Output_Tracking_Value_Handler(
         "Lighting Output[%lu]: value=%f step=%u/%u",
         (unsigned long)object_instance, (double)value, (unsigned)steps,
         (unsigned)UINT8_MAX);
+#if HAS_PWM_LEDS
+    int err;
+    uint8_t led = 0;
+    const struct device *led_pwm;
+
     /* hardware control */
     led_pwm = DEVICE_DT_GET(LED_PWM_NODE_ID);
     if (!device_is_ready(led_pwm)) {
         LOG_ERR("Device %s is not ready", led_pwm->name);
         return;
     }
-    if (!num_leds) {
+    if (!NUM_LEDS) {
         LOG_ERR("No LEDs found for %s", led_pwm->name);
         return;
     }
@@ -95,6 +98,9 @@ void BACnet_Lighting_Output_Tracking_Value_Handler(
             "Failed to set brightness of LED %u to %u: %d", (unsigned)led,
             (unsigned)steps, err);
     }
+#else
+    LOG_DBG("No pwm-leds devicetree node: skipping hardware LED update");
+#endif
 }
 
 /**
