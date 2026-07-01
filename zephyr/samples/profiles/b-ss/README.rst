@@ -26,14 +26,21 @@ list the supported boards.
 Compile this sample for the `nucleo_f429zi` board:
 
     west build -b nucleo_f429zi -p always bacnet/zephyr/samples/profiles/b-ss/
+    west flash
 
 Compile this sample for the `rpi_pico` board:
 
     west build -b rpi_pico -p always bacnet/zephyr/samples/profiles/b-ss/
+    west flash
 
 Compile this sample for the `adafruit_grand_central_m4_express` board with
 
     west build -b adafruit_grand_central_m4_express -p always bacnet/zephyr/samples/profiles/b-ss/
+    west flash
+
+Compile and run this sample for the `native_sim` board:
+
+    west build -t run -b native_sim -p always bacnet/zephyr/samples/profiles/b-ss/
 
 Using the Shell
 ***************

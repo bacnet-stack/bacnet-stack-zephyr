@@ -32,6 +32,10 @@ Requirements
 
 * A board with Ethernet support, for instance: nucleo_f429zi
 
+Note: B-LD drives PWM LED hardware when a ``pwm-leds`` devicetree node is
+available. On ``native_sim`` (which has no LED hardware), the sample still
+runs and logs lighting output changes without attempting hardware LED updates.
+
 Building and Running
 ********************
 
@@ -44,14 +48,21 @@ list the supported boards.
 Compile this sample for the `nucleo_f429zi` board:
 
     west build -b nucleo_f429zi -p always bacnet/zephyr/samples/profiles/b-ld/
+    west flash
 
 Compile this sample for the `rpi_pico` board:
 
     west build -b rpi_pico -p always bacnet/zephyr/samples/profiles/b-ld/
+    west flash
 
 Compile this sample for the `adafruit_grand_central_m4_express` board with
 
     west build -b adafruit_grand_central_m4_express -p always bacnet/zephyr/samples/profiles/b-ld/
+    west flash
+
+Compile and run this sample for the `native_sim` board:
+
+    west build -t run -b native_sim -p always bacnet/zephyr/samples/profiles/b-ld/
 
 Using the Shell
 ***************
