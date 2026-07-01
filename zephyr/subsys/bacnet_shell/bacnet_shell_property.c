@@ -12,6 +12,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/shell/shell.h>
 #include <bacnet/basic/object/device.h>
+#include <bacnet/basic/sys/compare.h>
 #include <bacnet/bactext.h>
 #include <bacnet/proplist.h>
 #include <bacnet/wp.h>
@@ -699,7 +700,7 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
                 wpdata.array_index = array_index;
                 wpdata.priority = priority;
                 application_data_len =
-                    min(apdu_len, sizeof(wpdata.application_data));
+                    BACNET_MIN(apdu_len, sizeof(wpdata.application_data));
                 wpdata.application_data_len = application_data_len;
                 memcpy(&wpdata.application_data, apdu, application_data_len);
                 status = Device_Write_Property(&wpdata);
