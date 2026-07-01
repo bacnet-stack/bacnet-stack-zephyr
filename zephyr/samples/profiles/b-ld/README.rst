@@ -64,10 +64,34 @@ Compile and run this sample for the `native_sim` board:
 
     west build -t run -b native_sim -p always bacnet/zephyr/samples/profiles/b-ld/
 
+End-to-end ``native_sim`` networking setup flow (Linux host):
+
+Terminal #1 (set up host TAP networking using Zephyr net-tools):
+
+    git clone https://github.com/zephyrproject-rtos/net-tools
+    cd net-tools
+    sudo ./net-setup.sh start
+
+Terminal #2 (from workspace root, build and run this sample on ``native_sim``):
+
+    cd ${workspaceFolder}
+    west build -t run -b native_sim -p always bacnet/zephyr/samples/profiles/b-ld/
+
+Terminal #1 (cleanup when done):
+
+    cd net-tools
+    sudo ./net-setup.sh stop
+
 Using the Shell
 ***************
 
-The shell is available on some boards via virtual communication port:
+For ``native_sim``, shell is exposed on a pseudo-terminal. After starting the
+sample, look for output similar to ``UART connected to pseudotty: /dev/pts/5``
+and attach to that device:
+
+    screen /dev/pts/<N>
+
+On hardware boards, shell is available via virtual communication port:
 
     picocom --baud 115200 /dev/ttyACM0
 
