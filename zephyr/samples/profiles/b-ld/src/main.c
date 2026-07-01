@@ -45,7 +45,7 @@ static const uint32_t Lighting_Instance = 1;
 #define HAS_PWM_LEDS DT_HAS_COMPAT_STATUS_OKAY(pwm_leds)
 #if HAS_PWM_LEDS
 #define LED_PWM_NODE_ID DT_COMPAT_GET_ANY_STATUS_OKAY(pwm_leds)
-#define NUM_LEDS DT_NUM_CHILD_STATUS_OKAY(LED_PWM_NODE_ID)
+#define NUM_LEDS DT_CHILD_NUM_STATUS_OKAY(LED_PWM_NODE_ID)
 #endif
 
 /**
