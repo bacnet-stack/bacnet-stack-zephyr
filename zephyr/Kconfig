@@ -748,6 +748,12 @@ config BACNET_BASIC_OBJECT_ANALOG_VALUE
     help
         Use the BACnet basic analog value object
 
+config BACNET_BASIC_OBJECT_AVERAGING
+    bool "Use the BACnet basic averaging object"
+    default false
+    help
+        Use the BACnet basic averaging object
+
 config BACNET_BASIC_OBJECT_FILE
     bool "Use the BACnet basic file object"
     default false
