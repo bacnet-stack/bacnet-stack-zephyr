@@ -470,6 +470,7 @@ set(BACNETSTACK_BASIC_SRCS
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_ANALOG_INPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/ai.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_ANALOG_OUTPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/ao.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_ANALOG_VALUE}>:${BACNETSTACK_SRC}/bacnet/basic/object/av.c>
+    $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_AVERAGING}>:${BACNETSTACK_SRC}/bacnet/basic/object/averaging.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_AUDIT_LOG}>:${BACNETSTACK_SRC}/bacnet/basic/object/auditlog.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_FILE}>:${BACNETSTACK_SRC}/bacnet/basic/object/bacfile.c>
     $<$<BOOL:${CONFIG_BACNET_BASIC_OBJECT_BINARY_INPUT}>:${BACNETSTACK_SRC}/bacnet/basic/object/bi.c>
