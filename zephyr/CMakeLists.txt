@@ -295,7 +295,7 @@ set(BACNETSTACK_SRCS
     ${BACNETSTACK_SRC}/bacnet/basic/services.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bigend.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bigend.h
-    ${BACNETSTACK_SRC}/bacnet/basic/sys/datetime_mstimer.c
+    ${BACNETSTACK_SRC}/bacnet/basic/datetime/datetime_mstimer.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bramfs.c
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bramfs.h
     ${BACNETSTACK_SRC}/bacnet/basic/sys/bsramfs.c
