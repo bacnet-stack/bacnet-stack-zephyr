@@ -1,0 +1,22 @@
+analyzer:
+  # Start by disabling all
+  - --disable-all
+
+  # Enable the sensitive profile
+  - --enable=sensitive
+
+  # Disable unused cases
+  - --disable=boost
+  - --disable=mpi
+
+  # Can enable after https://github.com/zephyrproject-rtos/zephyr/pull/93826
+  - --disable=bugprone-branch-clone
+
+  # using sscanf in BACnet stack for command line parsing or shell commands
+  - --disable=cert-err34-c
+
+  # Drop reports whose primary location is in a skipped file.
+  - --drop-reports-from-skipped-files
+
+  # Cleanup
+  - --clean
