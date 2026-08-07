@@ -604,6 +604,7 @@ static int direct_loader_immediate_value(
     const char *next;
     size_t name_len;
     size_t value_len;
+    ssize_t rc;
     struct direct_immediate_value *context =
         (struct direct_immediate_value *)param;
 
@@ -611,8 +612,13 @@ static int direct_loader_immediate_value(
     /* only the exact match and ignore descendants of the searched name */
     name_len = settings_name_next(name, &next);
     if (name_len == 0) {
-        value_len = read_cb(cb_arg, context->value, context->value_size);
-        if ((value_len >= 0) && (value_len <= context->value_size)) {
+        rc = read_cb(cb_arg, context->value, context->value_size);
+        if (rc < 0) {
+            LOG_ERR("immediate load: failed (err %zu)", rc);
+            return rc;
+        }
+        value_len = (size_t)rc;
+        if (value_len <= context->value_size) {
             context->fetched = true;
             context->value_len = value_len;
             LOG_INF("immediate load: OK.");

@@ -439,7 +439,7 @@ int bacnet_settings_object_parse(
     int scan_count = 0;
     char property_name[80] = { 0 };
 
-    if (argc < 3) {
+    if (argc < 4) {
         return -EINVAL;
     }
     if (!bactext_object_type_strtol(argv[1], &found_index)) {
@@ -473,19 +473,16 @@ int bacnet_settings_object_parse(
         if (property_id) {
             *property_id = found_index;
         }
-        if (array_index) {
-            *array_index = (uint32_t)array_value;
-        }
-    } else if (scan_count < 1) {
-        return -EINVAL;
     } else {
         if (property_id) {
             *property_id = (uint32_t)unsigned_value;
         }
     }
-    if (scan_count < 2) {
-        if (array_index) {
+    if (array_index) {
+        if (scan_count < 2) {
             *array_index = BACNET_STORAGE_ARRAY_INDEX_NONE;
+        } else {
+            *array_index = (uint32_t)array_value;
         }
     }
 
