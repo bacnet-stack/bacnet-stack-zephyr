@@ -50,7 +50,10 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
     }
     data_len = rc;
     /* convert the key to a string for the shell to print */
-    (void)bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+    rc = bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+    if (rc < 0) {
+        return rc;
+    }
     /* check for an assigned tag */
     if ((argc > 5) && bacnet_storage_strtoul(argv[4], &unsigned_value)) {
         value.tag = unsigned_value;
@@ -60,6 +63,10 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
     }
     if (value_string) {
         len = bacapp_decode_application_data(data, data_len, &value);
+        if (len <= 0) {
+            shell_error(sh, "Unable to decode value for %s", key_name);
+            return -EINVAL;
+        }
         status = bacnet_settings_value_parse(
             value_string, key.object_type, key.property_id, &value);
         if (status) {
@@ -69,7 +76,7 @@ static int cmd_value(const struct shell *sh, size_t argc, char **argv)
             len = bacapp_encode_application_data(NULL, &value);
             if (len <= 0) {
                 return -ENOTSUP;
-            } else if (len > sizeof(data)) {
+            } else if (len > (int)sizeof(data)) {
                 return -EINVAL;
             }
             len = bacapp_encode_application_data(data, &value);
@@ -128,7 +135,10 @@ static int cmd_delete(const struct shell *sh, size_t argc, char **argv)
         return rc;
     }
     /* convert the key to a string for the shell */
-    (void)bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+    rc = bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+    if (rc < 0) {
+        return rc;
+    }
     if (argc > 3) {
         rc = bacnet_storage_delete(&key);
         if (rc == 0) {
@@ -154,12 +164,16 @@ static int print_storage_data(
 {
     char data_string[80] = { 0 };
     char hex_string[3] = { 0 };
+    int len;
     unsigned i;
     const struct shell *sh = context;
 
     for (i = 0; i < data_len && i < ((sizeof(data_string) / 2) - 1); i++) {
-        snprintf(
+        len = snprintf(
             hex_string, sizeof(hex_string), "%02X", ((const uint8_t *)data)[i]);
+        if ((len < 0) || (len >= (int)sizeof(hex_string))) {
+            return -EINVAL;
+        }
         strcat(data_string, hex_string);
     }
     if (key->array_index == BACNET_STORAGE_ARRAY_INDEX_NONE) {
@@ -187,6 +201,8 @@ static int cmd_list(const struct shell *sh, size_t argc, char **argv)
 {
     int err;
 
+    ARG_UNUSED(argc);
+    ARG_UNUSED(argv);
     err = bacnet_storage_load_callback_set(print_storage_data, (void *)sh);
     if (err) {
         shell_error(sh, "Failed to set settings load callback");

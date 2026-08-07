@@ -27,16 +27,16 @@ cmd_lighting_output_value_print(const struct shell *shell, uint32_t instance)
     if (Lighting_Output_Valid_Instance(instance) == false) {
         return -EINVAL;
     }
-    present_value = Lighting_Output_Present_Value(instance);
-    tracking_value = Lighting_Output_Tracking_Value(instance);
+    present_value = (double)Lighting_Output_Present_Value(instance);
+    tracking_value = (double)Lighting_Output_Tracking_Value(instance);
     priority = Lighting_Output_Present_Value_Priority(instance);
     overridden = Lighting_Output_Overridden_Status(instance);
     out_of_service = Lighting_Output_Out_Of_Service(instance);
     shell_print(
         shell, "lighting-output:%u %.1f%%@%d->%.1f %s %s", instance,
         present_value, priority, tracking_value,
-        (overridden ? "overridden" : ""),
-        (out_of_service ? "out-of-service" : ""));
+        (overridden ? "overridden" : "tracking"),
+        (out_of_service ? "out-of-service" : "in-service"));
     return 0;
 }
 
@@ -74,6 +74,7 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
     bool is_relinquished[BACNET_MAX_PRIORITY + 1] = { false };
     unsigned long long_value;
     bool overridden = false;
+    bool out_of_service = false;
     char *end;
 
     if (argc > 1) {
@@ -98,12 +99,13 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
                 Lighting_Output_Priority_Array_Relinquished(instance, priority);
         }
         overridden = Lighting_Output_Overridden_Status(instance);
+        out_of_service = Lighting_Output_Out_Of_Service(instance);
         tracking_value = (double)Lighting_Output_Tracking_Value(instance);
         shell_print(
             shell,
             "lighting-output-%d %.1f "
             "{%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,"
-            "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f} %s",
+            "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f} %s %s",
             instance, tracking_value,
             cmd_priority_array_value(is_relinquished[0], priority_array[0]),
             cmd_priority_array_value(is_relinquished[1], priority_array[1]),
@@ -122,7 +124,8 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
             cmd_priority_array_value(is_relinquished[14], priority_array[14]),
             cmd_priority_array_value(is_relinquished[15], priority_array[15]),
             (double)priority_array[BACNET_MAX_PRIORITY],
-            (overridden ? "overridden" : ""));
+            (overridden ? "overridden" : "tracking"),
+            (out_of_service ? "out-of-service" : "in-service"));
     } else {
         shell_help(shell);
         return -EINVAL;
@@ -589,7 +592,7 @@ static int cmd_lighting_output_blink(
 {
     BACNET_LIGHTING_COMMAND data = { 0 };
     uint32_t instance = 0;
-    float off_value = 0.0;
+    float off_value = 0.0f;
     uint16_t interval = 0;
     uint16_t count = 0;
     uint32_t egress_seconds = 60 * 5;

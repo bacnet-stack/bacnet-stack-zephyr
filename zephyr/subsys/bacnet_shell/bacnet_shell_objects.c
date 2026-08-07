@@ -80,7 +80,7 @@ static int bacnet_object_instance_parse(
  */
 static int cmd_object_list(const struct shell *sh, size_t argc, char **argv)
 {
-    int count;
+    uint32_t count;
     BACNET_OBJECT_TYPE object_type;
     uint32_t instance;
     uint32_t array_index;
@@ -102,7 +102,7 @@ static int cmd_object_list(const struct shell *sh, size_t argc, char **argv)
                 (array_index == count) ? "]," : ",");
         }
     }
-    shell_print(sh, "\"object-list-size\": %d}", count);
+    shell_print(sh, "\"object-list-size\": %u}", count);
 
     return 0;
 }

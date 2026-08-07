@@ -356,7 +356,7 @@ void bacnet_storage_key_init(
  * @param buffer buffer to store key string
  * @param buffer_size size of key buffer
  * @param key BACnet key (type, instance, property, array index)
- * @return length of the string
+ * @return length of the string, or a negative value if an error was encountered
  */
 int bacnet_storage_key_encode(
     char *buffer, size_t buffer_size, BACNET_STORAGE_KEY *key)
@@ -387,11 +387,11 @@ int bacnet_storage_key_encode(
 
 /**
  * @brief Decode a storage key string into a BACnet object property
- * @param name settings name key string
+ * @param name settings name key string (i.e. path)
  * @param key BACnet key (type, instance, property, array index)
  * @return 0=success, negative on error
  */
-int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
+int bacnet_storage_key_decode(const char *name, BACNET_STORAGE_KEY *key)
 {
     const char *next;
     size_t next_len;
@@ -402,19 +402,19 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
     unsigned long long_value = 0;
     const char base_name[] = CONFIG_BACNET_STORAGE_BASE_NAME;
 
-    /* settings root name */
-    if (settings_name_steq(path, base_name, &next) && next) {
+    /* settings root name from the path */
+    if (settings_name_steq(name, base_name, &next) && next) {
         /* OPTIONAL - called from shell */
-        path = next;
+        name = next;
     }
     /* object-type */
-    next_len = settings_name_next(path, &next);
-    if (path) {
+    next_len = settings_name_next(name, &next);
+    if (name) {
         if (next_len + 1 > sizeof(object_type_name)) {
             LOG_ERR("key: object-type name too long: %d", next_len);
             return -EINVAL;
         }
-        memcpy(object_type_name, path, next_len);
+        memcpy(object_type_name, name, next_len);
         if (bacnet_storage_strtoul(object_type_name, &long_value)) {
             key->object_type = long_value;
         } else {
@@ -424,14 +424,14 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
         return -EINVAL;
     }
     /* object-instance */
-    path = next;
-    next_len = settings_name_next(path, &next);
-    if (path) {
+    name = next;
+    next_len = settings_name_next(name, &next);
+    if (name) {
         if (next_len + 1 > sizeof(object_instance_name)) {
             LOG_ERR("key: object-instance name too long: %d", next_len);
             return -EINVAL;
         }
-        memcpy(object_instance_name, path, next_len);
+        memcpy(object_instance_name, name, next_len);
         if (bacnet_storage_strtoul(object_instance_name, &long_value)) {
             key->object_instance = long_value;
         } else {
@@ -441,14 +441,14 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
         return -EINVAL;
     }
     /* property-id */
-    path = next;
-    next_len = settings_name_next(path, &next);
-    if (path) {
+    name = next;
+    next_len = settings_name_next(name, &next);
+    if (name) {
         if (next_len + 1 > sizeof(property_id_name)) {
             LOG_ERR("key: property-id name too long: %d", next_len);
             return -EINVAL;
         }
-        memcpy(property_id_name, path, next_len);
+        memcpy(property_id_name, name, next_len);
         if (bacnet_storage_strtoul(property_id_name, &long_value)) {
             key->property_id = long_value;
         } else {
@@ -459,14 +459,14 @@ int bacnet_storage_key_decode(const char *path, BACNET_STORAGE_KEY *key)
     }
     /* array-index - OPTIONAL */
     key->array_index = BACNET_STORAGE_ARRAY_INDEX_NONE;
-    path = next;
-    next_len = settings_name_next(path, &next);
-    if (path) {
+    name = next;
+    next_len = settings_name_next(name, &next);
+    if (name) {
         if (next_len + 1 > sizeof(array_index_name)) {
             LOG_ERR("key: array-index name too long: %d", next_len);
             return -EINVAL;
         }
-        memcpy(array_index_name, path, next_len);
+        memcpy(array_index_name, name, next_len);
         if (bacnet_storage_strtoul(array_index_name, &long_value)) {
             key->array_index = long_value;
         } else {
@@ -540,6 +540,7 @@ int bacnet_storage_handler_commit(void)
 int bacnet_storage_handler_export(
     int (*cb)(const char *name, const void *value, size_t val_len))
 {
+    ARG_UNUSED(cb);
     LOG_INF("FIXME: Export requested");
     return 0;
 }
@@ -558,9 +559,14 @@ int bacnet_storage_set(
     int rc;
 
     rc = bacnet_storage_key_encode(name, sizeof(name), key);
+    if (rc < 0) {
+        LOG_INF(FAIL_MSG, rc);
+        return rc;
+    }
     LOG_INF("Set a key-value pair. Key=%s", name);
     rc = settings_save_one(name, data, data_len);
     if (rc) {
+        /* non-zero on failure */
         LOG_INF(FAIL_MSG, rc);
     } else {
         LOG_HEXDUMP_INF(data, data_len, "value");
@@ -597,17 +603,24 @@ static int direct_loader_immediate_value(
 {
     const char *next;
     size_t name_len;
-    int rc;
+    size_t value_len;
+    ssize_t rc;
     struct direct_immediate_value *context =
         (struct direct_immediate_value *)param;
 
+    ARG_UNUSED(len);
     /* only the exact match and ignore descendants of the searched name */
     name_len = settings_name_next(name, &next);
     if (name_len == 0) {
-        rc = read_cb(cb_arg, context->value, len);
-        if ((rc >= 0) && (rc <= context->value_size)) {
+        rc = read_cb(cb_arg, context->value, context->value_size);
+        if (rc < 0) {
+            LOG_ERR("immediate load: failed (err %zu)", rc);
+            return rc;
+        }
+        value_len = (size_t)rc;
+        if (value_len <= context->value_size) {
             context->fetched = true;
-            context->value_len = rc;
+            context->value_len = value_len;
             LOG_INF("immediate load: OK.");
             return 0;
         }
@@ -628,10 +641,10 @@ static int direct_loader_immediate_value(
  * @param value_size [in] size of the buffer
  * @return value length in bytes on success 0..N, negative on failure.
  */
-static int
+static ssize_t
 load_immediate_value(const char *name, void *value, size_t value_size)
 {
-    int rc;
+    ssize_t rc;
     struct direct_immediate_value context;
 
     context.fetched = false;
@@ -642,12 +655,14 @@ load_immediate_value(const char *name, void *value, size_t value_size)
     rc = settings_load_subtree_direct(
         name, direct_loader_immediate_value, (void *)&context);
     if (rc == 0) {
-        if (!context.fetched) {
+        if (context.fetched) {
+            rc = (ssize_t)context.value_len;
+        } else {
             rc = -ENOENT;
         }
     }
 
-    return context.value_len;
+    return rc;
 }
 
 /**
@@ -660,9 +675,13 @@ load_immediate_value(const char *name, void *value, size_t value_size)
 int bacnet_storage_get(BACNET_STORAGE_KEY *key, void *data, size_t data_size)
 {
     char name[SETTINGS_MAX_NAME_LEN + 1] = { 0 };
-    int rc;
+    ssize_t rc;
 
     rc = bacnet_storage_key_encode(name, sizeof(name), key);
+    if (rc < 0) {
+        LOG_INF(FAIL_MSG, rc);
+        return rc;
+    }
     LOG_INF("Get a key-value pair. Key=<%s>", name);
     rc = load_immediate_value(name, data, data_size);
     if (rc == 0) {
@@ -686,9 +705,13 @@ int bacnet_storage_get(BACNET_STORAGE_KEY *key, void *data, size_t data_size)
 int bacnet_storage_delete(BACNET_STORAGE_KEY *key)
 {
     char name[SETTINGS_MAX_NAME_LEN + 1] = { 0 };
-    int rc;
+    ssize_t rc;
 
     rc = bacnet_storage_key_encode(name, sizeof(name), key);
+    if (rc < 0) {
+        LOG_INF(FAIL_MSG, rc);
+        return rc;
+    }
     LOG_INF("Delete a key-value pair. Key=%s", name);
     rc = settings_delete(name);
     if (rc) {
