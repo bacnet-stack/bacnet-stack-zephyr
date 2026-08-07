@@ -9,6 +9,12 @@ analyzer:
   - --disable=boost
   - --disable=mpi
 
+  # Zephyr macros use compiler tricks that trigger warnings, so disable them
+  # underscore prefixes are reserved identifiers in C/C++.
+  - --disable=clang-diagnostic-reserved-identifier
+  # casting integer to pointer is a common pattern in Zephyr, so disable it
+  - --disable=performance-no-int-to-ptr
+
   # Can enable after https://github.com/zephyrproject-rtos/zephyr/pull/93826
   - --disable=bugprone-branch-clone
 
