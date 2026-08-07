@@ -118,7 +118,7 @@ static int bacnet_settings_restore(
     BACNET_WRITE_PROPERTY_DATA wp_data = { 0 };
 
     if (data && (data_len > 0) && (data_len <= MAX_APDU)) {
-        wp_data.application_data_len = data_len;
+        wp_data.application_data_len = (int)data_len;
         memcpy(&wp_data.application_data[0], data, data_len);
         wp_data.object_type = object_type;
         wp_data.object_instance = object_instance;
@@ -283,7 +283,7 @@ bool bacnet_settings_value_set(
     len = bacapp_encode_application_data(NULL, value);
     if (len <= 0) {
         return false;
-    } else if (len > sizeof(name)) {
+    } else if (len > (int)sizeof(name)) {
         return false;
     }
     len = bacapp_encode_application_data(name, value);
@@ -433,30 +433,28 @@ int bacnet_settings_object_parse(
     uint32_t *property_id,
     uint32_t *array_index)
 {
-    long value = 0;
     unsigned long unsigned_value = 0;
     unsigned long array_value = 0;
-    int found_index = 0, scan_count = 0;
+    uint32_t found_index = 0;
+    int scan_count = 0;
     char property_name[80] = { 0 };
 
     if (argc < 3) {
         return -EINVAL;
     }
-    if (bactext_object_type_strtol(argv[1], &found_index)) {
-        value = found_index;
-    } else {
+    if (!bactext_object_type_strtol(argv[1], &found_index)) {
         return -EINVAL;
     }
-    if ((value < 0) || (value >= UINT16_MAX)) {
+    if (found_index >= UINT16_MAX) {
         return -EINVAL;
     }
     if (object_type) {
-        *object_type = (uint16_t)value;
+        *object_type = (uint16_t)found_index;
     }
     if (!bacnet_storage_strtoul(argv[2], &unsigned_value)) {
         return -EINVAL;
     }
-    if (unsigned_value > 4194303) {
+    if (unsigned_value > BACNET_MAX_INSTANCE) {
         return -EINVAL;
     }
     if (object_instance) {
@@ -469,16 +467,11 @@ int bacnet_settings_object_parse(
         if (scan_count < 1) {
             return -EINVAL;
         }
-        if (bactext_property_strtol(property_name, &found_index)) {
-            value = found_index;
-        } else {
-            return -EINVAL;
-        }
-        if (value > UINT32_MAX) {
+        if (!bactext_property_strtol(property_name, &found_index)) {
             return -EINVAL;
         }
         if (property_id) {
-            *property_id = (uint32_t)value;
+            *property_id = found_index;
         }
         if (array_index) {
             *array_index = (uint32_t)array_value;
@@ -785,7 +778,7 @@ int bacnet_settings_string_get(
     if (rc <= 0) {
         if (default_value) {
             strncpy(value, default_value, value_size);
-            rc = strlen(default_value);
+            rc = (int)strlen(default_value);
         }
     }
 

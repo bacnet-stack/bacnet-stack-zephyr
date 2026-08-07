@@ -58,6 +58,13 @@ bool bacnet_settings_value_parse(
     uint16_t object_type,
     uint32_t property_id,
     BACNET_APPLICATION_DATA_VALUE *value);
+int bacnet_settings_object_parse(
+    size_t argc,
+    char **argv,
+    uint16_t *object_type,
+    uint32_t *object_instance,
+    uint32_t *property_id,
+    uint32_t *array_index);
 
 int bacnet_settings_real_get(
     uint16_t object_type,
