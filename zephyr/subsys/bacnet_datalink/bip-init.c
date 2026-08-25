@@ -196,6 +196,7 @@ bool bip_get_broadcast_addr(BACNET_IP_ADDRESS *addr)
  */
 bool bip_set_subnet_prefix(uint8_t prefix)
 {
+    ARG_UNUSED(prefix);
     /* not something we do within this driver */
     return false;
 }
@@ -277,6 +278,7 @@ uint16_t bip_receive(
     int max = 0;
     struct zsock_timeval select_timeout;
     struct sockaddr_in sin = { 0 };
+    suseconds_t timeout_msec, timeout_sec;
     BACNET_IP_ADDRESS addr = { 0 };
     socklen_t sin_len = sizeof(sin);
     int received_bytes = 0;
@@ -292,13 +294,14 @@ uint16_t bip_receive(
     /* we could just use a non-blocking socket, but that consumes all
        the CPU time.  We can use a timeout; it is only supported as
        a select. */
-    if (timeout >= 1000) {
-        select_timeout.tv_sec = timeout / 1000;
-        select_timeout.tv_usec =
-            1000 * (timeout - select_timeout.tv_sec * 1000);
+    timeout_msec = (suseconds_t)timeout;
+    if (timeout_msec >= 1000) {
+        timeout_sec = timeout_msec / 1000;
+        select_timeout.tv_sec = timeout_sec;
+        select_timeout.tv_usec = 1000 * (timeout_msec - (timeout_sec * 1000));
     } else {
         select_timeout.tv_sec = 0;
-        select_timeout.tv_usec = 1000 * timeout;
+        select_timeout.tv_usec = 1000 * timeout_msec;
     }
     ZSOCK_FD_ZERO(&read_fds);
     ZSOCK_FD_SET(BIP_Socket, &read_fds);
@@ -406,6 +409,7 @@ static void event_cb_handler(
 {
     struct wait_data *wait = CONTAINER_OF(cb, struct wait_data, cb);
 
+    ARG_UNUSED(iface);
     if (mgmt_event == cb->event_mask) {
         k_sem_give(&wait->sem);
     }
@@ -415,6 +419,7 @@ static void wait_for_net_event(struct net_if *iface, mgmt_event_t event)
 {
     struct wait_data wait;
 
+    ARG_UNUSED(iface);
     wait.cb.handler = event_cb_handler;
     wait.cb.event_mask = event;
 
@@ -449,7 +454,7 @@ void bip_set_interface(const char *ifname)
     if (ifname) {
         index = atoi(ifname);
         /* if index is zero, discern between "0" and a parse error */
-        if (!index && strcmp(ifname, "0")) {
+        if (!index && (strcmp(ifname, "0") != 0)) {
             LOG_ERR(
                 "%s:%d - Argument must parse to an integer", THIS_FILE,
                 __LINE__);
@@ -625,7 +630,7 @@ static int createSocket(struct sockaddr_in *sin)
  * @return True if the socket is successfully opened for BACnet/IP,
  *        else False if the socket functions fail.
  */
-bool bip_init(char *ifname)
+bool bip_init(const char *ifname)
 {
     int sock_fd;
     struct sockaddr_in sin = { 0 };

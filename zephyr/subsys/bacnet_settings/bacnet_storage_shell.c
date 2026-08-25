@@ -34,7 +34,10 @@ static int cmd_string(const struct shell *sh, size_t argc, char **argv)
         return rc;
     }
     /* convert the key to a string for the shell */
-    (void)bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+    rc = bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+    if (rc < 0) {
+        return rc;
+    }
     /* convert the key string to numbers for a test */
     if (bacnet_storage_key_decode(key_name, &test_key) == 0) {
         shell_print(
@@ -83,7 +86,10 @@ static int cmd_delete(const struct shell *sh, size_t argc, char **argv)
         return rc;
     }
     /* convert the key to a string for the shell */
-    (void)bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+    rc = bacnet_storage_key_encode(key_name, sizeof(key_name), &key);
+    if (rc < 0) {
+        return rc;
+    }
     if (argc > 3) {
         rc = bacnet_storage_delete(&key);
         if (rc == 0) {
@@ -110,11 +116,16 @@ static int print_storage_data(
     char data_string[80] = { 0 };
     char hex_string[3] = { 0 };
     unsigned i;
+    int len;
     const struct shell *sh = context;
 
     for (i = 0; i < data_len && i < ((sizeof(data_string) / 2) - 1); i++) {
-        snprintf(
+        len = snprintf(
             hex_string, sizeof(hex_string), "%02X", ((const uint8_t *)data)[i]);
+        if ((len < 0) || (len >= (int)sizeof(hex_string))) {
+            shell_error(sh, "Encoding error");
+            return -EINVAL;
+        }
         strcat(data_string, hex_string);
     }
     if (key->array_index == BACNET_STORAGE_ARRAY_INDEX_NONE) {
@@ -142,6 +153,8 @@ static int cmd_list(const struct shell *sh, size_t argc, char **argv)
 {
     int err;
 
+    ARG_UNUSED(argc);
+    ARG_UNUSED(argv);
     err = bacnet_storage_load_callback_set(print_storage_data, (void *)sh);
     if (err) {
         shell_error(sh, "Failed to set storage load callback");

@@ -1,0 +1,5 @@
+# Our Source Folders
+-*/bacnet/stack/src/**
++*/bacnet/zephyr/**
+# Skip everything else by default
+-*

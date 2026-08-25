@@ -36,7 +36,7 @@ config BACNET_VENDOR_IDENTIFIER
 
 config BACNET_PROTOCOL_REVISION
     int "BACnet Stack protocol-revision number"
-    default 24
+    default 28
     help
         BACnet Stack protocol-revision number
 
@@ -747,6 +747,12 @@ config BACNET_BASIC_OBJECT_ANALOG_VALUE
     default false
     help
         Use the BACnet basic analog value object
+
+config BACNET_BASIC_OBJECT_AVERAGING
+    bool "Use the BACnet basic averaging object"
+    default false
+    help
+        Use the BACnet basic averaging object
 
 config BACNET_BASIC_OBJECT_FILE
     bool "Use the BACnet basic file object"

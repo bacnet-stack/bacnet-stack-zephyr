@@ -445,7 +445,7 @@ void bip6_cleanup(void)
  * @return True if the socket is successfully opened for BACnet/IP,
  *         else False if the socket functions fail.
  */
-bool bip6_init(char *ifname)
+bool bip6_init(const char *ifname)
 {
     int status = -1;
     struct sockaddr_in6 server = { 0 };

@@ -1,0 +1,30 @@
+analyzer:
+  # Start by disabling all
+  - --disable-all
+
+  # Enable the sensitive profile
+  - --enable=sensitive
+
+  # Disable unused cases
+  - --disable=boost
+  - --disable=mpi
+
+  # Zephyr macros use compiler tricks that trigger warnings, so disable checking
+  # underscore prefixes are reserved identifiers in C/C++.
+  - --disable=clang-diagnostic-reserved-identifier
+  # Zephyr SHELL macros often missing fields
+  - --disable=clang-diagnostic-missing-field-initializers
+  # casting integer to pointer is a common pattern in Zephyr, so disable it
+  - --disable=performance-no-int-to-ptr
+
+  # Can enable after https://github.com/zephyrproject-rtos/zephyr/pull/93826
+  - --disable=bugprone-branch-clone
+
+  # using sscanf in BACnet stack for command line parsing or shell commands
+  - --disable=cert-err34-c
+
+  # Drop reports whose primary location is in a skipped file.
+  - --drop-reports-from-skipped-files
+
+  # Cleanup
+  - --clean

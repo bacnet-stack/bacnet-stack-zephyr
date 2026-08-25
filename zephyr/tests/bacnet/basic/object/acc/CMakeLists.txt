@@ -49,6 +49,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
     ${BACNET_BASE}/src/bacnet/basic/sys/keylist.c
     ${BACNET_BASE}/src/bacnet/datetime.c
+    ${BACNET_BASE}/src/bacnet/cov.c
     ${BACNET_BASE}/src/bacnet/indtext.c
     ${BACNET_BASE}/src/bacnet/hostnport.c
     ${BACNET_BASE}/src/bacnet/lighting.c

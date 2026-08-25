@@ -27,16 +27,16 @@ cmd_lighting_output_value_print(const struct shell *shell, uint32_t instance)
     if (Lighting_Output_Valid_Instance(instance) == false) {
         return -EINVAL;
     }
-    present_value = Lighting_Output_Present_Value(instance);
-    tracking_value = Lighting_Output_Tracking_Value(instance);
+    present_value = (double)Lighting_Output_Present_Value(instance);
+    tracking_value = (double)Lighting_Output_Tracking_Value(instance);
     priority = Lighting_Output_Present_Value_Priority(instance);
     overridden = Lighting_Output_Overridden_Status(instance);
     out_of_service = Lighting_Output_Out_Of_Service(instance);
     shell_print(
         shell, "lighting-output:%u %.1f%%@%d->%.1f %s %s", instance,
         present_value, priority, tracking_value,
-        (overridden ? "overridden" : ""),
-        (out_of_service ? "out-of-service" : ""));
+        (overridden ? "overridden" : "tracking"),
+        (out_of_service ? "out-of-service" : "in-service"));
     return 0;
 }
 
@@ -74,6 +74,7 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
     bool is_relinquished[BACNET_MAX_PRIORITY + 1] = { false };
     unsigned long long_value;
     bool overridden = false;
+    bool out_of_service = false;
     char *end;
 
     if (argc > 1) {
@@ -98,12 +99,13 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
                 Lighting_Output_Priority_Array_Relinquished(instance, priority);
         }
         overridden = Lighting_Output_Overridden_Status(instance);
+        out_of_service = Lighting_Output_Out_Of_Service(instance);
         tracking_value = (double)Lighting_Output_Tracking_Value(instance);
         shell_print(
             shell,
             "lighting-output-%d %.1f "
             "{%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,"
-            "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f} %s",
+            "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f} %s %s",
             instance, tracking_value,
             cmd_priority_array_value(is_relinquished[0], priority_array[0]),
             cmd_priority_array_value(is_relinquished[1], priority_array[1]),
@@ -122,7 +124,8 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
             cmd_priority_array_value(is_relinquished[14], priority_array[14]),
             cmd_priority_array_value(is_relinquished[15], priority_array[15]),
             (double)priority_array[BACNET_MAX_PRIORITY],
-            (overridden ? "overridden" : ""));
+            (overridden ? "overridden" : "tracking"),
+            (out_of_service ? "out-of-service" : "in-service"));
     } else {
         shell_help(shell);
         return -EINVAL;
@@ -166,8 +169,10 @@ cmd_lighting_output_override(const struct shell *shell, int argc, char **argv)
     unsigned long long_value;
     float float_value = 0.0f;
     double double_value;
+    float ramp_value = 0.0f;
     char *end;
 
+    /* <instance> <clear|ramp <percent> <rate>|<percent> [momentary] */
     if (argc > 1) {
         /* <instance> */
         long_value = strtoul(argv[1], &end, 0);
@@ -189,6 +194,23 @@ cmd_lighting_output_override(const struct shell *shell, int argc, char **argv)
             /* clear the override */
             Lighting_Output_Overridden_Clear(instance);
             return cmd_lighting_output_value_print(shell, instance);
+        } else if (bacnet_strnicmp(argv[2], "ramp", 4) == 0) {
+            /* <level in percent>*/
+            double_value = strtod(argv[3], &end);
+            if (end == argv[3]) {
+                shell_error(shell, "argv[3]=%s invalid percentage", argv[3]);
+                return -EINVAL;
+            }
+            float_value = (float)double_value;
+            /* <ramp in percent per second>*/
+            double_value = strtod(argv[4], &end);
+            if (end == argv[4]) {
+                shell_error(shell, "argv[4]=%s invalid ramp rate", argv[4]);
+                return -EINVAL;
+            }
+            ramp_value = (float)double_value;
+            /* ramp the override */
+            Lighting_Output_Overridden_Ramp(instance, float_value, ramp_value);
         } else {
             /* <level in percent>*/
             double_value = strtod(argv[2], &end);
@@ -197,19 +219,19 @@ cmd_lighting_output_override(const struct shell *shell, int argc, char **argv)
                 return -EINVAL;
             }
             float_value = (float)double_value;
+            if (argc > 3) {
+                if (bacnet_strnicmp(argv[3], "momentary", 9) == 0) {
+                    /* momentarily override the value */
+                    Lighting_Output_Overridden_Momentary(instance, float_value);
+                } else {
+                    shell_help(shell);
+                    return -EINVAL;
+                }
+            } else {
+                /* set the override without momentary */
+                Lighting_Output_Overridden_Set(instance, float_value);
+            }
         }
-    }
-    if (argc > 3) {
-        if (bacnet_strnicmp(argv[3], "momentary", 9) == 0) {
-            /* momentarily override the value */
-            Lighting_Output_Overridden_Momentary(instance, float_value);
-        } else {
-            shell_help(shell);
-            return -EINVAL;
-        }
-    } else {
-        /* set the override */
-        Lighting_Output_Overridden_Set(instance, float_value);
     }
     return cmd_lighting_output_value_print(shell, instance);
 }
@@ -570,7 +592,7 @@ static int cmd_lighting_output_blink(
 {
     BACNET_LIGHTING_COMMAND data = { 0 };
     uint32_t instance = 0;
-    float off_value = 0.0;
+    float off_value = 0.0f;
     uint16_t interval = 0;
     uint16_t count = 0;
     uint32_t egress_seconds = 60 * 5;
@@ -783,7 +805,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         override,
         NULL,
-        "<instance> <clear|<level percent> [momentary]>",
+        "<instance> <clear|ramp <percent> <rate>|<percent> [momentary]",
         cmd_lighting_output_override),
     SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
