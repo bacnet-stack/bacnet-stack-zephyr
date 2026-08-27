@@ -33,6 +33,9 @@ TWISTER_RC=$?
 # twister output directory cleanup files we do not archive
 find "$OUTPUT_DIR" -name 'CMakeFiles' -exec rm -rf {} \; 2>/dev/null
 find "$OUTPUT_DIR" -name 'modules' -exec rm -rf {} \; 2>/dev/null
+find "$OUTPUT_DIR" -type f \( -name '*.bin' -o -name '*.hex' -o -name '*.elf' -o -name '*.map' \) -exec rm -f {} + 2>/dev/null
+find "$OUTPUT_DIR" -type f -exec chmod u+rw,go+r {} + 2>/dev/null
+find "$OUTPUT_DIR" -type d -exec chmod u+rwx,go+rx {} + 2>/dev/null
 find "$OUTPUT_DIR" -name 'app' -exec rm -rf \
     '{}/../zephyr/arch
     {}/../zephyr/boards
