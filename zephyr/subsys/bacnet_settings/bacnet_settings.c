@@ -833,8 +833,5 @@ bool bacnet_settings_init(void)
  */
 int bacnet_settings_clear(void)
 {
-    int err;
-
-    err = settings_delete(CONFIG_BACNET_STORAGE_BASE_NAME);
-    return err;
+    return bacnet_storage_clear();
 }
