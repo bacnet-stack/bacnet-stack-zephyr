@@ -278,7 +278,6 @@ uint16_t bip_receive(
     int max = 0;
     struct zsock_timeval select_timeout;
     struct sockaddr_in sin = { 0 };
-    suseconds_t timeout_msec, timeout_sec;
     BACNET_IP_ADDRESS addr = { 0 };
     socklen_t sin_len = sizeof(sin);
     int received_bytes = 0;
@@ -294,14 +293,13 @@ uint16_t bip_receive(
     /* we could just use a non-blocking socket, but that consumes all
        the CPU time.  We can use a timeout; it is only supported as
        a select. */
-    timeout_msec = (suseconds_t)timeout;
-    if (timeout_msec >= 1000) {
-        timeout_sec = timeout_msec / 1000;
-        select_timeout.tv_sec = timeout_sec;
-        select_timeout.tv_usec = 1000 * (timeout_msec - (timeout_sec * 1000));
+    if (timeout >= 1000U) {
+        select_timeout.tv_sec = timeout / 1000U;
+        select_timeout.tv_usec =
+            1000U * (timeout - select_timeout.tv_sec * 1000U);
     } else {
         select_timeout.tv_sec = 0;
-        select_timeout.tv_usec = 1000 * timeout_msec;
+        select_timeout.tv_usec = 1000U * timeout;
     }
     ZSOCK_FD_ZERO(&read_fds);
     ZSOCK_FD_SET(BIP_Socket, &read_fds);
