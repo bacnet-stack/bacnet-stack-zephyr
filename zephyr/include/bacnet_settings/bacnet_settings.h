@@ -140,6 +140,7 @@ bool bacnet_settings_string_set(
     const char *value);
 
 bool bacnet_settings_init(void);
+int bacnet_settings_clear(void);
 
 #ifdef __cplusplus
 }

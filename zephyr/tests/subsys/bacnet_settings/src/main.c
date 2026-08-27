@@ -109,4 +109,23 @@ ZTEST(bacnet_storage, test_handler_set_invokes_restore_callback)
     zassert_mem_equal(restore_state.data, sample, sizeof(sample), NULL);
 }
 
+ZTEST(bacnet_storage, test_clear_removes_namespace_entries)
+{
+    BACNET_STORAGE_KEY key;
+    char value[32] = { 0 };
+    const char *persisted = "persisted";
+    int rc;
+
+    zassert_equal(bacnet_storage_init(), 0, NULL);
+    bacnet_storage_key_init(&key, 1, 2, 3, BACNET_STORAGE_ARRAY_INDEX_NONE);
+    zassert_equal(
+        bacnet_storage_set(&key, persisted, strlen(persisted) + 1), 0, NULL);
+
+    rc = bacnet_storage_clear();
+    zassert_equal(rc, 0, NULL);
+
+    rc = bacnet_storage_get(&key, value, sizeof(value));
+    zassert_equal(rc, -ENOENT, NULL);
+}
+
 ZTEST_SUITE(bacnet_storage, NULL, NULL, NULL, NULL, NULL);

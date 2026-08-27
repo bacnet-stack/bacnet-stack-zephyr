@@ -4,4 +4,5 @@
 zephyr_sources(
   bacnet_log.c
   bacnet_mstimer.c
+  bacnet_reinit.c
   )

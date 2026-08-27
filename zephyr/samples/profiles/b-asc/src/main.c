@@ -29,6 +29,7 @@
 #include "bacnet/basic/server/bacnet_port.h"
 /* BACnet Stack Zephyr services */
 #include <bacnet_settings/bacnet_settings.h>
+#include <bacnet_osif/bacnet_reinit.h>
 /* Logging module registration is already done in ports/zephyr/main.c */
 #include <bacnet_osif/bacnet_log.h>
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
@@ -37,6 +38,21 @@ LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 static const uint32_t Device_Instance = 260127;
 static const char *Device_Name =
     "BACnet Application Specific Controller (B-ASC)";
+
+/**
+ * @brief Clear any stored BACnet settings before a cold start reboot
+ * @param context [in] The context to pass to the callback function
+ */
+static void BACnet_Device_Coldstart_Callback(void *context)
+{
+    int err;
+
+    (void)context;
+    err = bacnet_settings_clear();
+    if (err < 0) {
+        LOG_ERR("Failed to clear BACnet settings: %d", err);
+    }
+}
 
 /**
  * @brief Callback data for WriteProperty restore iterator
@@ -110,6 +126,7 @@ static void BACnet_Device_Init_Handler(void *context)
     /* done */
     LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
     bacnet_basic_task_object_timer_set(1000UL);
+    bacnet_reinitialize_device_init(3000);
     srand(sys_rand32_get());
 }
 
@@ -120,7 +137,7 @@ static void BACnet_Device_Init_Handler(void *context)
  */
 static void BACnet_Device_Task_Handler(void *context)
 {
-    (void)context;
+    bacnet_reinitialize_device_task(BACnet_Device_Coldstart_Callback, context);
 }
 
 int main(void)
