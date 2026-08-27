@@ -101,7 +101,7 @@ static void BACnet_Smart_Actuator_Init_Handler(void *context)
     LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
     /* start the seconds cyclic timer */
     mstimer_set(&Actuator_Update_Timer, 1000);
-    bacnet_reinitialize_device_init(3000);
+    bacnet_reinitialize_device_init(CONFIG_BACNET_REINIT_REBOOT_DELAY);
     srand(sys_rand32_get());
 }
 
@@ -114,7 +114,6 @@ static void BACnet_Smart_Actuator_Task_Handler(void *context)
 {
     float percent = 0.0f, change = 0.0f;
 
-    (void)context;
     bacnet_reinitialize_device_task(
         BACnet_Smart_Actuator_Coldstart_Callback, context);
     if (mstimer_expired(&Actuator_Update_Timer)) {

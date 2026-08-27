@@ -168,7 +168,7 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
     LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
     /* set the BACnet Basic Task device object timer for lighting output use */
     bacnet_basic_task_object_timer_set(10UL);
-    bacnet_reinitialize_device_init(3000);
+    bacnet_reinitialize_device_init(CONFIG_BACNET_REINIT_REBOOT_DELAY);
     srand(sys_rand32_get());
 }
 

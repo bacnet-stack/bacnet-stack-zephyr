@@ -683,6 +683,13 @@ config BACNET_MAX_OCTET_STRING_BYTES
     help
         Maximum number of bytes in a BACnet octet string
 
+config BACNET_REINIT_REBOOT_DELAY
+    int "Minimum reboot delay for BACnet ReinitializeDevice service"
+    default 3000
+    help
+        Minimum reboot delay in milliseconds after receiving
+        the BACnet ReinitializeDevice service
+
 config BACNET_STORAGE_BASE_NAME
     string "BACnet storage base name for settings subsystem"
     default "bacnet"

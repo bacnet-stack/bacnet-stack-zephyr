@@ -126,7 +126,7 @@ static void BACnet_Device_Init_Handler(void *context)
     /* done */
     LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
     bacnet_basic_task_object_timer_set(1000UL);
-    bacnet_reinitialize_device_init(3000);
+    bacnet_reinitialize_device_init(CONFIG_BACNET_REINIT_REBOOT_DELAY);
     srand(sys_rand32_get());
 }
 

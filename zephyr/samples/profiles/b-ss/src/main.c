@@ -96,7 +96,7 @@ static void BACnet_Smart_Sensor_Init_Handler(void *context)
     LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
     /* start the seconds cyclic timer */
     mstimer_set(&Sensor_Update_Timer, 1000);
-    bacnet_reinitialize_device_init(3000);
+    bacnet_reinitialize_device_init(CONFIG_BACNET_REINIT_REBOOT_DELAY);
     srand(sys_rand32_get());
 }
 
