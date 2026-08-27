@@ -11,6 +11,7 @@
 #include <zephyr/drivers/led.h>
 #include <zephyr/random/random.h>
 #include <zephyr/sys/util.h>
+#include <zephyr/sys/reboot.h>
 #include <stdint.h>
 #include <stdlib.h>
 /* BACnet Stack defines - first */
@@ -32,6 +33,7 @@
 
 /* BACnet Stack Zephyr services */
 #include <bacnet_settings/bacnet_settings.h>
+#include <bacnet_osif/bacnet_reinit.h>
 /* Logging module registration is already done in ports/zephyr/main.c */
 #include <bacnet_osif/bacnet_log.h>
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
@@ -152,6 +154,7 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
     LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
     /* set the BACnet Basic Task device object timer for lighting output use */
     bacnet_basic_task_object_timer_set(10UL);
+    bacnet_reinitialize_device_init(3000);
     srand(sys_rand32_get());
 }
 
@@ -163,6 +166,7 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
 static void BACnet_Lighting_Device_Task_Handler(void *context)
 {
     (void)context;
+    bacnet_reinitialize_device_task(NULL);
 }
 
 int main(void)
