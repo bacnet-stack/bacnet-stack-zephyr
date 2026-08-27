@@ -27,6 +27,7 @@
 #include "bacnet/basic/server/bacnet_port.h"
 /* BACnet Stack Zephyr services */
 #include <bacnet_settings/bacnet_settings.h>
+#include <bacnet_osif/bacnet_reinit.h>
 /* Logging module registration is already done in ports/zephyr/main.c */
 #include <bacnet_osif/bacnet_log.h>
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
@@ -42,6 +43,21 @@ static struct mstimer Actuator_Update_Timer;
 static void BACnet_Smart_Actuator_Datalink_Init(void)
 {
     /* nothing to do */
+}
+
+/**
+ * @brief Clear any stored BACnet settings before a cold start reboot
+ * @param context [in] The context to pass to the callback function
+ */
+static void BACnet_Smart_Actuator_Coldstart_Callback(void *context)
+{
+    int err;
+
+    (void)context;
+    err = bacnet_settings_clear();
+    if (err < 0) {
+        LOG_ERR("Failed to clear BACnet settings: %d", err);
+    }
 }
 
 /**
@@ -85,6 +101,7 @@ static void BACnet_Smart_Actuator_Init_Handler(void *context)
     LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
     /* start the seconds cyclic timer */
     mstimer_set(&Actuator_Update_Timer, 1000);
+    bacnet_reinitialize_device_init(3000);
     srand(sys_rand32_get());
 }
 
@@ -98,6 +115,8 @@ static void BACnet_Smart_Actuator_Task_Handler(void *context)
     float percent = 0.0f, change = 0.0f;
 
     (void)context;
+    bacnet_reinitialize_device_task(
+        BACnet_Smart_Actuator_Coldstart_Callback, context);
     if (mstimer_expired(&Actuator_Update_Timer)) {
         mstimer_reset(&Actuator_Update_Timer);
         /* simulate an internal software program,

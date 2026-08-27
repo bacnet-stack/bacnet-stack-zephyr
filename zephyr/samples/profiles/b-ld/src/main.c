@@ -127,6 +127,21 @@ Settings_Restore_Callback(BACNET_WRITE_PROPERTY_DATA *wp_data, void *context)
 }
 
 /**
+ * @brief Clear any stored BACnet settings before a cold start reboot
+ * @param context [in] The context to pass to the callback function
+ */
+static void BACnet_Lighting_Device_Coldstart_Callback(void *context)
+{
+    int err;
+
+    (void)context;
+    err = bacnet_settings_clear();
+    if (err < 0) {
+        LOG_ERR("Failed to clear BACnet settings: %d", err);
+    }
+}
+
+/**
  * @brief BACnet Project Initialization Handler
  * @param context [in] The context to pass to the callback function
  * @note This is called from the BACnet task
@@ -165,8 +180,8 @@ static void BACnet_Lighting_Device_Init_Handler(void *context)
  */
 static void BACnet_Lighting_Device_Task_Handler(void *context)
 {
-    (void)context;
-    bacnet_reinitialize_device_task(NULL);
+    bacnet_reinitialize_device_task(
+        BACnet_Lighting_Device_Coldstart_Callback, context);
 }
 
 int main(void)

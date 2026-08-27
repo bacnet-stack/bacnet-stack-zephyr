@@ -16,6 +16,7 @@
 #include <zephyr/sys/reboot.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <bacnet_osif/bacnet_reinit.h>
 /* BACnet Stack defines - first */
 #include "bacnet/bacdef.h"
 /* BACnet Stack core API */
@@ -31,16 +32,25 @@ LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 /* timer for ReinitializeDevice service */
 static struct mstimer Reinitialize_Timer;
 
-void bacnet_reinitialize_device_task(void *context)
+/**
+ * @brief Process a ReinitializeDevice request and trigger warm/cold restart.
+ * @param coldstart_callback Callback invoked before a cold start reboot.
+ * @param context Context passed to the cold start callback.
+ */
+void bacnet_reinitialize_device_task(
+    bacnet_reinitialize_device_coldstart_callback coldstart_callback,
+    void *context)
 {
     BACNET_REINITIALIZED_STATE state;
 
-    (void)context;
     state = Device_Reinitialized_State();
     switch (state) {
         case BACNET_REINIT_COLDSTART:
             if (mstimer_expired(&Reinitialize_Timer)) {
                 LOG_INF("ReinitializeDevice COLDSTART requested. REBOOT.");
+                if (coldstart_callback != NULL) {
+                    coldstart_callback(context);
+                }
 #if defined(CONFIG_REBOOT)
                 sys_reboot(SYS_REBOOT_COLD);
 #else
@@ -67,9 +77,9 @@ void bacnet_reinitialize_device_task(void *context)
 }
 
 /**
- * @brief Initialize the ReinitializeDevice service timer
+ * @brief Initialize the ReinitializeDevice service timer.
  * @param timeout_ms The timeout in milliseconds for the ReinitializeDevice
- * service
+ * service.
  * @note This function should be called during system initialization to set up
  * the timer.
  */
