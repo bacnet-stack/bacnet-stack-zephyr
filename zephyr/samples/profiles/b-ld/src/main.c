@@ -11,7 +11,6 @@
 #include <zephyr/drivers/led.h>
 #include <zephyr/random/random.h>
 #include <zephyr/sys/util.h>
-#include <zephyr/sys/reboot.h>
 #include <stdint.h>
 #include <stdlib.h>
 /* BACnet Stack defines - first */

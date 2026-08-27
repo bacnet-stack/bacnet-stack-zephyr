@@ -109,7 +109,6 @@ static void BACnet_Smart_Sensor_Task_Handler(void *context)
 {
     float temperature = 0.0f, change = 0.0f;
 
-    (void)context;
     bacnet_reinitialize_device_task(
         BACnet_Smart_Sensor_Coldstart_Callback, context);
     if (mstimer_expired(&Sensor_Update_Timer)) {
