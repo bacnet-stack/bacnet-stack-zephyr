@@ -54,10 +54,11 @@ void bacnet_reinitialize_device_task(
 #if defined(CONFIG_REBOOT)
                 /* disable the interval timer - one shot */
                 mstimer_set(&Reinitialize_Timer, 0);
+                log_panic();
                 sys_reboot(SYS_REBOOT_COLD);
 #else
                 /* reset the interval timer and state */
-                mstimer_reset(&Reinitialize_Timer);
+                mstimer_restart(&Reinitialize_Timer);
                 Device_Reinitialize_State_Set(BACNET_REINIT_IDLE);
                 LOG_ERR("Reboot not supported on this platform");
 #endif
@@ -69,17 +70,18 @@ void bacnet_reinitialize_device_task(
 #if defined(CONFIG_REBOOT)
                 /* disable the interval timer - one shot */
                 mstimer_set(&Reinitialize_Timer, 0);
+                log_panic();
                 sys_reboot(SYS_REBOOT_WARM);
 #else
                 /* reset the interval timer and state */
-                mstimer_reset(&Reinitialize_Timer);
+                mstimer_restart(&Reinitialize_Timer);
                 Device_Reinitialize_State_Set(BACNET_REINIT_IDLE);
                 LOG_ERR("Reboot not supported on this platform");
 #endif
             }
             break;
         case BACNET_REINIT_IDLE:
-            mstimer_reset(&Reinitialize_Timer);
+            mstimer_restart(&Reinitialize_Timer);
             break;
         default:
             break;
@@ -95,5 +97,6 @@ void bacnet_reinitialize_device_task(
  */
 void bacnet_reinitialize_device_init(uint32_t timeout_ms)
 {
+    LOG_INF("ReinitializeDevice reboot delay: %u ms", timeout_ms);
     mstimer_set(&Reinitialize_Timer, timeout_ms);
 }
