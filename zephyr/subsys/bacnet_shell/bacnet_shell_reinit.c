@@ -27,7 +27,7 @@
 static int cmd_reinit(const struct shell *sh, size_t argc, char **argv)
 {
     BACNET_REINITIALIZE_DEVICE_DATA rd_data = { 0 };
-    BACNET_REINITIALIZED_STATE state = BACNET_REINIT_IDLE;
+    BACNET_REINITIALIZED_STATE state = BACNET_REINIT_MAX;
     uint32_t found_index = 0;
     bool status = false;
     const char *name = NULL, *password = NULL, *error_name = NULL;
@@ -35,11 +35,29 @@ static int cmd_reinit(const struct shell *sh, size_t argc, char **argv)
     const char *param_name = "state";
     const char *result_name = "error-code";
 
-    rd_data.state = BACNET_REINIT_IDLE;
+    rd_data.state = BACNET_REINIT_MAX;
+    /* argv[1] = [state|help]
+       argv[2] = [password] */
     if ((argc == 3) || (argc == 2) || (argc == 1)) {
         if ((argc == 3) || (argc == 2)) {
-            /* Request ReinitializeDevice without password */
-            if (bactext_reinitialized_state_strtol(argv[1], &found_index)) {
+            if (bacnet_stricmp(argv[1], "help") == 0) {
+                /* [help] - print all possible reinitialized states in JSON */
+                shell_print(sh, "{\"ReinitializeDeviceStates\":[");
+                for (found_index = 0; found_index < BACNET_REINIT_MAX;
+                     found_index++) {
+                    name = bactext_reinitialized_state_name_default(
+                        found_index, NULL);
+                    if (name) {
+                        shell_print(
+                            sh, "  \"%s\"%s", name,
+                            (found_index < BACNET_REINIT_MAX - 1) ? "," : "");
+                    }
+                }
+                shell_print(sh, "]}");
+                return 0;
+            } else if (bactext_reinitialized_state_strtol(
+                           argv[1], &found_index)) {
+                /* [state] - either a name or a numeric value */
                 rd_data.state = found_index;
             }
         }
@@ -48,7 +66,7 @@ static int cmd_reinit(const struct shell *sh, size_t argc, char **argv)
             password = argv[2];
             characterstring_init_ansi(&rd_data.password, password);
         }
-        if (rd_data.state == BACNET_REINIT_IDLE) {
+        if (rd_data.state == BACNET_REINIT_MAX) {
             /* Print current ReinitializeDevice state */
             state = Device_Reinitialized_State();
             name = bactext_reinitialized_state_name_default(state, "Unknown");
@@ -82,4 +100,4 @@ static int cmd_reinit(const struct shell *sh, size_t argc, char **argv)
 }
 
 SHELL_SUBCMD_ADD(
-    (bacnet), reinit, NULL, "[state] [password]", cmd_reinit, 0, 0);
+    (bacnet), reinit, NULL, "[state|help] [password]", cmd_reinit, 0, 0);
