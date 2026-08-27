@@ -199,14 +199,15 @@ int bacnet_storage_init(void)
 
     rc = fs_mount(&littlefs_mnt);
     if (rc != 0) {
-        LOG_INF("mounting littlefs error: [%d]", rc);
+        LOG_ERR("mounting littlefs error: [%d]", rc);
+        return rc;
+    }
+
+    rc = fs_unlink(CONFIG_SETTINGS_FILE_PATH);
+    if ((rc != 0) && (rc != -ENOENT)) {
+        LOG_ERR("can't delete config file (err %d)", rc);
     } else {
-        rc = fs_unlink(CONFIG_SETTINGS_FILE_PATH);
-        if ((rc != 0) && (rc != -ENOENT)) {
-            H("can't delete config file%d", rc);
-        } else {
-            LOG_INF("FS initialized: OK");
-        }
+        LOG_INF("FS initialized: OK");
     }
 #endif
     rc = settings_subsys_init();
@@ -719,4 +720,58 @@ int bacnet_storage_delete(BACNET_STORAGE_KEY *key)
     }
 
     return rc;
+}
+
+struct bacnet_storage_clear_ctx {
+    const char *subtree;
+    int status;
+};
+
+static int bacnet_storage_clear_cb(
+    const char *key,
+    size_t len,
+    settings_read_cb read_cb,
+    void *cb_arg,
+    void *param)
+{
+    struct bacnet_storage_clear_ctx *ctx = param;
+    char path[SETTINGS_MAX_NAME_LEN + 1] = { 0 };
+    int rc;
+
+    ARG_UNUSED(len);
+    ARG_UNUSED(read_cb);
+    ARG_UNUSED(cb_arg);
+
+    if (key == NULL) {
+        rc = snprintf(path, sizeof(path), "%s", ctx->subtree);
+    } else {
+        rc = snprintf(path, sizeof(path), "%s/%s", ctx->subtree, key);
+    }
+    if (rc < 0 || (size_t)rc >= sizeof(path)) {
+        return -ENAMETOOLONG;
+    }
+
+    rc = settings_delete(path);
+    if (rc && ctx->status == 0) {
+        ctx->status = rc;
+    }
+
+    return 0;
+}
+
+int bacnet_storage_clear(void)
+{
+    struct bacnet_storage_clear_ctx ctx = {
+        .subtree = CONFIG_BACNET_STORAGE_BASE_NAME,
+        .status = 0,
+    };
+    int rc;
+
+    rc = settings_load_subtree_direct(
+        ctx.subtree, bacnet_storage_clear_cb, &ctx);
+    if (rc) {
+        return rc;
+    }
+
+    return ctx.status;
 }

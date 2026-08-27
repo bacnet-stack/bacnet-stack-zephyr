@@ -826,3 +826,12 @@ bool bacnet_settings_init(void)
 
     return true;
 }
+
+/**
+ * @brief Clear all persisted BACnet settings.
+ * @return 0 on success, or a negative errno value on failure.
+ */
+int bacnet_settings_clear(void)
+{
+    return bacnet_storage_clear();
+}

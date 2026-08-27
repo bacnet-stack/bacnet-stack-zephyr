@@ -64,6 +64,7 @@ int bacnet_storage_set(
     BACNET_STORAGE_KEY *key, const void *data, size_t data_size);
 int bacnet_storage_get(BACNET_STORAGE_KEY *key, void *data, size_t data_size);
 int bacnet_storage_delete(BACNET_STORAGE_KEY *key);
+int bacnet_storage_clear(void);
 
 #ifdef __cplusplus
 }
