@@ -199,14 +199,15 @@ int bacnet_storage_init(void)
 
     rc = fs_mount(&littlefs_mnt);
     if (rc != 0) {
-        LOG_INF("mounting littlefs error: [%d]", rc);
+        LOG_ERR("mounting littlefs error: [%d]", rc);
+        return rc;
+    }
+
+    rc = fs_unlink(CONFIG_SETTINGS_FILE_PATH);
+    if ((rc != 0) && (rc != -ENOENT)) {
+        LOG_ERR("can't delete config file (err %d)", rc);
     } else {
-        rc = fs_unlink(CONFIG_SETTINGS_FILE_PATH);
-        if ((rc != 0) && (rc != -ENOENT)) {
-            H("can't delete config file%d", rc);
-        } else {
-            LOG_INF("FS initialized: OK");
-        }
+        LOG_INF("FS initialized: OK");
     }
 #endif
     rc = settings_subsys_init();
