@@ -49,9 +49,12 @@ static void BACnet_Smart_Sensor_Coldstart_Callback(void *context)
     int err;
 
     (void)context;
+    LOG_INF("COLDSTART: Clearing BACnet settings...");
     err = bacnet_settings_clear();
     if (err < 0) {
-        LOG_ERR("Failed to clear BACnet settings: %d", err);
+        LOG_ERR("COLDSTART: Failed to clear BACnet settings: %d", err);
+    } else {
+        LOG_INF("COLDSTART: Successfully cleared BACnet settings");
     }
 }
 
@@ -118,7 +121,7 @@ static void BACnet_Smart_Sensor_Task_Handler(void *context)
             return;
         }
         temperature = Analog_Input_Present_Value(Sensor_Instance);
-        change = -1.0f + 2.0f * ((float)rand()) / RAND_MAX;
+        change = -1.0f + 2.0f * ((float)sys_rand32_get() / (float)UINT32_MAX);
         temperature += change;
         Analog_Input_Present_Value_Set(Sensor_Instance, temperature);
     }

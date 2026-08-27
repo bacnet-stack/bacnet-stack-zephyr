@@ -118,9 +118,12 @@ static void BACnet_Lighting_Device_Coldstart_Callback(void *context)
     int err;
 
     (void)context;
+    LOG_INF("COLDSTART: Clearing BACnet settings...");
     err = bacnet_settings_clear();
     if (err < 0) {
-        LOG_ERR("Failed to clear BACnet settings: %d", err);
+        LOG_ERR("COLDSTART: Failed to clear BACnet settings: %d", err);
+    } else {
+        LOG_INF("COLDSTART: Successfully cleared BACnet settings");
     }
 }
 
