@@ -47,6 +47,8 @@ void bacnet_reinitialize_device_task(
     switch (state) {
         case BACNET_REINIT_COLDSTART:
             if (mstimer_expired(&Reinitialize_Timer)) {
+                /* disable the interval timer - one shot */
+                mstimer_set(&Reinitialize_Timer, 0);
                 LOG_INF("ReinitializeDevice COLDSTART requested. REBOOT.");
                 if (coldstart_callback != NULL) {
                     coldstart_callback(context);
@@ -60,6 +62,8 @@ void bacnet_reinitialize_device_task(
             break;
         case BACNET_REINIT_WARMSTART:
             if (mstimer_expired(&Reinitialize_Timer)) {
+                /* disable the interval timer - one shot */
+                mstimer_set(&Reinitialize_Timer, 0);
                 LOG_INF("ReinitializeDevice WARMSTART requested. REBOOT.");
 #if defined(CONFIG_REBOOT)
                 sys_reboot(SYS_REBOOT_WARM);
