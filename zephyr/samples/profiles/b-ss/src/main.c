@@ -27,6 +27,7 @@
 /* BACnet Stack Zephyr services */
 #include <bacnet_settings/bacnet_settings.h>
 #include <bacnet_settings/bacnet_storage.h>
+#include <bacnet_osif/bacnet_reinit.h>
 /* Logging module registration is already done in ports/zephyr/main.c */
 #include <bacnet_osif/bacnet_log.h>
 LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
@@ -38,6 +39,21 @@ static const uint32_t Device_Instance = 260121;
 static const uint32_t Sensor_Instance = 1;
 /* timer for Sensor Update Interval */
 static struct mstimer Sensor_Update_Timer;
+
+/**
+ * @brief Clear any stored BACnet settings before a cold start reboot
+ * @param context [in] The context to pass to the callback function
+ */
+static void BACnet_Smart_Sensor_Coldstart_Callback(void *context)
+{
+    int err;
+
+    (void)context;
+    err = bacnet_settings_clear();
+    if (err < 0) {
+        LOG_ERR("Failed to clear BACnet settings: %d", err);
+    }
+}
 
 /**
  * @brief Callback data for WriteProperty restore iterator
@@ -80,6 +96,7 @@ static void BACnet_Smart_Sensor_Init_Handler(void *context)
     LOG_INF("BACnet Device ID: %u", Device_Object_Instance_Number());
     /* start the seconds cyclic timer */
     mstimer_set(&Sensor_Update_Timer, 1000);
+    bacnet_reinitialize_device_init(3000);
     srand(sys_rand32_get());
 }
 
@@ -93,6 +110,8 @@ static void BACnet_Smart_Sensor_Task_Handler(void *context)
     float temperature = 0.0f, change = 0.0f;
 
     (void)context;
+    bacnet_reinitialize_device_task(
+        BACnet_Smart_Sensor_Coldstart_Callback, context);
     if (mstimer_expired(&Sensor_Update_Timer)) {
         mstimer_reset(&Sensor_Update_Timer);
         /* simulate a sensor reading, and update the BACnet object values */
