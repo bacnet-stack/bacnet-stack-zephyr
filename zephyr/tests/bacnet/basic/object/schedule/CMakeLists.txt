@@ -46,9 +46,10 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_BASE}/src/bacnet/bactext.c
     ${BACNET_BASE}/src/bacnet/bactimevalue.c
     ${BACNET_BASE}/src/bacnet/basic/sys/bigend.c
-    ${BACNET_BASE}/src/bacnet/datetime.c
     ${BACNET_BASE}/src/bacnet/basic/sys/days.c
     ${BACNET_BASE}/src/bacnet/basic/sys/debug.c
+    ${BACNET_BASE}/src/bacnet/basic/sys/keylist.c
+    ${BACNET_BASE}/src/bacnet/datetime.c
     ${BACNET_BASE}/src/bacnet/indtext.c
     ${BACNET_BASE}/src/bacnet/hostnport.c
     ${BACNET_BASE}/src/bacnet/lighting.c
