@@ -19,5 +19,6 @@ target_sources(app PRIVATE
 
 add_compile_definitions(
     CONFIG_ZTEST_NEW_API
-    CONFIG_BACNET_STORAGE_BASE_NAME=\"bacnet\"
+    CONFIG_BACNET_SETTINGS_BASE_NAME=\".bacnet\"
+    CONFIG_BACNET_STORAGE_BASE_NAME=\".bacnet\"
 )

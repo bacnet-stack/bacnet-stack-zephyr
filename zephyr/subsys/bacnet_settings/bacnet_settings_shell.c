@@ -15,7 +15,15 @@
 #include <bacnet/proplist.h>
 #include <bacnet/wp.h>
 
-static const char Storage_Base_Name[] = CONFIG_BACNET_STORAGE_BASE_NAME;
+#if defined(CONFIG_BACNET_SETTINGS_BASE_NAME)
+#define BACNET_STORAGE_BASE_NAME CONFIG_BACNET_SETTINGS_BASE_NAME
+#elif defined(CONFIG_BACNET_STORAGE_BASE_NAME)
+#define BACNET_STORAGE_BASE_NAME CONFIG_BACNET_STORAGE_BASE_NAME
+#else
+#define BACNET_STORAGE_BASE_NAME ".bacnet"
+#endif
+
+static const char Storage_Base_Name[] = BACNET_STORAGE_BASE_NAME;
 
 /**
  * @brief Get or set a string using BACnet settings subsystem
