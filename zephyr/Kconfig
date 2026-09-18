@@ -691,10 +691,11 @@ config BACNET_REINIT_REBOOT_DELAY
         the BACnet ReinitializeDevice service
 
 config BACNET_STORAGE_BASE_NAME
-    string "BACnet storage base name for settings subsystem"
-    default "bacnet"
+    string "Deprecated alias for BACnet settings base name"
+    default ".bacnet"
     help
-        BACnet storage base name for settings subsystem
+        Deprecated compatibility alias for the BACnet settings subtree base name.
+        Use BACNET_SETTINGS_BASE_NAME to configure the active settings root.
 
 config BACNET_ADDRESS_CACHE_FILE
     bool "BACnet Address Cache file functionality"

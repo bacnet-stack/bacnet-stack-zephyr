@@ -24,8 +24,10 @@
 /* me! */
 #include "bacnet_settings/bacnet_storage.h"
 
-#ifdef CONFIG_BACNET_SETTINGS_BASE_NAME
+#if defined(CONFIG_BACNET_SETTINGS_BASE_NAME)
 #define BACNET_STORAGE_BASE_NAME CONFIG_BACNET_SETTINGS_BASE_NAME
+#elif defined(CONFIG_BACNET_STORAGE_BASE_NAME)
+#define BACNET_STORAGE_BASE_NAME CONFIG_BACNET_STORAGE_BASE_NAME
 #else
 #define BACNET_STORAGE_BASE_NAME ".bacnet"
 #endif
@@ -363,7 +365,7 @@ int bacnet_storage_key_encode(
     char *buffer, size_t buffer_size, BACNET_STORAGE_KEY *key)
 {
     int rc = 0;
-    const char base_name[] = CONFIG_BACNET_STORAGE_BASE_NAME;
+    const char base_name[] = BACNET_STORAGE_BASE_NAME;
 
     if (buffer) {
         memset(buffer, 0, buffer_size);
@@ -401,7 +403,7 @@ int bacnet_storage_key_decode(const char *name, BACNET_STORAGE_KEY *key)
     char property_id_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
     char array_index_name[SETTINGS_MAX_DIR_DEPTH + 1] = { 0 };
     unsigned long long_value = 0;
-    const char base_name[] = CONFIG_BACNET_STORAGE_BASE_NAME;
+    const char base_name[] = BACNET_STORAGE_BASE_NAME;
 
     /* settings root name from the path */
     if (settings_name_steq(name, base_name, &next) && next) {
@@ -762,7 +764,7 @@ static int bacnet_storage_clear_cb(
 int bacnet_storage_clear(void)
 {
     struct bacnet_storage_clear_ctx ctx = {
-        .subtree = CONFIG_BACNET_STORAGE_BASE_NAME,
+        .subtree = BACNET_STORAGE_BASE_NAME,
         .status = 0,
     };
     int rc;
