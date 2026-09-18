@@ -50,6 +50,19 @@ ZTEST(bacnet_storage, test_numeric_helpers)
     zassert_false(bacnet_storage_strtof("abc", &fvalue), NULL);
 }
 
+ZTEST(bacnet_storage, test_base_name_config_is_consistent)
+{
+#if defined(CONFIG_BACNET_SETTINGS_BASE_NAME)
+    zassert_true(
+        strcmp(
+            CONFIG_BACNET_SETTINGS_BASE_NAME,
+            CONFIG_BACNET_STORAGE_BASE_NAME) == 0,
+        NULL);
+#else
+    zassert_true(strcmp(CONFIG_BACNET_STORAGE_BASE_NAME, ".bacnet") == 0, NULL);
+#endif
+}
+
 ZTEST(bacnet_storage, test_key_encode_decode_roundtrip)
 {
     char path[128];

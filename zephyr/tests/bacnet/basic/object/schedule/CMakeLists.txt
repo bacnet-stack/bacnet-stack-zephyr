@@ -67,6 +67,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_TEST_PATH}/src/main.c
     ${BACNET_BASE}/test/bacnet/basic/object/test/property_test.c
     ${BACNET_BASE}/test/bacnet/basic/object/test/device_mock.c
+    ${BACNET_BASE}/test/bacnet/basic/object/test/datetime_local.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
