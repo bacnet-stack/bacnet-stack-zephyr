@@ -7,6 +7,7 @@ currently being supported with security updates.
 
 | Zephyr-OS  | BACnet-Stack | Supported          |
 | ---------- | ------------ | ------------------ |
+| 4.4.0      | 1.6.x        | :white_check_mark: |
 | 3.7.0      | 1.4.x        | :white_check_mark: |
 | 3.6.0      | 1.3.x        | :white_check_mark: |
 
