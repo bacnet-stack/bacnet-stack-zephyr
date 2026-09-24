@@ -200,9 +200,9 @@ static void bacnet_shell_write_property_parameter_init(
 }
 
 /**
- * @brief determine if the JSON string value requires quoations or not
- * @param value string value to analyze
- * @return true if the string requires quotations
+ * @brief Determine if the JSON string value requires quotation marks.
+ * @param value String value to analyze.
+ * @return true if the string requires quotes, false otherwise.
  */
 static bool cmd_json_is_quoted(const char *value)
 {
@@ -260,6 +260,16 @@ static bool cmd_json_is_quoted(const char *value)
     return quotes;
 }
 
+/**
+ * @brief Print a JSON key/value pair to the shell.
+ * @param sh Shell context.
+ * @param prefix Prefix text before the JSON object.
+ * @param key Name of the JSON property.
+ * @param value Value string to print.
+ * @param suffix Suffix text after the value.
+ * @param append Text appended after the JSON pair.
+ * @return 0 on success.
+ */
 static int cmd_json_print_key_value(
     const struct shell *sh,
     const char *prefix,
@@ -280,6 +290,16 @@ static int cmd_json_print_key_value(
     return 0;
 }
 
+/**
+ * @brief Print a JSON array element for a list property.
+ * @param sh Shell context.
+ * @param key Property name for the array.
+ * @param value Value string to print inside the array.
+ * @param first_value true when this is the first element.
+ * @param last_value true when this is the last element.
+ * @param append Text appended after the JSON array payload.
+ * @return 0 on success.
+ */
 static int cmd_json_print_list_value(
     const struct shell *sh,
     const char *key,
@@ -308,6 +328,17 @@ static int cmd_json_print_list_value(
     return 0;
 }
 
+/**
+ * @brief Print a buffer as a JSON-encoded hex string value.
+ * @param sh Shell context.
+ * @param prefix Prefix text before the JSON object.
+ * @param key Property name for the value.
+ * @param buffer Byte buffer to encode.
+ * @param buffer_length Number of bytes in the buffer.
+ * @param suffix Text to append after the value.
+ * @param append Text appended after the JSON object.
+ * @return 0 on success.
+ */
 static int cmd_json_print_hex_dump(
     const struct shell *sh,
     const char *prefix,
@@ -339,6 +370,15 @@ static int cmd_json_print_hex_dump(
     return 0;
 }
 
+/**
+ * @brief Print a BACnet error payload as JSON.
+ * @param sh Shell context.
+ * @param key Property name associated with the error.
+ * @param error_class Error class string.
+ * @param error_code Error code string.
+ * @param append Text appended after the JSON object.
+ * @return 0 on success.
+ */
 static int cmd_json_print_key_error(
     const struct shell *sh,
     const char *key,
@@ -353,6 +393,18 @@ static int cmd_json_print_key_error(
     return 0;
 }
 
+/**
+ * @brief Print a BACnet property value tag payload as JSON.
+ * @param sh Shell context.
+ * @param property Property name.
+ * @param array_index Array index for the property.
+ * @param priority Write priority for the value.
+ * @param value_tag BACnet application tag identifier.
+ * @param value_string String representation of the value.
+ * @param success true when the value operation succeeded.
+ * @param append Text appended after the JSON object.
+ * @return 0 on success.
+ */
 static int cmd_json_print_property_value_tag(
     const struct shell *sh,
     const char *property,
@@ -374,6 +426,14 @@ static int cmd_json_print_property_value_tag(
     return 0;
 }
 
+/**
+ * @brief Get a printable BACnet name for a property or numeric value.
+ * @param name Optional symbolic name for the value.
+ * @param value Numeric value used when no name is provided.
+ * @param buffer Output buffer for the formatted name.
+ * @param size Size of the output buffer.
+ * @return Pointer to the formatted name string.
+ */
 static char *
 bactext_name(const char *name, unsigned long value, char *buffer, size_t size)
 {
@@ -384,9 +444,14 @@ bactext_name(const char *name, unsigned long value, char *buffer, size_t size)
 }
 
 /**
- * @brief Get or set a BACnet object property value
- * @param sh Shell
- * @return 0 on success, negative on failure
+ * @brief Print a BACnet property value from the read-property payload.
+ * @param sh Shell context.
+ * @param rpdata Read-property request data.
+ * @param value Application data value to decode or update.
+ * @param apdu_len Length of the APDU payload.
+ * @param skip_print true to skip emitting the formatted value.
+ * @param append Text appended after the JSON output.
+ * @return 0 on success.
  */
 static int cmd_value_print(
     const struct shell *sh,
@@ -487,11 +552,10 @@ static int cmd_value_print(
 }
 
 /**
- * @brief Get or set a BACnet object property value
- * @param sh Shell
- * @param argc Number of arguments
- * @param argv Argument list
- * @return 0 on success, negative on failure
+ * @brief Print all property values for a BACnet object as JSON.
+ * @param sh Shell context.
+ * @param rpdata Read-property request data describing the object.
+ * @return 0 on success, negative on failure.
  */
 static int
 cmd_print_value_all(const struct shell *sh, BACNET_READ_PROPERTY_DATA *rpdata)
