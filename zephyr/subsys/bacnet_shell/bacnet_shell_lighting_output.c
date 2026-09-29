@@ -1,10 +1,9 @@
-/*
- * Copyright (c) 2025 Legrand North America, LLC., as an unpublished work.
- * All Rights Reserved.
- *
- * The information contained herein is confidential property of Legrand.
- * The use, copying, transfer, or disclosure of such information is
- * prohibited except by the express written agreement with Legrand.
+/**
+ * @file
+ * @brief BACnet shell commands for debugging and testing lighting output
+ * @author Steve Karg <skarg@users.sourceforge.net>
+ * @date 2025
+ * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <stdlib.h>
 #include <stdint.h>
