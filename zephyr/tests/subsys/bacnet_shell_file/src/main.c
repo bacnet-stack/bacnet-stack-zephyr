@@ -144,6 +144,75 @@ static size_t encode_create_request(
     return create_object_service_request_encode(buffer, MAX_APDU, &data);
 }
 
+static bool append_create_initial_value(
+    BACNET_CREATE_OBJECT_DATA *request,
+    BACNET_PROPERTY_ID property,
+    const BACNET_APPLICATION_DATA_VALUE *application_value)
+{
+    uint8_t encoded_value[MAX_APDU];
+    BACNET_CREATE_OBJECT_PROPERTY_VALUE initial_value = { 0 };
+    int encoded_value_len;
+    size_t initial_value_len;
+
+    encoded_value_len = bacapp_encode_data(encoded_value, application_value);
+    if (encoded_value_len <= 0) {
+        return false;
+    }
+    initial_value.propertyIdentifier = property;
+    initial_value.propertyArrayIndex = BACNET_ARRAY_ALL;
+    initial_value.application_data = encoded_value;
+    initial_value.application_data_len = encoded_value_len;
+    initial_value.priority = BACNET_NO_PRIORITY;
+    initial_value_len = create_object_initial_value_data_encode(
+        request->application_data,
+        sizeof(request->application_data) -
+            (size_t)request->application_data_len,
+        request->application_data_len, &initial_value);
+    if (initial_value_len == 0U) {
+        return false;
+    }
+    request->application_data_len += (int)initial_value_len;
+
+    return true;
+}
+
+static size_t encode_create_request_with_initial_values(uint8_t *buffer)
+{
+    BACNET_APPLICATION_DATA_VALUE application_value = { 0 };
+    BACNET_CREATE_OBJECT_DATA request = { 0 };
+
+    request.object_type = OBJECT_ANALOG_INPUT;
+    request.object_instance = 12;
+
+    application_value.tag = BACNET_APPLICATION_TAG_REAL;
+    application_value.type.Real = 12.5f;
+    if (!append_create_initial_value(
+            &request, PROP_PRESENT_VALUE, &application_value)) {
+        return 0;
+    }
+
+    memset(&application_value, 0, sizeof(application_value));
+    application_value.tag = BACNET_APPLICATION_TAG_CHARACTER_STRING;
+    if (!characterstring_init_ansi(
+            &application_value.type.Character_String, "Backup \"fixture\"")) {
+        return 0;
+    }
+    if (!append_create_initial_value(
+            &request, PROP_OBJECT_NAME, &application_value)) {
+        return 0;
+    }
+
+    memset(&application_value, 0, sizeof(application_value));
+    application_value.tag = BACNET_APPLICATION_TAG_BOOLEAN;
+    application_value.type.Boolean = true;
+    if (!append_create_initial_value(
+            &request, PROP_OUT_OF_SERVICE, &application_value)) {
+        return 0;
+    }
+
+    return create_object_service_request_encode(buffer, MAX_APDU, &request);
+}
+
 static void store_backup_data(const uint8_t *data, size_t data_size)
 {
     zassert_true(data_size <= sizeof(Mock_File_Data), NULL);
@@ -288,8 +357,39 @@ ZTEST(bacnet_shell_file, test_decode_create_object_backup)
 
     err = shell_run("bacnet file decode 7", &output);
     zassert_equal(err, 0, "decode command failed: %d (%s)", err, output);
-    zassert_not_null(strstr(output, "offset=0"), "%s", output);
-    zassert_not_null(strstr(output, "instance=8"), "%s", output);
+    zassert_not_null(strstr(output, "\"offset\":0"), "%s", output);
+    zassert_not_null(strstr(output, "\"object_instance\":8"), "%s", output);
+}
+
+ZTEST(bacnet_shell_file, test_decode_json_initial_values)
+{
+    uint8_t request[MAX_APDU];
+    const char *output;
+    size_t request_size;
+    int err;
+
+    request_size = encode_create_request_with_initial_values(request);
+    zassert_true(request_size > 0U, "failed to encode CreateObject values");
+    store_backup_data(request, request_size);
+
+    err = shell_run("bacnet file decode 7", &output);
+    zassert_equal(err, 0, "decode command failed: %d (%s)", err, output);
+    zassert_not_null(
+        strstr(output, "\"object_type_name\":\"analog-input\""), "%s", output);
+    zassert_not_null(
+        strstr(
+            output,
+            "\"property_name\":\"present-value\",\"array_index\":null,"
+            "\"priority\":null,\"value\":[{\"type\":\"real\",\"value\":12.5}]"),
+        "%s", output);
+    zassert_not_null(
+        strstr(
+            output,
+            "\"type\":\"character-string\",\"encoding\":0,"
+            "\"value\":\"Backup \\\"fixture\\\"\""),
+        "%s", output);
+    zassert_not_null(
+        strstr(output, "\"type\":\"boolean\",\"value\":true"), "%s", output);
 }
 
 ZTEST(bacnet_shell_file, test_decode_malformed_and_truncated_records)

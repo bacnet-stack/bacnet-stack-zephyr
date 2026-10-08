@@ -1,10 +1,13 @@
 /**
  * @file
  * @brief BACnet File object shell commands
+ * @author Steve Karg <skarg@users.sourceforge.net>
+ * @date October 2026
  * @copyright SPDX-License-Identifier: Apache-2.0
  */
 #include <errno.h>
 #include <limits.h>
+#include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -15,6 +18,7 @@
 #include <zephyr/sys/util.h>
 
 /* BACnet Stack API */
+#include "bacnet/bacapp.h"
 #include "bacnet/bacstr.h"
 #include "bacnet/bactext.h"
 #include "bacnet/create_object.h"
@@ -437,22 +441,301 @@ static int cmd_file_dump(const struct shell *sh, size_t argc, char **argv)
     return 0;
 }
 
-static void file_json_string(const struct shell *sh, const char *value)
+static void file_json_string_data(
+    const struct shell *sh, const uint8_t *value, size_t value_len)
 {
-    const unsigned char *character = (const unsigned char *)value;
+    size_t index;
 
     shell_fprintf(sh, SHELL_NORMAL, "\"");
-    while (*character != '\0') {
-        if ((*character == '"') || (*character == '\\')) {
-            shell_fprintf(sh, SHELL_NORMAL, "\\%c", *character);
-        } else if ((*character < 0x20U) || (*character >= 0x7fU)) {
-            shell_fprintf(sh, SHELL_NORMAL, "\\u%04x", (unsigned)*character);
-        } else {
-            shell_fprintf(sh, SHELL_NORMAL, "%c", *character);
+    for (index = 0; index < value_len; index++) {
+        uint8_t character = value[index];
+
+        switch (character) {
+            case '"':
+            case '\\':
+                shell_fprintf(sh, SHELL_NORMAL, "\\%c", (int)character);
+                break;
+            case '\b':
+                shell_fprintf(sh, SHELL_NORMAL, "\\b");
+                break;
+            case '\f':
+                shell_fprintf(sh, SHELL_NORMAL, "\\f");
+                break;
+            case '\n':
+                shell_fprintf(sh, SHELL_NORMAL, "\\n");
+                break;
+            case '\r':
+                shell_fprintf(sh, SHELL_NORMAL, "\\r");
+                break;
+            case '\t':
+                shell_fprintf(sh, SHELL_NORMAL, "\\t");
+                break;
+            default:
+                if (character < 0x20U) {
+                    shell_fprintf(
+                        sh, SHELL_NORMAL, "\\u%04x", (unsigned)character);
+                } else {
+                    shell_fprintf(sh, SHELL_NORMAL, "%c", (int)character);
+                }
+                break;
         }
-        character++;
     }
     shell_fprintf(sh, SHELL_NORMAL, "\"");
+}
+
+static void file_json_string(const struct shell *sh, const char *value)
+{
+    file_json_string_data(sh, (const uint8_t *)value, strlen(value));
+}
+
+static void
+file_json_hex(const struct shell *sh, const uint8_t *value, size_t value_len)
+{
+    static const char Hex_Digits[] = "0123456789abcdef";
+    size_t index;
+
+    shell_fprintf(sh, SHELL_NORMAL, "\"");
+    for (index = 0; index < value_len; index++) {
+        shell_fprintf(
+            sh, SHELL_NORMAL, "%c%c", Hex_Digits[value[index] >> 4],
+            Hex_Digits[value[index] & 0x0fU]);
+    }
+    shell_fprintf(sh, SHELL_NORMAL, "\"");
+}
+
+static void file_json_unsigned_or_null(
+    const struct shell *sh, uint32_t value, uint32_t unspecified)
+{
+    if (value == unspecified) {
+        shell_fprintf(sh, SHELL_NORMAL, "null");
+    } else {
+        shell_fprintf(sh, SHELL_NORMAL, "%u", (unsigned)value);
+    }
+}
+
+static void file_json_real(
+    const struct shell *sh, const char *type, double value, bool is_single)
+{
+    char number[48];
+    int length;
+
+    if (!isfinite(value)) {
+        shell_fprintf(
+            sh, SHELL_NORMAL,
+            "{\"type\":\"%s\",\"value\":null,\"special\":", type);
+        file_json_string(
+            sh,
+            isnan(value) ? "nan" : (value < 0.0 ? "-infinity" : "infinity"));
+        shell_fprintf(sh, SHELL_NORMAL, "}");
+        return;
+    }
+    length = bacapp_snprintf(
+        number, sizeof(number), is_single ? "%.9g" : "%.17g", value);
+    if ((length < 0) || ((size_t)length >= sizeof(number))) {
+        shell_fprintf(
+            sh, SHELL_NORMAL, "{\"type\":\"%s\",\"value\":null}", type);
+        return;
+    }
+    shell_fprintf(
+        sh, SHELL_NORMAL, "{\"type\":\"%s\",\"value\":%s}", type, number);
+}
+
+static void file_json_application_value(
+    const struct shell *sh, const BACNET_APPLICATION_DATA_VALUE *value)
+{
+    switch (value->tag) {
+#if defined(BACAPP_NULL)
+        case BACNET_APPLICATION_TAG_NULL:
+            shell_fprintf(
+                sh, SHELL_NORMAL, "{\"type\":\"null\",\"value\":null}");
+            break;
+#endif
+#if defined(BACAPP_BOOLEAN)
+        case BACNET_APPLICATION_TAG_BOOLEAN:
+            shell_fprintf(
+                sh, SHELL_NORMAL, "{\"type\":\"boolean\",\"value\":%s}",
+                value->type.Boolean ? "true" : "false");
+            break;
+#endif
+#if defined(BACAPP_UNSIGNED)
+        case BACNET_APPLICATION_TAG_UNSIGNED_INT:
+            shell_fprintf(
+                sh, SHELL_NORMAL, "{\"type\":\"unsigned\",\"value\":%llu}",
+                (unsigned long long)value->type.Unsigned_Int);
+            break;
+#endif
+#if defined(BACAPP_SIGNED)
+        case BACNET_APPLICATION_TAG_SIGNED_INT:
+            shell_fprintf(
+                sh, SHELL_NORMAL, "{\"type\":\"signed\",\"value\":%ld}",
+                (long)value->type.Signed_Int);
+            break;
+#endif
+#if defined(BACAPP_REAL)
+        case BACNET_APPLICATION_TAG_REAL:
+            file_json_real(sh, "real", value->type.Real, true);
+            break;
+#endif
+#if defined(BACAPP_DOUBLE)
+        case BACNET_APPLICATION_TAG_DOUBLE:
+            file_json_real(sh, "double", value->type.Double, false);
+            break;
+#endif
+#if defined(BACAPP_OCTET_STRING)
+        case BACNET_APPLICATION_TAG_OCTET_STRING:
+            shell_fprintf(
+                sh, SHELL_NORMAL, "{\"type\":\"octet-string\",\"value_hex\":");
+            file_json_hex(
+                sh, octetstring_value_const(&value->type.Octet_String),
+                octetstring_length(&value->type.Octet_String));
+            shell_fprintf(sh, SHELL_NORMAL, "}");
+            break;
+#endif
+#if defined(BACAPP_CHARACTER_STRING)
+        case BACNET_APPLICATION_TAG_CHARACTER_STRING:
+            shell_fprintf(
+                sh, SHELL_NORMAL,
+                "{\"type\":\"character-string\",\"encoding\":%u,",
+                (unsigned)characterstring_encoding(
+                    &value->type.Character_String));
+            if (characterstring_utf8_valid(&value->type.Character_String)) {
+                shell_fprintf(sh, SHELL_NORMAL, "\"value\":");
+                file_json_string_data(
+                    sh,
+                    (const uint8_t *)characterstring_value_const(
+                        &value->type.Character_String),
+                    characterstring_length(&value->type.Character_String));
+            } else {
+                shell_fprintf(sh, SHELL_NORMAL, "\"value_hex\":");
+                file_json_hex(
+                    sh,
+                    (const uint8_t *)characterstring_value_const(
+                        &value->type.Character_String),
+                    characterstring_length(&value->type.Character_String));
+            }
+            shell_fprintf(sh, SHELL_NORMAL, "}");
+            break;
+#endif
+#if defined(BACAPP_BIT_STRING)
+        case BACNET_APPLICATION_TAG_BIT_STRING: {
+            uint8_t bit_index;
+            uint8_t bits_used = bitstring_bits_used(&value->type.Bit_String);
+
+            shell_fprintf(
+                sh, SHELL_NORMAL, "{\"type\":\"bit-string\",\"bits\":\"");
+            for (bit_index = 0; bit_index < bits_used; bit_index++) {
+                shell_fprintf(
+                    sh, SHELL_NORMAL, "%c",
+                    bitstring_bit(&value->type.Bit_String, bit_index) ? '1'
+                                                                      : '0');
+            }
+            shell_fprintf(sh, SHELL_NORMAL, "\"}");
+        } break;
+#endif
+#if defined(BACAPP_ENUMERATED)
+        case BACNET_APPLICATION_TAG_ENUMERATED:
+            shell_fprintf(
+                sh, SHELL_NORMAL, "{\"type\":\"enumerated\",\"value\":%u}",
+                (unsigned)value->type.Enumerated);
+            break;
+#endif
+#if defined(BACAPP_DATE)
+        case BACNET_APPLICATION_TAG_DATE:
+            shell_fprintf(sh, SHELL_NORMAL, "{\"type\":\"date\",\"year\":");
+            file_json_unsigned_or_null(
+                sh, value->type.Date.year, BACNET_DATE_YEAR_EPOCH + UINT8_MAX);
+            shell_fprintf(sh, SHELL_NORMAL, ",\"month\":");
+            file_json_unsigned_or_null(sh, value->type.Date.month, UINT8_MAX);
+            shell_fprintf(sh, SHELL_NORMAL, ",\"day\":");
+            file_json_unsigned_or_null(sh, value->type.Date.day, UINT8_MAX);
+            shell_fprintf(sh, SHELL_NORMAL, ",\"weekday\":");
+            file_json_unsigned_or_null(sh, value->type.Date.wday, UINT8_MAX);
+            shell_fprintf(sh, SHELL_NORMAL, "}");
+            break;
+#endif
+#if defined(BACAPP_TIME)
+        case BACNET_APPLICATION_TAG_TIME:
+            shell_fprintf(sh, SHELL_NORMAL, "{\"type\":\"time\",\"hour\":");
+            file_json_unsigned_or_null(sh, value->type.Time.hour, UINT8_MAX);
+            shell_fprintf(sh, SHELL_NORMAL, ",\"minute\":");
+            file_json_unsigned_or_null(sh, value->type.Time.min, UINT8_MAX);
+            shell_fprintf(sh, SHELL_NORMAL, ",\"second\":");
+            file_json_unsigned_or_null(sh, value->type.Time.sec, UINT8_MAX);
+            shell_fprintf(sh, SHELL_NORMAL, ",\"hundredths\":");
+            file_json_unsigned_or_null(
+                sh, value->type.Time.hundredths, UINT8_MAX);
+            shell_fprintf(sh, SHELL_NORMAL, "}");
+            break;
+#endif
+#if defined(BACAPP_OBJECT_ID)
+        case BACNET_APPLICATION_TAG_OBJECT_ID: {
+            const char *object_type_name = bactext_object_type_name_default(
+                value->type.Object_Id.type, "unknown");
+
+            shell_fprintf(
+                sh, SHELL_NORMAL,
+                "{\"type\":\"object-identifier\",\"object_type\":%u,"
+                "\"object_type_name\":",
+                (unsigned)value->type.Object_Id.type);
+            file_json_string(sh, object_type_name);
+            shell_fprintf(
+                sh, SHELL_NORMAL, ",\"instance\":%u}",
+                (unsigned)value->type.Object_Id.instance);
+        } break;
+#endif
+        default:
+            shell_fprintf(
+                sh, SHELL_NORMAL, "{\"type\":\"unsupported\",\"tag\":%u}",
+                (unsigned)value->tag);
+            break;
+    }
+}
+
+static bool
+file_application_data_is_primitive(const uint8_t *data, uint32_t data_len)
+{
+    BACNET_APPLICATION_DATA_VALUE value = { 0 };
+    uint32_t offset = 0;
+    int decoded_len;
+
+    while (offset < data_len) {
+        decoded_len = bacapp_decode_application_data(
+            &data[offset], data_len - offset, &value);
+        if ((decoded_len <= 0) || ((uint32_t)decoded_len > data_len - offset)) {
+            return false;
+        }
+        offset += (uint32_t)decoded_len;
+    }
+
+    return true;
+}
+
+static void file_json_application_values(
+    const struct shell *sh, const uint8_t *data, uint32_t data_len)
+{
+    BACNET_APPLICATION_DATA_VALUE value = { 0 };
+    uint32_t offset = 0;
+    int decoded_len;
+    bool first = true;
+
+    shell_fprintf(sh, SHELL_NORMAL, "[");
+    if (!file_application_data_is_primitive(data, data_len)) {
+        shell_fprintf(sh, SHELL_NORMAL, "{\"type\":\"encoded\",\"data_hex\":");
+        file_json_hex(sh, data, data_len);
+        shell_fprintf(sh, SHELL_NORMAL, "}]");
+        return;
+    }
+    while (offset < data_len) {
+        decoded_len = bacapp_decode_application_data(
+            &data[offset], data_len - offset, &value);
+        if (!first) {
+            shell_fprintf(sh, SHELL_NORMAL, ",");
+        }
+        file_json_application_value(sh, &value);
+        offset += (uint32_t)decoded_len;
+        first = false;
+    }
+    shell_fprintf(sh, SHELL_NORMAL, "]");
 }
 
 static int file_export_crc(
@@ -607,6 +890,93 @@ static int cmd_file_import(const struct shell *sh, size_t argc, char **argv)
     return file_write_hex(sh, instance, offset, chunk.data);
 }
 
+static int file_initial_values_validate(const BACNET_CREATE_OBJECT_DATA *data)
+{
+    BACNET_CREATE_OBJECT_PROPERTY_VALUE value = { 0 };
+    uint32_t offset = 0;
+    uint32_t data_len;
+    int decoded_len;
+
+    if ((data->application_data_len < 0) ||
+        ((size_t)data->application_data_len > sizeof(data->application_data))) {
+        return -EBADMSG;
+    }
+    data_len = (uint32_t)data->application_data_len;
+    while (offset < data_len) {
+        decoded_len = create_object_decode_initial_value(
+            &data->application_data[offset], data_len - offset, &value);
+        if ((decoded_len <= 0) || ((uint32_t)decoded_len > data_len - offset)) {
+            return -EBADMSG;
+        }
+        offset += (uint32_t)decoded_len;
+    }
+
+    return 0;
+}
+
+static void file_json_initial_values(
+    const struct shell *sh, const BACNET_CREATE_OBJECT_DATA *data)
+{
+    BACNET_CREATE_OBJECT_PROPERTY_VALUE value = { 0 };
+    uint32_t offset = 0;
+    bool first = true;
+    int decoded_len;
+
+    shell_fprintf(sh, SHELL_NORMAL, "[");
+    while (offset < (uint32_t)data->application_data_len) {
+        decoded_len = create_object_decode_initial_value(
+            &data->application_data[offset],
+            (uint32_t)data->application_data_len - offset, &value);
+        if (!first) {
+            shell_fprintf(sh, SHELL_NORMAL, ",");
+        }
+        shell_fprintf(
+            sh, SHELL_NORMAL, "{\"property_identifier\":%u,\"property_name\":",
+            (unsigned)value.propertyIdentifier);
+        file_json_string(
+            sh,
+            bactext_property_name_default(value.propertyIdentifier, "unknown"));
+        shell_fprintf(sh, SHELL_NORMAL, ",\"array_index\":");
+        if (value.propertyArrayIndex == BACNET_ARRAY_ALL) {
+            shell_fprintf(sh, SHELL_NORMAL, "null");
+        } else {
+            shell_fprintf(
+                sh, SHELL_NORMAL, "%u", (unsigned)value.propertyArrayIndex);
+        }
+        shell_fprintf(sh, SHELL_NORMAL, ",\"priority\":");
+        if (value.priority == BACNET_NO_PRIORITY) {
+            shell_fprintf(sh, SHELL_NORMAL, "null");
+        } else {
+            shell_fprintf(sh, SHELL_NORMAL, "%u", (unsigned)value.priority);
+        }
+        shell_fprintf(sh, SHELL_NORMAL, ",\"value\":");
+        file_json_application_values(
+            sh, value.application_data, (uint32_t)value.application_data_len);
+        shell_fprintf(sh, SHELL_NORMAL, "}");
+        offset += (uint32_t)decoded_len;
+        first = false;
+    }
+    shell_fprintf(sh, SHELL_NORMAL, "]");
+}
+
+static void file_json_create_object(
+    const struct shell *sh,
+    uint32_t offset,
+    const BACNET_CREATE_OBJECT_DATA *data)
+{
+    shell_fprintf(
+        sh, SHELL_NORMAL,
+        "{\"offset\":%u,\"object_type\":%u,\"object_type_name\":",
+        (unsigned)offset, (unsigned)data->object_type);
+    file_json_string(
+        sh, bactext_object_type_name_default(data->object_type, "unknown"));
+    shell_fprintf(
+        sh, SHELL_NORMAL, ",\"object_instance\":%u,\"initial_values\":",
+        (unsigned)data->object_instance);
+    file_json_initial_values(sh, data);
+    shell_print(sh, "}");
+}
+
 static int cmd_file_decode(const struct shell *sh, size_t argc, char **argv)
 {
     uint8_t apdu[MAX_APDU];
@@ -653,6 +1023,7 @@ static int cmd_file_decode(const struct shell *sh, size_t argc, char **argv)
                 sh, "Unable to read backup record at offset %u", offset);
             return -EIO;
         }
+        memset(&data, 0, sizeof(data));
         decoded_len =
             create_object_decode_service_request(apdu, bytes_read, &data);
         if ((decoded_len <= 0) || ((uint32_t)decoded_len > bytes_read)) {
@@ -667,10 +1038,14 @@ static int cmd_file_decode(const struct shell *sh, size_t argc, char **argv)
                 bactext_object_type_name(data.object_type), offset);
             return -ENOTSUP;
         }
-        shell_print(
-            sh, "offset=%u type=%s instance=%u", offset,
-            bactext_object_type_name(data.object_type),
-            (unsigned)data.object_instance);
+        err = file_initial_values_validate(&data);
+        if (err) {
+            shell_error(
+                sh, "Malformed CreateObject initial values at offset %u",
+                offset);
+            return err;
+        }
+        file_json_create_object(sh, offset, &data);
         offset += (uint32_t)decoded_len;
     }
 

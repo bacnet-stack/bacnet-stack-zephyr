@@ -41,6 +41,20 @@ encodings, with no APDU header and no per-record length prefix. It reports the
 file offset of malformed, truncated, or unsupported records and never executes
 the decoded requests.
 
+Each decoded record is printed as one JSON Lines object. `initial_values` is an
+array containing each property identifier and name, array index, priority, and
+typed value data. Primitive BACnet values include their tag type and JSON value;
+for example:
+
+```json
+{"offset":0,"object_type":0,"object_type_name":"analog-input","object_instance":12,"initial_values":[{"property_identifier":85,"property_name":"present-value","array_index":null,"priority":null,"value":[{"type":"real","value":12.5}]}]}
+```
+
+Character strings include their encoding. Octet strings are represented as hex,
+bit strings as a bit sequence, and date/time wildcard fields as `null`. Values
+using context-specific or otherwise unsupported encodings are retained as an
+`encoded` value with `data_hex`.
+
 Record-access File objects are not supported. There is no `truncate` command:
 the POSIX backend's `bacfile_file_size_set` callback is currently unimplemented,
 so a shared truncation command would fail on native/POSIX builds. Offset writes

@@ -58,7 +58,8 @@ The git repository is hosted at the following site:
 ### Added
 * Added optional `bacnet file` shell commands for listing and inspecting File
   objects, hex stream reads and writes, xxd-compatible dumps, chunked JSON
-  import/export with CRC32, and read-only decoding of configured backup files.
+  import/export with CRC32, and read-only JSON decoding of configured backup
+  files with typed CreateObject initial values.
   Backup decoding accepts the concatenated CreateObject service-request
   parameter encodings written by `Device_Start_Backup()` (without APDU headers
   or per-record length prefixes); POSIX truncation remains unsupported.
