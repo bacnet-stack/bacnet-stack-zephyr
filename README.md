@@ -124,6 +124,11 @@ A device application demonstrating configuration of a
 [BACnet Application Specific Controller (B-ASC) device profile](./zephyr/samples/profiles/b-asc/README.rst)
 that can be used with any supported boards.
 
+## BACnet File Shell
+
+See the [BACnet File shell guide](./zephyr/subsys/bacnet_shell/bacnet_shell_file.md)
+for configuration, commands, and backup decoding details.
+
 # Coding Style and Guidelines
 
 See Zephyr Project [Coding Guidelines](https://docs.zephyrproject.org/latest/contribute/coding_guidelines/index.html)

@@ -22,4 +22,24 @@ if BACNETSTACK_BACNET_SHELL
         help
           Enable BACnet Basic subsystem shell support
 
+    config BACNETSTACK_BACNET_FILE_SHELL
+        bool "BACnet File object shell"
+        depends on BACNETSTACK_BACNET_SHELL && BACNET_BASIC_OBJECT_FILE
+        default n
+        select JSON_LIBRARY
+        select CRC
+        help
+          Enable shell commands for transferring and inspecting BACnet File
+          object contents.
+
+    config BACNETSTACK_BACNET_FILE_SHELL_CHUNK_SIZE
+        int "BACnet File shell transfer chunk size"
+        depends on BACNETSTACK_BACNET_FILE_SHELL
+        range 1 64
+        default 64
+        help
+          Maximum number of file bytes transferred by one read, write, or
+          JSON import command. The build checks that the command fits in the
+          configured shell command buffer.
+
 endif # BACNETSTACK_BACNET_SHELL

@@ -1,0 +1,7 @@
+tests:
+  bacnet.subsys.bacnet_shell_file:
+    tags: bacnet shell
+    integration_platforms:
+      - native_sim
+    platform_allow:
+      - native_sim
