@@ -37,7 +37,10 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_BASE}/src/bacnet/bacaddr.c
     ${BACNET_BASE}/src/bacnet/bacapp.c
     ${BACNET_BASE}/src/bacnet/bacdcode.c
+    ${BACNET_BASE}/src/bacnet/abort.c
+    ${BACNET_BASE}/src/bacnet/bacerror.c
     ${BACNET_BASE}/src/bacnet/bacdest.c
+    ${BACNET_BASE}/src/bacnet/reject.c
     ${BACNET_BASE}/src/bacnet/bacdevobjpropref.c
     ${BACNET_BASE}/src/bacnet/bacint.c
     ${BACNET_BASE}/src/bacnet/baclog.c
