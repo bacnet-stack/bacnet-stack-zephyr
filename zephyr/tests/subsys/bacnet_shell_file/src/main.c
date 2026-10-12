@@ -229,7 +229,12 @@ ZTEST(bacnet_shell_file, test_write_read_roundtrip)
     zassert_equal(err, 0, "write command failed: %d (%s)", err, output);
     err = shell_run("bacnet file read 7 0 8", &output);
     zassert_equal(err, 0, "read command failed: %d (%s)", err, output);
-    zassert_not_null(strstr(output, "0 5 48656c6c6f EOF"), "%s", output);
+    zassert_not_null(
+        strstr(
+            output,
+            "\"offset\":0,\"length\":5,\"data\":\"48656c6c6f\","
+            "\"eof\":true"),
+        "%s", output);
 }
 
 ZTEST(bacnet_shell_file, test_invalid_hex_and_instance)
@@ -281,13 +286,19 @@ ZTEST(bacnet_shell_file, test_info_list_and_dump)
     err = shell_run("bacnet file list", &output);
     zassert_equal(err, 0, "list command failed: %d (%s)", err, output);
     zassert_not_null(
-        strstr(output, "7 shell-test.bin application/test 0 read-write"), "%s",
-        output);
+        strstr(
+            output,
+            "\"instance\":7,\"name\":\"shell-test.bin\","
+            "\"mime_type\":\"application/test\",\"size\":0,"
+            "\"read_only\":false,\"pathname\":\"shell-test.bin\""),
+        "%s", output);
 
     err = shell_run("bacnet file info 7", &output);
     zassert_equal(err, 0, "info command failed: %d (%s)", err, output);
-    zassert_not_null(strstr(output, "pathname: shell-test.bin"), "%s", output);
-    zassert_not_null(strstr(output, "stream-access: true"), "%s", output);
+    zassert_not_null(
+        strstr(output, "\"pathname\":\"shell-test.bin\""), "%s", output);
+    zassert_not_null(
+        strstr(output, "\"stream_access\":true"), "%s", output);
 
     err = shell_run("bacnet file write 7 0 48656c6c6f", &output);
     zassert_equal(err, 0, "write command failed: %d (%s)", err, output);
@@ -295,6 +306,38 @@ ZTEST(bacnet_shell_file, test_info_list_and_dump)
     zassert_equal(err, 0, "dump command failed: %d (%s)", err, output);
     zassert_not_null(strstr(output, "00000000: 4865 6c6c 6f"), "%s", output);
     zassert_not_null(strstr(output, "|Hello"), "%s", output);
+}
+
+ZTEST(bacnet_shell_file, test_config_list_and_set)
+{
+    const char *output;
+    int err;
+
+    err = shell_run("bacnet file config", &output);
+    zassert_equal(err, 0, "config list command failed: %d (%s)", err, output);
+    zassert_not_null(
+        strstr(output, "{\"index\":1,\"object-type\":10,\"instance\":7}"), "%s",
+        output);
+    zassert_not_null(
+        strstr(output, "\"configuration-files-size\":1"), "%s", output);
+
+    err = shell_run("bacnet file config 1 file 7", &output);
+    zassert_equal(err, 0, "config set command failed: %d (%s)", err, output);
+    zassert_not_null(
+        strstr(output, "{\"index\":1,\"object-type\":10,\"instance\":7}"), "%s",
+        output);
+
+    err = shell_run("bacnet file config 1 analog-input 7", &output);
+    zassert_not_equal(err, 0, "non-File object-type was accepted");
+    zassert_not_null(strstr(output, "must be File objects"), "%s", output);
+
+    err = shell_run("bacnet file config 2 file 7", &output);
+    zassert_not_equal(err, 0, "out of range index was accepted");
+    zassert_not_null(strstr(output, "Must be 1-1"), "%s", output);
+
+    err = shell_run("bacnet file config 1 file 99", &output);
+    zassert_not_equal(err, 0, "nonexistent file instance was accepted");
+    zassert_not_null(strstr(output, "does not exist"), "%s", output);
 }
 
 ZTEST(bacnet_shell_file, test_export_import_roundtrip)
@@ -327,7 +370,12 @@ ZTEST(bacnet_shell_file, test_export_import_roundtrip)
     zassert_equal(err, 0, "import command failed: %d (%s)", err, output);
     err = shell_run("bacnet file read 7 0 8", &output);
     zassert_equal(err, 0, "read command failed: %d (%s)", err, output);
-    zassert_not_null(strstr(output, "0 5 48656c6c6f EOF"), "%s", output);
+    zassert_not_null(
+        strstr(
+            output,
+            "\"offset\":0,\"length\":5,\"data\":\"48656c6c6f\","
+            "\"eof\":true"),
+        "%s", output);
 }
 
 ZTEST(bacnet_shell_file, test_non_stream_file)

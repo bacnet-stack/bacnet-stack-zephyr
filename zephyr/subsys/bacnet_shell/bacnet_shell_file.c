@@ -28,6 +28,11 @@
 #define FILE_CHUNK_SIZE CONFIG_BACNETSTACK_BACNET_FILE_SHELL_CHUNK_SIZE
 #define FILE_HEX_BUFFER_SIZE (2U * FILE_CHUNK_SIZE + 1U)
 #define FILE_IMPORT_COMMAND_OVERHEAD 74U
+#if defined(BACNET_BACKUP_RESTORE)
+#define FILE_CONFIG_COUNT BACNET_BACKUP_FILE_COUNT
+#else
+#define FILE_CONFIG_COUNT 0U
+#endif
 
 BUILD_ASSERT(
     (2U * FILE_CHUNK_SIZE + FILE_IMPORT_COMMAND_OVERHEAD) <
@@ -189,10 +194,13 @@ static int file_write_hex(
     }
 
     shell_print(
-        sh, "Wrote %u bytes to file %u at offset %u", (unsigned)data_len,
-        (unsigned)instance, (unsigned)offset);
+        sh, "{\"instance\":%u,\"offset\":%u,\"length\":%u}",
+        (unsigned)instance, (unsigned)offset, (unsigned)data_len);
     return 0;
 }
+
+/* forward declaration: JSON string encoder defined later, used above its definition */
+static void file_json_string(const struct shell *sh, const char *value);
 
 static int cmd_file_list(const struct shell *sh, size_t argc, char **argv)
 {
@@ -202,16 +210,27 @@ static int cmd_file_list(const struct shell *sh, size_t argc, char **argv)
     ARG_UNUSED(argc);
     ARG_UNUSED(argv);
 
+    shell_print(sh, "{\"file-list\":[");
     for (index = 0; index < count; index++) {
         uint32_t instance = bacfile_index_to_instance(index);
         const char *name = bacfile_name_ansi(instance);
         const char *mime_type = bacfile_file_type(instance);
+        const char *pathname = bacfile_pathname(instance);
 
-        shell_print(
-            sh, "%u %s %s %u %s", (unsigned)instance, name ? name : "",
-            mime_type ? mime_type : "", (unsigned)bacfile_file_size(instance),
-            bacfile_read_only(instance) ? "read-only" : "read-write");
+        shell_fprintf(
+            sh, SHELL_NORMAL, "{\"instance\":%u,\"name\":",
+            (unsigned)instance);
+        file_json_string(sh, name ? name : "");
+        shell_fprintf(sh, SHELL_NORMAL, ",\"mime_type\":");
+        file_json_string(sh, mime_type ? mime_type : "");
+        shell_fprintf(
+            sh, SHELL_NORMAL, ",\"size\":%u,\"read_only\":%s,\"pathname\":",
+            (unsigned)bacfile_file_size(instance),
+            bacfile_read_only(instance) ? "true" : "false");
+        file_json_string(sh, pathname ? pathname : "");
+        shell_print(sh, "}%s", ((index + 1U) < count) ? "," : "");
     }
+    shell_print(sh, "],\"file-list-size\":%u}", count);
 
     return 0;
 }
@@ -236,16 +255,77 @@ static int cmd_file_info(const struct shell *sh, size_t argc, char **argv)
     pathname = bacfile_pathname(instance);
     name = bacfile_name_ansi(instance);
     mime_type = bacfile_file_type(instance);
-    shell_print(sh, "instance: %u", (unsigned)instance);
-    shell_print(sh, "name: %s", name ? name : "");
-    shell_print(sh, "mime-type: %s", mime_type ? mime_type : "");
-    shell_print(sh, "size: %u", (unsigned)bacfile_file_size(instance));
+    shell_fprintf(
+        sh, SHELL_NORMAL, "{\"instance\":%u,\"name\":", (unsigned)instance);
+    file_json_string(sh, name ? name : "");
+    shell_fprintf(sh, SHELL_NORMAL, ",\"mime_type\":");
+    file_json_string(sh, mime_type ? mime_type : "");
+    shell_fprintf(
+        sh, SHELL_NORMAL, ",\"size\":%u,\"read_only\":%s,\"pathname\":",
+        (unsigned)bacfile_file_size(instance),
+        bacfile_read_only(instance) ? "true" : "false");
+    file_json_string(sh, pathname ? pathname : "");
     shell_print(
-        sh, "read-only: %s", bacfile_read_only(instance) ? "true" : "false");
-    shell_print(sh, "pathname: %s", pathname ? pathname : "");
-    shell_print(
-        sh, "stream-access: %s",
+        sh, ",\"stream_access\":%s}",
         bacfile_file_access_stream(instance) ? "true" : "false");
+
+    return 0;
+}
+
+static int cmd_file_config(const struct shell *sh, size_t argc, char **argv)
+{
+    uint32_t index;
+    uint32_t object_type;
+    uint32_t object_instance;
+    unsigned config_index;
+
+    if (argc == 1U) {
+        shell_print(sh, "{\"configuration-files\":[");
+        for (config_index = 0; config_index < FILE_CONFIG_COUNT;
+             config_index++) {
+            shell_print(
+                sh, "{\"index\":%u,\"object-type\":%u,\"instance\":%u}%s",
+                config_index + 1U, (unsigned)OBJECT_FILE,
+                (unsigned)Device_Configuration_File(config_index),
+                ((config_index + 1U) < FILE_CONFIG_COUNT) ? "," : "");
+        }
+        shell_print(
+            sh, "],\"configuration-files-size\":%u}", FILE_CONFIG_COUNT);
+        return 0;
+    }
+    if (argc != 4U) {
+        shell_error(
+            sh,
+            "Usage: bacnet file config [<index> <object-type> <instance>]");
+        return -EINVAL;
+    }
+    if (!bacnet_string_to_uint32(argv[1], &index) || (index < 1U) ||
+        (index > FILE_CONFIG_COUNT)) {
+        shell_error(
+            sh, "Invalid configuration-files index: %s. Must be 1-%u.",
+            argv[1], FILE_CONFIG_COUNT);
+        return -EINVAL;
+    }
+    if (!bactext_object_type_strtol(argv[2], &object_type)) {
+        shell_error(sh, "Invalid object-type: %s", argv[2]);
+        return -EINVAL;
+    }
+    if (object_type != OBJECT_FILE) {
+        shell_error(sh, "configuration-files entries must be File objects");
+        return -EINVAL;
+    }
+    if (!bacnet_string_to_uint32(argv[3], &object_instance) ||
+        !bacfile_valid_instance(object_instance)) {
+        shell_error(sh, "File instance %s does not exist", argv[3]);
+        return -EINVAL;
+    }
+    if (!Device_Configuration_File_Set(index - 1U, object_instance)) {
+        shell_error(sh, "Unable to set configuration-files entry %u", index);
+        return -EIO;
+    }
+    shell_print(
+        sh, "{\"index\":%u,\"object-type\":%u,\"instance\":%u}", index,
+        (unsigned)OBJECT_FILE, (unsigned)object_instance);
 
     return 0;
 }
@@ -301,8 +381,11 @@ static int cmd_file_read(const struct shell *sh, size_t argc, char **argv)
         return -EIO;
     }
     shell_print(
-        sh, "%u %u %s%s", (unsigned)offset, (unsigned)bytes_read, hex,
-        bytes_read < requested ? " EOF" : "");
+        sh,
+        "{\"instance\":%u,\"offset\":%u,\"length\":%u,\"data\":\"%s\","
+        "\"eof\":%s}",
+        (unsigned)instance, (unsigned)offset, (unsigned)bytes_read, hex,
+        (bytes_read < requested) ? "true" : "false");
 
     return 0;
 }
@@ -1056,6 +1139,12 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
     file_sub_cmd,
     SHELL_CMD(list, NULL, "list BACnet File objects", cmd_file_list),
     SHELL_CMD(info, NULL, "<instance> show File object details", cmd_file_info),
+    SHELL_CMD(
+        config,
+        NULL,
+        "[<index> <object-type> <instance>] list or set a "
+        "Device configuration-files entry",
+        cmd_file_config),
     SHELL_CMD(
         read,
         NULL,
