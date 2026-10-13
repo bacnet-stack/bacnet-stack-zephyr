@@ -23,8 +23,8 @@ appropriate layer:
 - `bacnet/zephyr/`: Zephyr integration code, including Kconfig, CMake files,
   samples, subsystems, and tests.
 - `zephyr/`: the local Zephyr tree used as the workspace framework.
-- `west.yml`: the workspace manifest that pins the Zephyr version and the
-  BACnet stack module.
+- `west.yml`: the workspace manifest that pins Zephyr to `v3.7.1` and brings
+  in the BACnet stack project.
 
 When in doubt, keep BACnet semantics stable and keep Zephyr integration code in
 `bacnet/zephyr/`.
@@ -42,6 +42,7 @@ west build -p always -b nucleo_f429zi bacnet/zephyr/samples/profiles/b-ss
 west build -p always -b nucleo_f429zi bacnet/zephyr/samples/profiles/b-ld
 west build -p always -b nucleo_f429zi bacnet/zephyr/samples/profiles/b-ls
 west build -p always -b nucleo_f429zi bacnet/zephyr/samples/profiles/b-asc
+west build -p always -b native_sim bacnet/zephyr/samples/hello_bacnet_stack
 ```
 
 If a specific board target is unavailable, prefer the nearest available sample
@@ -81,6 +82,13 @@ Useful validation commands include:
 west twister -T bacnet/zephyr/tests --build-only
 west twister -p native_sim -T bacnet/zephyr/tests
 west twister -s bacnet/zephyr/tests/<scenario-name> --build-only
+```
+
+To flash or debug the current build, use:
+
+```bash
+west flash -d build
+west debug -d build
 ```
 
 For sample changes, build the sample that exercises the behavior you changed.
@@ -148,7 +156,9 @@ Please also ensure that:
 
 - the relevant sample or test has been built or run;
 - the patch does not include unrelated cleanup or broad refactoring;
-- the change remains compatible with the Zephyr-based embedded workflow; and
+- the change remains compatible with the Zephyr-based embedded workflow and
+  uses Zephyr APIs rather than assuming Linux-only, host-only, or generic C
+  library behavior when a Zephyr API is available; and
 - commit messages stay scoped to the BACnet/Zephyr functionality being changed.
 
 Thank you for helping keep the BACnet Stack + Zephyr workspace maintainable,
