@@ -362,6 +362,9 @@ ZTEST(bacnet_shell_file, test_export_import_roundtrip)
     hex_len = (size_t)(hex_end - hex_start);
     zassert_true(hex_len > 0U, "exported chunk is empty");
 
+    memset(Mock_File_Data, 0, sizeof(Mock_File_Data));
+    Mock_File_Size = 0;
+
     snprintk(
         command, sizeof(command),
         "bacnet file import '{\"instance\":7,\"offset\":0,\"data\":\"%.*s\"}'",
