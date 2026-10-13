@@ -10,6 +10,11 @@ Enable `CONFIG_BACNETSTACK_BACNET_FILE_SHELL` with
 The chunk size defaults to 64 bytes and is checked against the configured
 shell command buffer.
 
+The `config` and `decode` commands additionally require
+`CONFIG_BACNET_BASIC_BACKUP_RESTORE`. Without it, the Device object's
+`configuration-files` property has zero entries, so `config` has nothing to
+list or set and `decode` rejects every instance.
+
 The commands support stream-access File objects only:
 
 ```text
