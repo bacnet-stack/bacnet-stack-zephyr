@@ -224,8 +224,8 @@ static int cmd_file_list(const struct shell *sh, size_t argc, char **argv)
         shell_fprintf(sh, SHELL_NORMAL, ",\"mime_type\":");
         file_json_string(sh, mime_type ? mime_type : "");
         shell_fprintf(
-            sh, SHELL_NORMAL, ",\"size\":%u,\"read_only\":%s,\"pathname\":",
-            (unsigned)bacfile_file_size(instance),
+            sh, SHELL_NORMAL, ",\"size\":%llu,\"read_only\":%s,\"pathname\":",
+            (unsigned long long)bacfile_file_size(instance),
             bacfile_read_only(instance) ? "true" : "false");
         file_json_string(sh, pathname ? pathname : "");
         shell_print(sh, "}%s", ((index + 1U) < count) ? "," : "");
@@ -261,8 +261,8 @@ static int cmd_file_info(const struct shell *sh, size_t argc, char **argv)
     shell_fprintf(sh, SHELL_NORMAL, ",\"mime_type\":");
     file_json_string(sh, mime_type ? mime_type : "");
     shell_fprintf(
-        sh, SHELL_NORMAL, ",\"size\":%u,\"read_only\":%s,\"pathname\":",
-        (unsigned)bacfile_file_size(instance),
+        sh, SHELL_NORMAL, ",\"size\":%llu,\"read_only\":%s,\"pathname\":",
+        (unsigned long long)bacfile_file_size(instance),
         bacfile_read_only(instance) ? "true" : "false");
     file_json_string(sh, pathname ? pathname : "");
     shell_print(
@@ -452,6 +452,7 @@ static int cmd_file_dump(const struct shell *sh, size_t argc, char **argv)
     uint32_t instance;
     uint32_t offset = 0;
     uint32_t remaining;
+    BACNET_UNSIGNED_INTEGER file_size_max;
     uint32_t file_size;
     uint32_t requested;
     uint32_t bytes_read;
@@ -490,11 +491,12 @@ static int cmd_file_dump(const struct shell *sh, size_t argc, char **argv)
         return err;
     }
 
-    file_size = bacfile_file_size(instance);
-    if (file_size > INT32_MAX) {
+    file_size_max = bacfile_file_size(instance);
+    if (file_size_max > INT32_MAX) {
         shell_error(sh, "File is too large for stream offsets");
         return -EOVERFLOW;
     }
+    file_size = (uint32_t)file_size_max;
     if (offset > file_size) {
         shell_error(
             sh, "Offset %u is past end of file (%u)", offset, file_size);
@@ -821,39 +823,12 @@ static void file_json_application_values(
     shell_fprintf(sh, SHELL_NORMAL, "]");
 }
 
-static int file_export_crc(
-    const struct shell *sh,
-    uint32_t instance,
-    uint32_t file_size,
-    uint32_t *crc)
-{
-    uint8_t data[FILE_CHUNK_SIZE];
-    uint32_t offset = 0;
-    uint32_t requested;
-    uint32_t bytes_read;
-
-    *crc = 0;
-    while (offset < file_size) {
-        requested = MIN(file_size - offset, FILE_CHUNK_SIZE);
-        bytes_read =
-            bacfile_read_offset(instance, (int32_t)offset, data, requested);
-        if (bytes_read != requested) {
-            shell_error(
-                sh, "Short read while computing CRC at offset %u", offset);
-            return -EIO;
-        }
-        *crc = crc32_ieee_update(*crc, data, bytes_read);
-        offset += bytes_read;
-    }
-
-    return 0;
-}
-
 static int cmd_file_export(const struct shell *sh, size_t argc, char **argv)
 {
     uint8_t data[FILE_CHUNK_SIZE];
     char hex[FILE_HEX_BUFFER_SIZE];
     uint32_t instance;
+    BACNET_UNSIGNED_INTEGER file_size_max;
     uint32_t file_size;
     uint32_t offset;
     uint32_t requested;
@@ -881,15 +856,12 @@ static int cmd_file_export(const struct shell *sh, size_t argc, char **argv)
         return err;
     }
 
-    file_size = bacfile_file_size(instance);
-    if (file_size > INT32_MAX) {
+    file_size_max = bacfile_file_size(instance);
+    if (file_size_max > INT32_MAX) {
         shell_error(sh, "File is too large for stream offsets");
         return -EOVERFLOW;
     }
-    err = file_export_crc(sh, instance, file_size, &crc);
-    if (err) {
-        return err;
-    }
+    file_size = (uint32_t)file_size_max;
 
     name = bacfile_name_ansi(instance);
     mime_type = bacfile_file_type(instance);
@@ -905,9 +877,9 @@ static int cmd_file_export(const struct shell *sh, size_t argc, char **argv)
     shell_print(
         sh, "\"read_only\":%s,",
         bacfile_read_only(instance) ? "true" : "false");
-    shell_print(sh, "\"crc32\":\"%08x\",", (unsigned)crc);
     shell_print(sh, "\"data\":[");
 
+    crc = 0;
     offset = 0;
     while (offset < file_size) {
         requested = MIN(file_size - offset, FILE_CHUNK_SIZE);
@@ -917,6 +889,7 @@ static int cmd_file_export(const struct shell *sh, size_t argc, char **argv)
             shell_error(sh, "Short read while exporting at offset %u", offset);
             return -EIO;
         }
+        crc = crc32_ieee_update(crc, data, bytes_read);
         if (bin2hex(data, bytes_read, hex, sizeof(hex)) != 2U * bytes_read) {
             shell_error(sh, "Unable to encode export data as hex");
             return -EIO;
@@ -927,7 +900,8 @@ static int cmd_file_export(const struct shell *sh, size_t argc, char **argv)
             (offset + bytes_read < file_size) ? "," : "");
         offset += bytes_read;
     }
-    shell_print(sh, "]");
+    shell_print(sh, "],");
+    shell_print(sh, "\"crc32\":\"%08x\"", (unsigned)crc);
     shell_print(sh, "}");
 
     return 0;
@@ -1065,6 +1039,7 @@ static int cmd_file_decode(const struct shell *sh, size_t argc, char **argv)
     uint8_t apdu[MAX_APDU];
     BACNET_CREATE_OBJECT_DATA data = { 0 };
     uint32_t instance;
+    BACNET_UNSIGNED_INTEGER file_size_max;
     uint32_t file_size;
     uint32_t offset = 0;
     uint32_t bytes_read;
@@ -1093,11 +1068,12 @@ static int cmd_file_decode(const struct shell *sh, size_t argc, char **argv)
         return err;
     }
 
-    file_size = bacfile_file_size(instance);
-    if (file_size > INT32_MAX) {
+    file_size_max = bacfile_file_size(instance);
+    if (file_size_max > INT32_MAX) {
         shell_error(sh, "Backup file is too large for stream offsets");
         return -EOVERFLOW;
     }
+    file_size = (uint32_t)file_size_max;
     while (offset < file_size) {
         bytes_read =
             bacfile_read_offset(instance, (int32_t)offset, apdu, sizeof(apdu));
