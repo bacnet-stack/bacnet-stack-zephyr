@@ -372,6 +372,12 @@ static int cmd_file_read(const struct shell *sh, size_t argc, char **argv)
         return err;
     }
 
+    if (offset > bacfile_file_size(instance)) {
+        shell_error(
+            sh, "Offset %u is past end of file (%llu)", (unsigned)offset,
+            (unsigned long long)bacfile_file_size(instance));
+        return -EINVAL;
+    }
     bytes_read =
         bacfile_read_offset(instance, (int32_t)offset, data, requested);
     hex[0] = '\0';
