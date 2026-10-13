@@ -25,6 +25,7 @@ if BACNETSTACK_BACNET_SHELL
     config BACNETSTACK_BACNET_FILE_SHELL
         bool "BACnet File object shell"
         depends on BACNETSTACK_BACNET_SHELL && BACNET_BASIC_OBJECT_FILE
+        depends on BACNET_BASIC_SERVER || BACNET_BASIC_OBJECT_DEVICE_SERVER
         default n
         select JSON_LIBRARY
         select CRC
