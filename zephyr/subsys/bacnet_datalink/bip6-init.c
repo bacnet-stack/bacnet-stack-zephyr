@@ -60,7 +60,7 @@ static char *inet6_ntoa(struct in6_addr *a)
     return &ipv6_addr_str[0];
 }
 
-void bip6_set_interface(char *ifname)
+void bip6_set_interface(const char *ifname)
 {
     struct net_if *interface = 0;
     int index = -1;
