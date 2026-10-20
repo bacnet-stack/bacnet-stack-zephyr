@@ -68,11 +68,15 @@ config BACDL_ARCNET
 config BACDL_BIP
     bool "BACnet BIP datalink"
     select NETWORKING
+    select NET_MGMT
+    select NET_MGMT_EVENT
     select NET_SOCKETS
     select NET_UDP
     select NET_IPV4
     help
       Enable BACnet BIP datalink
+      Uses an existing IPv4 address, or waits for an address notification.
+      When DHCP is enabled, waits for a DHCP address.
 
 config BACDL_BIP6
     bool "BACnet BIP6 datalink"
