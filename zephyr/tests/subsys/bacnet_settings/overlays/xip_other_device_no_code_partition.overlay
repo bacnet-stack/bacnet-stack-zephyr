@@ -1,0 +1,38 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/*
+ * Same as xip_other_device.overlay, but no zephyr,code-partition is chosen,
+ * as on many boards. The firmware device is then the chosen zephyr,flash,
+ * which differs from the settings partition device, so
+ * bacnet_storage_erase() must not refuse the erase.
+ */
+/ {
+  chosen {
+    zephyr,settings-partition = &settings_part;
+  };
+
+  sim_flash: sim_flash {
+    compatible = "zephyr,sim-flash";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    erase-value = <0xff>;
+
+    flash_sim0: flash_sim@0 {
+      compatible = "soc-nv-flash";
+      reg = <0x00000000 (16*1024)>;
+      erase-block-size = <1024>;
+      write-block-size = <4>;
+
+      partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        settings_part: partition@1000 {
+          label = "settings";
+          reg = <0x00001000 (4*1024)>;
+        };
+      };
+    };
+  };
+};

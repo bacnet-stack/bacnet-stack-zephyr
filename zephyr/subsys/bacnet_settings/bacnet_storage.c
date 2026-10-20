@@ -52,6 +52,21 @@ LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 #endif
 #define SETTINGS_PARTITION_ID DT_FIXED_PARTITION_ID(SETTINGS_PARTITION_NODE)
 
+#if defined(CONFIG_XIP)
+/* The flash device that holds the running firmware: the one with the chosen
+   zephyr,code-partition, else the chosen zephyr,flash that
+   CONFIG_FLASH_BASE_ADDRESS maps. */
+#if DT_HAS_CHOSEN(zephyr_code_partition)
+#define FIRMWARE_MTD_NODE \
+    DT_MTD_FROM_FIXED_PARTITION(DT_CHOSEN(zephyr_code_partition))
+#elif DT_HAS_CHOSEN(zephyr_flash)
+#define FIRMWARE_MTD_NODE                                          \
+    COND_CODE_1(                                                   \
+        DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_flash), soc_nv_flash), \
+        (DT_PARENT(DT_CHOSEN(zephyr_flash))), (DT_CHOSEN(zephyr_flash)))
+#endif
+#endif
+
 static bacnet_storage_restore_callback BACnet_Storage_Restore_Callback;
 static void *BACnet_Storage_Restore_Context;
 
@@ -820,10 +835,10 @@ int bacnet_storage_erase(void)
         uintptr_t image_end = image_start + (uintptr_t)_flash_used;
         bool same_device = true;
 
-#if DT_HAS_CHOSEN(zephyr_code_partition)
+#if defined(FIRMWARE_MTD_NODE)
         same_device = DT_SAME_NODE(
             DT_MTD_FROM_FIXED_PARTITION(SETTINGS_PARTITION_NODE),
-            DT_MTD_FROM_FIXED_PARTITION(DT_CHOSEN(zephyr_code_partition)));
+            FIRMWARE_MTD_NODE);
 #endif
         if (same_device && (part_start < image_end) &&
             (image_start < part_end)) {
