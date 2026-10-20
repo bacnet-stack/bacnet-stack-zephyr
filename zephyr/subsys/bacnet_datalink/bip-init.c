@@ -398,7 +398,37 @@ typedef uint32_t mgmt_event_t;
 struct wait_data {
     struct k_sem sem;
     struct net_mgmt_event_callback cb;
+    struct net_if *iface;
 };
+
+static int ipv4_address_index(struct net_if *iface)
+{
+    struct net_if_ipv4 *ipv4 = iface->config.ip.ipv4;
+
+    if (!ipv4) {
+        return -1;
+    }
+    for (int i = 0; i < NET_IF_MAX_IPV4_ADDR; i++) {
+        struct net_if_addr *addr = &ipv4->unicast[i].ipv4;
+
+#if defined(CONFIG_BACDL_BIP_ADDRESS_INDEX)
+        if (i != CONFIG_BACDL_BIP_ADDRESS_INDEX) {
+            continue;
+        }
+#endif
+        if (!addr->is_used || addr->address.family != AF_INET ||
+            addr->address.in_addr.s_addr == 0) {
+            continue;
+        }
+#if defined(CONFIG_NET_DHCPV4)
+        if (addr->addr_type != NET_ADDR_DHCP) {
+            continue;
+        }
+#endif
+        return i;
+    }
+    return -1;
+}
 
 static void event_cb_handler(
     struct net_mgmt_event_callback *cb,
@@ -407,26 +437,37 @@ static void event_cb_handler(
 {
     struct wait_data *wait = CONTAINER_OF(cb, struct wait_data, cb);
 
-    ARG_UNUSED(iface);
-    if (mgmt_event == cb->event_mask) {
+    if (iface == wait->iface && mgmt_event == NET_EVENT_IPV4_ADDR_ADD) {
         k_sem_give(&wait->sem);
     }
 }
 
-static void wait_for_net_event(struct net_if *iface, mgmt_event_t event)
+static int wait_for_ipv4_address(struct net_if *iface)
 {
-    struct wait_data wait;
-
-    ARG_UNUSED(iface);
-    wait.cb.handler = event_cb_handler;
-    wait.cb.event_mask = event;
+    struct wait_data wait = { .iface = iface };
+    int index;
 
     k_sem_init(&wait.sem, 0, 1);
+    net_mgmt_init_event_callback(
+        &wait.cb, event_cb_handler, NET_EVENT_IPV4_ADDR_ADD);
     net_mgmt_add_event_callback(&wait.cb);
 
-    k_sem_take(&wait.sem, K_FOREVER);
+    /* Subscribe before checking the address or starting DHCP to avoid missed
+     * events. */
+    index = ipv4_address_index(iface);
+#if defined(CONFIG_NET_DHCPV4)
+    if (index < 0) {
+        LOG_INF("Starting DHCP to obtain IP address");
+        net_dhcpv4_start(iface);
+    }
+#endif
+    while (index < 0) {
+        k_sem_take(&wait.sem, K_FOREVER);
+        index = ipv4_address_index(iface);
+    }
 
     net_mgmt_del_event_callback(&wait.cb);
+    return index;
 }
 
 /** Gets the local IP address and local broadcast address from the system,
@@ -497,59 +538,17 @@ void bip_set_interface(const char *ifname)
                     AF_INET, &BIP_Broadcast_Addr, hr_addr, NET_IPV4_ADDR_LEN));
             return;
         }
-#if defined(CONFIG_NET_DHCPV4)
-        LOG_INF("Starting DHCP to obtain IP address");
-        net_dhcpv4_start(iface);
-#endif
-
-        LOG_INF("Waiting to obtain IP address");
-        wait_for_net_event(iface, NET_EVENT_IPV4_ADDR_ADD);
-
 #if defined(CONFIG_BACDL_BIP_ADDRESS_INDEX)
-        LOG_INF(
-            "Config unicast address %d/%d", CONFIG_BACDL_BIP_ADDRESS_INDEX,
-            NET_IF_MAX_IPV4_ADDR - 1);
-        index = CONFIG_BACDL_BIP_ADDRESS_INDEX;
-#else
-        int i;
-        char hr_addr[NET_IPV4_ADDR_LEN];
-        index = 0;
-        for (i = 0; i < NET_IF_MAX_IPV4_ADDR; i++) {
-            struct net_if_addr *if_addr = &iface->config.ip.ipv4->unicast[i];
-
-            if (!if_addr->is_used) {
-                continue;
-            }
-#if defined(CONFIG_NET_DHCPV4)
-            if (if_addr->addr_type != NET_ADDR_DHCP) {
-                continue;
-            }
-#endif
-            index = i;
-            LOG_INF(
-                "IPv4 address: %s",
-                net_addr_ntop(
-                    AF_INET, &if_addr->address.in_addr, hr_addr,
-                    NET_IPV4_ADDR_LEN));
-            LOG_INF(
-                "Subnet: %s",
-                net_addr_ntop(
-                    AF_INET, &iface->config.ip.ipv4->netmask, hr_addr,
-                    NET_IPV4_ADDR_LEN));
-            LOG_INF(
-                "Router: %s",
-                net_addr_ntop(
-                    AF_INET, &iface->config.ip.ipv4->gw, hr_addr,
-                    NET_IPV4_ADDR_LEN));
-            break;
-        }
-#endif
-        if (index >= NET_IF_MAX_IPV4_ADDR) {
+        if (CONFIG_BACDL_BIP_ADDRESS_INDEX >= NET_IF_MAX_IPV4_ADDR) {
             LOG_ERR(
                 "%s:%d - IPv4 address index of %d is out of range (0-%d)",
-                THIS_FILE, __LINE__, index, NET_IF_MAX_IPV4_ADDR - 1);
+                THIS_FILE, __LINE__, CONFIG_BACDL_BIP_ADDRESS_INDEX,
+                NET_IF_MAX_IPV4_ADDR - 1);
             return;
         }
+#endif
+        LOG_INF("Obtaining IP address");
+        index = wait_for_ipv4_address(iface);
         LOG_INF("Using IPv4 address at index %d", index);
         /* Build the broadcast address from the unicast and netmask */
         struct net_if_addr_ipv4 *if_addr =

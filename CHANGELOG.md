@@ -19,6 +19,11 @@ The git repository is hosted at the following site:
   and placed them into BACnet Protocol Stack library.
 
 ### Fixed
+* Fixed BACnet/IP datalink startup to use an existing IPv4 address, or wait
+  for the address-added event on the selected interface (subscribing before
+  starting DHCP so the event is not missed). Fixed the b-asc sample to build
+  for native_sim on Zephyr versions using either the ETH_NATIVE_POSIX or
+  ETH_NATIVE_TAP Ethernet driver.
 * Fixed pipeline unit test and samples build by adding shed_level and
   timer_value source files to various CMakeLists. Also fixed the
   workspace path in the Docker container for building and save

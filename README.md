@@ -72,15 +72,23 @@ This library will use the following methods to accommodate the changes:
     typedef uint32_t mgmt_event_t;
     #endif
     ```
-2. In CMakeLists.txt via trying to load specific versions of the Zephyr
-    package or checking using:
+2. In CMakeLists.txt, after `find_package(Zephyr)` has returned, by checking
+    the Zephyr version for source files, include paths, or compile
+    definitions:
     ```
     if ("${KERNEL_VERSION_STRING}" VERSION_GREATER_EQUAL "4.2.0")
     # Do stuff...
     endif()
     ```
-3. In Kconfig by using 2 above and trying to load specific versions
-    of the Zephyr plugin and updating CONF_FILE accordingly.
+    `KERNEL_VERSION_STRING` is not available before `find_package(Zephyr)`
+    runs Kconfig, so this cannot select Kconfig fragments (`CONF_FILE`,
+    `EXTRA_CONF_FILE`) or board overlays. See 3 and 4.
+3. In Kconfig, which is processed by the Zephyr tree being built. Kconfig is
+    processed inside `find_package(Zephyr)`, so `CONF_FILE` and
+    `EXTRA_CONF_FILE` cannot be chosen from `KERNEL_VERSION_STRING` in
+    CMakeLists.txt. When a symbol was renamed between Zephyr versions, use a
+    sample `Kconfig` that selects both names, since selecting a symbol that
+    the Zephyr tree does not define is ignored. See the b-asc sample.
 
 4. There is not a clean way to manage version breaking changes in
    .dts, .dtsi or .overlay files since the device tree compile occurs
