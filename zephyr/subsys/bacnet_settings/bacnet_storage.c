@@ -16,6 +16,7 @@
 #include <zephyr/settings/settings.h>
 #include <zephyr/storage/flash_map.h>
 #include <zephyr/linker/linker-defs.h>
+#include <zephyr/devicetree.h>
 #if defined(CONFIG_SETTINGS_FILE) && defined(CONFIG_FILE_SYSTEM_LITTLEFS)
 #include <zephyr/fs/fs.h>
 #include <zephyr/fs/littlefs.h>
@@ -800,13 +801,23 @@ int bacnet_storage_erase(void)
     }
 #if defined(CONFIG_XIP)
     {
-        /* never erase the flash that holds the running firmware */
+        /* never erase the flash that holds the running firmware.
+           fa_off is relative to the partition's own flash device, and
+           CONFIG_FLASH_BASE_ADDRESS maps the device that holds the
+           image, so compare addresses only when both share a device. */
         uintptr_t part_start = CONFIG_FLASH_BASE_ADDRESS + fa->fa_off;
         uintptr_t part_end = part_start + fa->fa_size;
         uintptr_t image_start = (uintptr_t)__rom_region_start;
         uintptr_t image_end = image_start + (uintptr_t)_flash_used;
+        bool same_device = true;
 
-        if ((part_start < image_end) && (image_start < part_end)) {
+#if DT_HAS_CHOSEN(zephyr_code_partition)
+        same_device = DT_SAME_NODE(
+            DT_MTD_FROM_FIXED_PARTITION(DT_NODELABEL(STORAGE_PARTITION)),
+            DT_MTD_FROM_FIXED_PARTITION(DT_CHOSEN(zephyr_code_partition)));
+#endif
+        if (same_device && (part_start < image_end) &&
+            (image_start < part_end)) {
             LOG_ERR("storage partition overlaps the firmware image");
             flash_area_close(fa);
             return -EPERM;
