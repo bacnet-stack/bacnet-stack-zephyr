@@ -1,0 +1,43 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/*
+ * XIP target where the settings partition lives on the flash device that
+ * holds the running firmware, at the flash base address where the image
+ * starts, so bacnet_storage_erase() must refuse to erase it.
+ * The flash is a RAM-backed simulator, so nothing real can be erased.
+ */
+/ {
+  chosen {
+    zephyr,settings-partition = &settings_part;
+    zephyr,code-partition = &code_part;
+  };
+
+  sim_flash: sim_flash {
+    compatible = "zephyr,sim-flash";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    erase-value = <0xff>;
+
+    flash_sim0: flash_sim@0 {
+      compatible = "soc-nv-flash";
+      reg = <0x00000000 (16*1024)>;
+      erase-block-size = <1024>;
+      write-block-size = <4>;
+
+      partitions {
+        compatible = "fixed-partitions";
+        #address-cells = <1>;
+        #size-cells = <1>;
+
+        settings_part: partition@0 {
+          label = "settings";
+          reg = <0x00000000 (4*1024)>;
+        };
+        code_part: partition@2000 {
+          label = "code";
+          reg = <0x00002000 (4*1024)>;
+        };
+      };
+    };
+  };
+};
