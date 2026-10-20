@@ -61,6 +61,10 @@ The git repository is hosted at the following site:
 * Changed gitignore to ignore the build folder.
 
 ### Added
+* Added bacnet_storage_erase() regression tests for recovery from corrupt
+  storage, preservation of flash outside the settings partition, flash error
+  propagation, and the refusal to erase the XIP firmware image, using the
+  flash simulator on native_sim and qemu_cortex_m3.
 * Added optional `bacnet file` shell commands for listing and inspecting File
   objects, hex stream reads and writes, xxd-compatible dumps, chunked JSON
   import/export with CRC32, and read-only JSON decoding of configured backup

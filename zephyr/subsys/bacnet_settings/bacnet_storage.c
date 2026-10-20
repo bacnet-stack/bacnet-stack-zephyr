@@ -14,6 +14,9 @@
 #include <limits.h>
 #include <math.h>
 #include <zephyr/settings/settings.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/linker/linker-defs.h>
+#include <zephyr/devicetree.h>
 #if defined(CONFIG_SETTINGS_FILE) && defined(CONFIG_FILE_SYSTEM_LITTLEFS)
 #include <zephyr/fs/fs.h>
 #include <zephyr/fs/littlefs.h>
@@ -39,6 +42,30 @@ LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 
 #define STORAGE_PARTITION storage_partition
 #define STORAGE_PARTITION_ID FIXED_PARTITION_ID(STORAGE_PARTITION)
+
+/* Mirror the Zephyr NVS settings backend: prefer the chosen
+   zephyr,settings-partition node, else fall back to storage_partition. */
+#if DT_HAS_CHOSEN(zephyr_settings_partition)
+#define SETTINGS_PARTITION_NODE DT_CHOSEN(zephyr_settings_partition)
+#else
+#define SETTINGS_PARTITION_NODE DT_NODELABEL(STORAGE_PARTITION)
+#endif
+#define SETTINGS_PARTITION_ID DT_FIXED_PARTITION_ID(SETTINGS_PARTITION_NODE)
+
+#if defined(CONFIG_XIP)
+/* The flash device that holds the running firmware: the one with the chosen
+   zephyr,code-partition, else the chosen zephyr,flash that
+   CONFIG_FLASH_BASE_ADDRESS maps. */
+#if DT_HAS_CHOSEN(zephyr_code_partition)
+#define FIRMWARE_MTD_NODE \
+    DT_MTD_FROM_FIXED_PARTITION(DT_CHOSEN(zephyr_code_partition))
+#elif DT_HAS_CHOSEN(zephyr_flash)
+#define FIRMWARE_MTD_NODE                                          \
+    COND_CODE_1(                                                   \
+        DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_flash), soc_nv_flash), \
+        (DT_PARENT(DT_CHOSEN(zephyr_flash))), (DT_CHOSEN(zephyr_flash)))
+#endif
+#endif
 
 static bacnet_storage_restore_callback BACnet_Storage_Restore_Callback;
 static void *BACnet_Storage_Restore_Context;
@@ -776,4 +803,56 @@ int bacnet_storage_clear(void)
     }
 
     return ctx.status;
+}
+
+/**
+ * @brief Erase the entire flash storage partition used by the settings.
+ *  This recovers from a corrupt or foreign (non-NVS) storage partition,
+ *  such as when settings_subsys_init() fails with -EDEADLK (-45).
+ *  The device must be rebooted afterwards.
+ * @return 0 on success, -EPERM if the partition overlaps the running
+ *  firmware image, or another negative errno value on failure.
+ */
+int bacnet_storage_erase(void)
+{
+#if defined(CONFIG_SETTINGS_NVS)
+    const struct flash_area *fa = NULL;
+    int rc;
+
+    rc = flash_area_open(SETTINGS_PARTITION_ID, &fa);
+    if (rc) {
+        return rc;
+    }
+#if defined(CONFIG_XIP)
+    {
+        /* never erase the flash that holds the running firmware.
+           fa_off is relative to the partition's own flash device, and
+           CONFIG_FLASH_BASE_ADDRESS maps the device that holds the
+           image, so compare addresses only when both share a device. */
+        uintptr_t part_start = CONFIG_FLASH_BASE_ADDRESS + fa->fa_off;
+        uintptr_t part_end = part_start + fa->fa_size;
+        uintptr_t image_start = (uintptr_t)__rom_region_start;
+        uintptr_t image_end = image_start + (uintptr_t)_flash_used;
+        bool same_device = true;
+
+#if defined(FIRMWARE_MTD_NODE)
+        same_device = DT_SAME_NODE(
+            DT_MTD_FROM_FIXED_PARTITION(SETTINGS_PARTITION_NODE),
+            FIRMWARE_MTD_NODE);
+#endif
+        if (same_device && (part_start < image_end) &&
+            (image_start < part_end)) {
+            LOG_ERR("storage partition overlaps the firmware image");
+            flash_area_close(fa);
+            return -EPERM;
+        }
+    }
+#endif
+    rc = flash_area_erase(fa, 0, fa->fa_size);
+    flash_area_close(fa);
+
+    return rc;
+#else
+    return -ENOTSUP;
+#endif
 }

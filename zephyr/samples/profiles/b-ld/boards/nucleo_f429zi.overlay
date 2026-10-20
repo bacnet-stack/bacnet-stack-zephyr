@@ -41,11 +41,16 @@
      * On F4 series, the only option is to use the following
      * partition, which is compatible with mcuboot usage.
      * (limited by nvs.h: uint16_t sector_size)
+     * Located in the first two 16K sectors of the second flash bank
+     * (0x100000), above the firmware image which is linked at 0x0 when
+     * not using mcuboot. A storage partition overlapping the firmware
+     * would make the settings init fail (-EDEADLK) and erasing it would
+     * erase the running firmware.
      */
-    storage_partition: partition@8000 {
+    storage_partition: partition@100000 {
       compatible = "zephyr,mapped-partition";
       label = "storage";
-      reg = <0x0008000 DT_SIZE_K(32)>;
+      reg = <0x0100000 DT_SIZE_K(32)>;
     };
   };
 };

@@ -5,3 +5,42 @@ tests:
       - native_sim
     platform_allow:
       - native_sim
+  bacnet.subsys.bacnet_settings.xip_overlap:
+    tags: bacnet
+    integration_platforms:
+      - qemu_cortex_m3
+    platform_allow:
+      - qemu_cortex_m3
+    extra_args:
+      - DTC_OVERLAY_FILE=overlays/xip_overlap.overlay
+      - BACNET_TEST_XIP_SCENARIO=overlap
+    # Zephyr's own picolibc: the picolibc bundled with newer SDKs (0.17+)
+    # does not build against this Zephyr's libc hooks.
+    extra_configs:
+      - CONFIG_PICOLIBC_USE_MODULE=y
+  bacnet.subsys.bacnet_settings.xip_other_device:
+    tags: bacnet
+    integration_platforms:
+      - qemu_cortex_m3
+    platform_allow:
+      - qemu_cortex_m3
+    extra_args:
+      - DTC_OVERLAY_FILE=overlays/xip_other_device.overlay
+      - BACNET_TEST_XIP_SCENARIO=other_device
+    # Zephyr's own picolibc: the picolibc bundled with newer SDKs (0.17+)
+    # does not build against this Zephyr's libc hooks.
+    extra_configs:
+      - CONFIG_PICOLIBC_USE_MODULE=y
+  bacnet.subsys.bacnet_settings.xip_other_device_no_code_partition:
+    tags: bacnet
+    integration_platforms:
+      - qemu_cortex_m3
+    platform_allow:
+      - qemu_cortex_m3
+    extra_args:
+      - DTC_OVERLAY_FILE=overlays/xip_other_device_no_code_partition.overlay
+      - BACNET_TEST_XIP_SCENARIO=other_device
+    # Zephyr's own picolibc: the picolibc bundled with newer SDKs (0.17+)
+    # does not build against this Zephyr's libc hooks.
+    extra_configs:
+      - CONFIG_PICOLIBC_USE_MODULE=y
