@@ -1,0 +1,18 @@
+# @brief Kconfig for BACnet basic sample
+# @author Steve Karg <skarg@users.sourceforge.net>
+# @date October 2026
+# @copyright SPDX-License-Identifier: Apache-2.0
+
+mainmenu "BACnet B-ASC sample"
+
+# The native_sim Ethernet driver Kconfig symbol was renamed between Zephyr
+# versions (ETH_NATIVE_POSIX to ETH_NATIVE_TAP). Selecting a symbol that the
+# Zephyr tree does not define is ignored, so this enables whichever one exists
+# in the Zephyr tree that Kconfig is actually processing.
+config APP_NATIVE_SIM_ETH
+    bool
+    default y if BOARD_NATIVE_SIM
+    select ETH_NATIVE_TAP
+    select ETH_NATIVE_POSIX
+
+source "Kconfig.zephyr"
