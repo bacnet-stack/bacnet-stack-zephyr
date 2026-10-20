@@ -136,7 +136,17 @@ Recovering from a settings storage error
 
 If the log shows ``settings subsys initialization: fail (err -45)``, the
 flash storage partition holds data that is not a valid NVS filesystem.
-Erase it from the shell and reboot:
+
+First check that the storage partition does not overlap the firmware image.
+Without MCUboot the firmware is linked at flash offset 0, so a storage
+partition inside the image range holds program code, and erasing it destroys
+the running firmware. In that case, move ``storage_partition`` above the
+image in the board overlay (see ``boards/nucleo_f429zi.overlay``) and
+reflash. ``bacnet storage erase`` refuses to run and returns ``-EPERM`` when
+the partition overlaps the firmware image.
+
+If the partition does not overlap the firmware (for example, it holds stale
+data from a previous layout), erase it from the shell and reboot:
 
     uart:~$ bacnet storage erase
     uart:~$ kernel reboot cold
