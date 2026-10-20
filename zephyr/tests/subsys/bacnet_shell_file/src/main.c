@@ -297,8 +297,7 @@ ZTEST(bacnet_shell_file, test_info_list_and_dump)
     zassert_equal(err, 0, "info command failed: %d (%s)", err, output);
     zassert_not_null(
         strstr(output, "\"pathname\":\"shell-test.bin\""), "%s", output);
-    zassert_not_null(
-        strstr(output, "\"stream_access\":true"), "%s", output);
+    zassert_not_null(strstr(output, "\"stream_access\":true"), "%s", output);
 
     err = shell_run("bacnet file write 7 0 48656c6c6f", &output);
     zassert_equal(err, 0, "write command failed: %d (%s)", err, output);

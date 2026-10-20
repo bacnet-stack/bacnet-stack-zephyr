@@ -194,12 +194,13 @@ static int file_write_hex(
     }
 
     shell_print(
-        sh, "{\"instance\":%u,\"offset\":%u,\"length\":%u}",
-        (unsigned)instance, (unsigned)offset, (unsigned)data_len);
+        sh, "{\"instance\":%u,\"offset\":%u,\"length\":%u}", (unsigned)instance,
+        (unsigned)offset, (unsigned)data_len);
     return 0;
 }
 
-/* forward declaration: JSON string encoder defined later, used above its definition */
+/* forward declaration: JSON string encoder defined later, used above its
+ * definition */
 static void file_json_string(const struct shell *sh, const char *value);
 
 static int cmd_file_list(const struct shell *sh, size_t argc, char **argv)
@@ -218,8 +219,7 @@ static int cmd_file_list(const struct shell *sh, size_t argc, char **argv)
         const char *pathname = bacfile_pathname(instance);
 
         shell_fprintf(
-            sh, SHELL_NORMAL, "{\"instance\":%u,\"name\":",
-            (unsigned)instance);
+            sh, SHELL_NORMAL, "{\"instance\":%u,\"name\":", (unsigned)instance);
         file_json_string(sh, name ? name : "");
         shell_fprintf(sh, SHELL_NORMAL, ",\"mime_type\":");
         file_json_string(sh, mime_type ? mime_type : "");
@@ -295,15 +295,14 @@ static int cmd_file_config(const struct shell *sh, size_t argc, char **argv)
     }
     if (argc != 4U) {
         shell_error(
-            sh,
-            "Usage: bacnet file config [<index> <object-type> <instance>]");
+            sh, "Usage: bacnet file config [<index> <object-type> <instance>]");
         return -EINVAL;
     }
     if (!bacnet_string_to_uint32(argv[1], &index) || (index < 1U) ||
         (index > FILE_CONFIG_COUNT)) {
         shell_error(
-            sh, "Invalid configuration-files index: %s. Must be 1-%u.",
-            argv[1], FILE_CONFIG_COUNT);
+            sh, "Invalid configuration-files index: %s. Must be 1-%u.", argv[1],
+            FILE_CONFIG_COUNT);
         return -EINVAL;
     }
     if (!bactext_object_type_strtol(argv[2], &object_type)) {
