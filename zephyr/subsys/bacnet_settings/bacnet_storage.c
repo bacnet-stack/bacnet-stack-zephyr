@@ -43,6 +43,15 @@ LOG_MODULE_DECLARE(bacnet, CONFIG_BACNETSTACK_LOG_LEVEL);
 #define STORAGE_PARTITION storage_partition
 #define STORAGE_PARTITION_ID FIXED_PARTITION_ID(STORAGE_PARTITION)
 
+/* Mirror the Zephyr NVS settings backend: prefer the chosen
+   zephyr,settings-partition node, else fall back to storage_partition. */
+#if DT_HAS_CHOSEN(zephyr_settings_partition)
+#define SETTINGS_PARTITION_NODE DT_CHOSEN(zephyr_settings_partition)
+#else
+#define SETTINGS_PARTITION_NODE DT_NODELABEL(STORAGE_PARTITION)
+#endif
+#define SETTINGS_PARTITION_ID DT_FIXED_PARTITION_ID(SETTINGS_PARTITION_NODE)
+
 static bacnet_storage_restore_callback BACnet_Storage_Restore_Callback;
 static void *BACnet_Storage_Restore_Context;
 
@@ -795,7 +804,7 @@ int bacnet_storage_erase(void)
     const struct flash_area *fa = NULL;
     int rc;
 
-    rc = flash_area_open(STORAGE_PARTITION_ID, &fa);
+    rc = flash_area_open(SETTINGS_PARTITION_ID, &fa);
     if (rc) {
         return rc;
     }
@@ -813,7 +822,7 @@ int bacnet_storage_erase(void)
 
 #if DT_HAS_CHOSEN(zephyr_code_partition)
         same_device = DT_SAME_NODE(
-            DT_MTD_FROM_FIXED_PARTITION(DT_NODELABEL(STORAGE_PARTITION)),
+            DT_MTD_FROM_FIXED_PARTITION(SETTINGS_PARTITION_NODE),
             DT_MTD_FROM_FIXED_PARTITION(DT_CHOSEN(zephyr_code_partition)));
 #endif
         if (same_device && (part_start < image_end) &&
