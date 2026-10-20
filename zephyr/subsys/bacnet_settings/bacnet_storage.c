@@ -14,6 +14,7 @@
 #include <limits.h>
 #include <math.h>
 #include <zephyr/settings/settings.h>
+#include <zephyr/storage/flash_map.h>
 #if defined(CONFIG_SETTINGS_FILE) && defined(CONFIG_FILE_SYSTEM_LITTLEFS)
 #include <zephyr/fs/fs.h>
 #include <zephyr/fs/littlefs.h>
@@ -776,4 +777,30 @@ int bacnet_storage_clear(void)
     }
 
     return ctx.status;
+}
+
+/**
+ * @brief Erase the entire flash storage partition used by the settings.
+ *  This recovers from a corrupt or foreign (non-NVS) storage partition,
+ *  such as when settings_subsys_init() fails with -EDEADLK (-45).
+ *  The device must be rebooted afterwards.
+ * @return 0 on success, or a negative errno value on failure.
+ */
+int bacnet_storage_erase(void)
+{
+#if defined(CONFIG_SETTINGS_NVS)
+    const struct flash_area *fa = NULL;
+    int rc;
+
+    rc = flash_area_open(STORAGE_PARTITION_ID, &fa);
+    if (rc) {
+        return rc;
+    }
+    rc = flash_area_erase(fa, 0, fa->fa_size);
+    flash_area_close(fa);
+
+    return rc;
+#else
+    return -ENOTSUP;
+#endif
 }

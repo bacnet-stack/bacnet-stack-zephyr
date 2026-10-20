@@ -130,3 +130,13 @@ On hardware boards, shell is available via virtual communication port:
     {"object-identifier":{"timer":1}}],
     "object-list-size": 26}
     uart:~$
+
+Recovering from a settings storage error
+****************************************
+
+If the log shows ``settings subsys initialization: fail (err -45)``, the
+flash storage partition holds data that is not a valid NVS filesystem.
+Erase it from the shell and reboot:
+
+    uart:~$ bacnet storage erase
+    uart:~$ kernel reboot cold

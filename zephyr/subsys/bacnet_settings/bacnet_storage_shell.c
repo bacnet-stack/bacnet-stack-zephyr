@@ -177,8 +177,37 @@ static int cmd_list(const struct shell *sh, size_t argc, char **argv)
     return 0;
 }
 
+/**
+ * @brief Erase the flash storage partition to recover from corrupt storage
+ * @param sh Shell
+ * @param argc Number of arguments
+ * @param argv Argument list
+ * @return 0 on success, negative on failure
+ */
+static int cmd_erase(const struct shell *sh, size_t argc, char **argv)
+{
+    int rc;
+
+    ARG_UNUSED(argc);
+    ARG_UNUSED(argv);
+    rc = bacnet_storage_erase();
+    if (rc) {
+        shell_error(sh, "Unable to erase storage (err %d)", rc);
+        return rc;
+    }
+    shell_print(
+        sh, "Storage erased. Reboot to reinitialize: kernel reboot cold");
+
+    return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     sub_bacnet_storage_cmds,
+    SHELL_CMD(
+        erase,
+        NULL,
+        "erase the whole storage partition (reboot required)",
+        cmd_erase),
     SHELL_CMD(list, NULL, "list BACnet storage strings", cmd_list),
     SHELL_CMD(
         string,
