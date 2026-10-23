@@ -54,8 +54,14 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# workspace / patch dumps
+vendor/
+scratch/
+workspace/
+# build artifacts
+build/
+_build/
 # Zephyr OS
-build
 outdir
 outdir-*
 scripts/basic/fixdep
