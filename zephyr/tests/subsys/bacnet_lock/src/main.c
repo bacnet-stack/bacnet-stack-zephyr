@@ -33,9 +33,65 @@ static atomic_t Bad_Month;
 static atomic_t Bad_Day;
 static atomic_t Bad_Hour;
 
-static void clock_test_pause(void)
+/* Address of the clock's shared date and time. Learned from a copy out. */
+static const BACNET_DATE_TIME *Shared_Clock;
+static bool Learn_Shared;
+static bool Pause_Stores;
+
+extern void
+__real_datetime_copy_time(BACNET_TIME *dest_time, const BACNET_TIME *src_time);
+
+static bool clock_store_is_shared(const BACNET_DATE_TIME *dest)
 {
-    k_msleep(CLOCK_PAUSE_MS);
+    return Pause_Stores && (Shared_Clock != NULL) && (dest == Shared_Clock);
+}
+
+/**
+ * Sleep after the shared time store and before the shared date store.
+ * datetime_copy() writes the time first. The unlocked test reads during
+ * this sleep. The stack revision in west.yml provides no pause hook, and a
+ * wrap of datetime_copy_time() cannot see the call inside datetime_copy().
+ */
+void __wrap_datetime_copy(
+    BACNET_DATE_TIME *dest_datetime, const BACNET_DATE_TIME *src_datetime)
+{
+    if (Learn_Shared) {
+        Shared_Clock = src_datetime;
+        Learn_Shared = false;
+    }
+    __real_datetime_copy_time(&dest_datetime->time, &src_datetime->time);
+    if (clock_store_is_shared(dest_datetime)) {
+        k_msleep(CLOCK_PAUSE_MS);
+    }
+    datetime_copy_date(&dest_datetime->date, &src_datetime->date);
+}
+
+/**
+ * Same pause when another file stores the shared time directly.
+ */
+void __wrap_datetime_copy_time(
+    BACNET_TIME *dest_time, const BACNET_TIME *src_time)
+{
+    __real_datetime_copy_time(dest_time, src_time);
+    if ((Shared_Clock != NULL) &&
+        ((const BACNET_TIME *)dest_time == &Shared_Clock->time)) {
+        if (Pause_Stores) {
+            k_msleep(CLOCK_PAUSE_MS);
+        }
+    }
+}
+
+static void clock_learn_shared(void)
+{
+    BACNET_DATE date;
+    BACNET_TIME time;
+
+    Shared_Clock = NULL;
+    Learn_Shared = true;
+    datetime_local(&date, &time, NULL, NULL);
+    Learn_Shared = false;
+    zassert_not_null(Shared_Clock, "clock did not copy the shared time");
+    Pause_Stores = true;
 }
 
 static bool
@@ -116,7 +172,8 @@ static void *lock_setup(void)
 
     WAIT_FOR(shell_ready(sh), 20000, k_msleep(1));
     zassert_true(shell_ready(sh), "dummy shell did not become ready");
-    datetime_timesync_test_pause_set(clock_test_pause);
+    datetime_init_defaults();
+    clock_learn_shared();
     bacnet_lock();
     bacnet_basic_init();
     bacnet_unlock();
