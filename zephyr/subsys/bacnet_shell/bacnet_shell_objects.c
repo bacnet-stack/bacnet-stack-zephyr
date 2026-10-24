@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <zephyr/shell/shell.h>
+#include <bacnet_shell/bacnet_shell.h>
 /* BACnet definitions */
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
@@ -177,12 +178,16 @@ static int cmd_object_delete(const struct shell *sh, size_t argc, char **argv)
     return 0;
 }
 
+BACNET_SHELL_LOCK_HANDLER(cmd_object_list)
+BACNET_SHELL_LOCK_HANDLER(cmd_object_create)
+BACNET_SHELL_LOCK_HANDLER(cmd_object_delete)
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     object_sub_cmd,
-    SHELL_CMD(list, NULL, "list all objects", cmd_object_list),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(list, NULL, "list all objects", cmd_object_list),
+    BACNET_SHELL_CMD(
         create, NULL, "<object type> <object instance>", cmd_object_create),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         delete, NULL, "<object type> <object instance>", cmd_object_delete),
     SHELL_SUBCMD_SET_END);
 

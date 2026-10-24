@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <zephyr/shell/shell.h>
+#include <bacnet_shell/bacnet_shell.h>
 /* BACnet definitions */
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
@@ -34,5 +35,5 @@ static int cmd_uptime(const struct shell *sh, size_t argc, char **argv)
     return 0;
 }
 
-SHELL_SUBCMD_ADD(
+BACNET_SHELL_CMD_ADD(
     (bacnet), uptime, NULL, "BACnet task uptime", cmd_uptime, 1, 0);

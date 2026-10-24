@@ -32,6 +32,7 @@
 #include "bacnet/basic/server/bacnet_port.h"
 /* BACnet Stack Zephyr services */
 #include <bacnet_settings/bacnet_settings.h>
+#include <bacnet_osif/bacnet_lock.h>
 #include <bacnet_osif/bacnet_reinit.h>
 /* Logging module registration is already done in ports/zephyr/main.c */
 #include <bacnet_osif/bacnet_log.h>
@@ -225,13 +226,20 @@ int main(void)
     LOG_INF("BACnet Stack Max APDU: %d", MAX_APDU);
     bacnet_basic_init_callback_set(BACnet_Lighting_Device_Init_Handler, NULL);
     bacnet_basic_task_callback_set(BACnet_Lighting_Device_Task_Handler, NULL);
+    bacnet_lock();
     bacnet_basic_init();
+    bacnet_unlock();
     for (;;) {
         k_sleep(K_MSEC(CONFIG_BACNET_BASIC_SERVER_KSLEEP));
+        bacnet_lock();
         bacnet_basic_task();
         if (port_initialized) {
             bacnet_port_task();
-        } else {
+        }
+        bacnet_unlock();
+        /* Port init can wait for an IPv4 address. Keep that wait outside
+           the BACnet lock. */
+        if (!port_initialized) {
             port_initialized = bacnet_port_init();
         }
     }
