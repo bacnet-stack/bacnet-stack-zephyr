@@ -11,6 +11,7 @@
 #include <ctype.h>
 #include <zephyr/kernel.h>
 #include <zephyr/shell/shell.h>
+#include <bacnet_shell/bacnet_shell.h>
 #include <bacnet/basic/object/device.h>
 #include <bacnet/basic/sys/compare.h>
 #include <bacnet/bactext.h>
@@ -905,11 +906,15 @@ static int cmd_size(const struct shell *sh, size_t argc, char **argv)
     return 0;
 }
 
+BACNET_SHELL_LOCK_HANDLER(cmd_list)
+BACNET_SHELL_LOCK_HANDLER(cmd_size)
+BACNET_SHELL_LOCK_HANDLER(cmd_value)
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     sub_bacnet_property_cmds,
-    SHELL_CMD(list, NULL, "<object type> <object-instance>", cmd_list),
-    SHELL_CMD(size, NULL, "show the size of value data types", cmd_size),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(list, NULL, "<object type> <object-instance>", cmd_list),
+    BACNET_SHELL_CMD(size, NULL, "show the size of value data types", cmd_size),
+    BACNET_SHELL_CMD(
         value,
         NULL,
         "<object type> <object instance> "

@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <zephyr/shell/shell.h>
+#include <bacnet_shell/bacnet_shell.h>
 #include <bacnet_settings/bacnet_storage.h>
 #include <bacnet_settings/bacnet_settings.h>
 #include <bacnet/bactext.h>
@@ -225,15 +226,19 @@ static int cmd_list(const struct shell *sh, size_t argc, char **argv)
     return 0;
 }
 
+BACNET_SHELL_LOCK_HANDLER(cmd_list)
+BACNET_SHELL_LOCK_HANDLER(cmd_value)
+BACNET_SHELL_LOCK_HANDLER(cmd_delete)
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     sub_bacnet_settings_cmds,
-    SHELL_CMD(list, NULL, "list BACnet settings strings", cmd_list),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(list, NULL, "list BACnet settings strings", cmd_list),
+    BACNET_SHELL_CMD(
         value,
         NULL,
         "<object type> <object instance> <property id>[array index] [value]",
         cmd_value),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         delete,
         NULL,
         "<object type> <object instance> <property id>[array index]",

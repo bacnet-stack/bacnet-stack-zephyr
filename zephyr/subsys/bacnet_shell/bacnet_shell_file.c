@@ -14,6 +14,7 @@
 #include <string.h>
 #include <zephyr/data/json.h>
 #include <zephyr/shell/shell.h>
+#include <bacnet_shell/bacnet_shell.h>
 #include <zephyr/sys/crc.h>
 #include <zephyr/sys/util.h>
 
@@ -1116,39 +1117,50 @@ static int cmd_file_decode(const struct shell *sh, size_t argc, char **argv)
     return 0;
 }
 
+BACNET_SHELL_LOCK_HANDLER(cmd_file_list)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_info)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_config)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_read)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_write)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_dump)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_export)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_import)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_decode)
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     file_sub_cmd,
-    SHELL_CMD(list, NULL, "list BACnet File objects", cmd_file_list),
-    SHELL_CMD(info, NULL, "<instance> show File object details", cmd_file_info),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(list, NULL, "list BACnet File objects", cmd_file_list),
+    BACNET_SHELL_CMD(
+        info, NULL, "<instance> show File object details", cmd_file_info),
+    BACNET_SHELL_CMD(
         config,
         NULL,
         "[<index> <object-type> <instance>] list or set a "
         "Device configuration-files entry",
         cmd_file_config),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         read,
         NULL,
         "<instance> <offset> [len] read a hex chunk",
         cmd_file_read),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         write,
         NULL,
         "<instance> <offset> <hex> write a hex chunk",
         cmd_file_write),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         dump,
         NULL,
         "<instance> [offset] [len] xxd -r compatible hexdump",
         cmd_file_dump),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         export,
         NULL,
         "<instance> export a JSON document with chunk data",
         cmd_file_export),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         import, NULL, "'<json>' import one JSON hex chunk", cmd_file_import),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         decode,
         NULL,
         "<instance> inspect configured CreateObject backup data",
