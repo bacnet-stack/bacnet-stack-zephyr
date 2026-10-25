@@ -13,7 +13,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <zephyr/data/json.h>
+#include <zephyr/kernel.h>
 #include <zephyr/shell/shell.h>
+#include <bacnet_shell/bacnet_shell.h>
 #include <zephyr/sys/crc.h>
 #include <zephyr/sys/util.h>
 
@@ -139,6 +141,201 @@ static int file_stream_require(const struct shell *sh, uint32_t instance)
         shell_error(
             sh, "File %u does not use stream access", (unsigned)instance);
         return -ENOTSUP;
+    }
+
+    return 0;
+}
+
+/**
+ * Owned File object snapshot for a transfer that prints after releasing
+ * bacnet_lock(). Shell output waits for transport space, so dump and export
+ * must not hold the task lock across a chunk.
+ */
+struct file_transfer {
+    uint32_t instance;
+    uint32_t file_size;
+    bool read_only;
+    char *pathname;
+    char *name;
+    char *mime_type;
+};
+
+static int file_cstring_own(const char *value, char **owned)
+{
+    size_t length = value ? strlen(value) : 0U;
+    char *copy = k_malloc(length + 1U);
+
+    if (!copy) {
+        return -ENOMEM;
+    }
+    if (length > 0U) {
+        memcpy(copy, value, length);
+    }
+    copy[length] = '\0';
+    *owned = copy;
+
+    return 0;
+}
+
+static void file_transfer_release(struct file_transfer *transfer)
+{
+    k_free(transfer->pathname);
+    k_free(transfer->name);
+    k_free(transfer->mime_type);
+    transfer->pathname = NULL;
+    transfer->name = NULL;
+    transfer->mime_type = NULL;
+}
+
+/**
+ * Copy File object identity and metadata. Caller holds bacnet_lock().
+ */
+static int
+file_transfer_capture(uint32_t instance, struct file_transfer *transfer)
+{
+    const char *pathname;
+    BACNET_UNSIGNED_INTEGER file_size_max;
+    int err;
+
+    memset(transfer, 0, sizeof(*transfer));
+    if (!bacfile_valid_instance(instance)) {
+        return -ENOENT;
+    }
+    pathname = bacfile_pathname(instance);
+    if (!pathname || !pathname[0]) {
+        return -EINVAL;
+    }
+    if (!bacfile_file_access_stream(instance)) {
+        return -ENOTSUP;
+    }
+    file_size_max = bacfile_file_size(instance);
+    if (file_size_max > INT32_MAX) {
+        return -EOVERFLOW;
+    }
+    err = file_cstring_own(pathname, &transfer->pathname);
+    if (err) {
+        return err;
+    }
+    err = file_cstring_own(bacfile_name_ansi(instance), &transfer->name);
+    if (err) {
+        file_transfer_release(transfer);
+        return err;
+    }
+    err = file_cstring_own(bacfile_file_type(instance), &transfer->mime_type);
+    if (err) {
+        file_transfer_release(transfer);
+        return err;
+    }
+    transfer->instance = instance;
+    transfer->file_size = (uint32_t)file_size_max;
+    transfer->read_only = bacfile_read_only(instance);
+
+    return 0;
+}
+
+/**
+ * Confirm the snapshotted File object is still the same object.
+ * Caller holds bacnet_lock().
+ */
+static int file_transfer_revalidate(const struct file_transfer *transfer)
+{
+    const char *pathname;
+
+    if (!bacfile_valid_instance(transfer->instance)) {
+        return -ENOENT;
+    }
+    pathname = bacfile_pathname(transfer->instance);
+    if (!pathname || strcmp(pathname, transfer->pathname) != 0) {
+        return -ENOENT;
+    }
+    if (!bacfile_file_access_stream(transfer->instance)) {
+        return -ENOENT;
+    }
+    if (bacfile_file_size(transfer->instance) > INT32_MAX) {
+        return -EOVERFLOW;
+    }
+
+    return 0;
+}
+
+static int file_transfer_status(
+    const struct shell *sh, uint32_t instance, int err, bool backup)
+{
+    if (err == -ENOENT) {
+        shell_error(sh, "File instance %u does not exist", (unsigned)instance);
+    } else if (err == -EINVAL) {
+        shell_error(sh, "File %u has no pathname", (unsigned)instance);
+    } else if (err == -ENOTSUP) {
+        shell_error(
+            sh, "File %u does not use stream access", (unsigned)instance);
+    } else if (err == -EOVERFLOW) {
+        shell_error(
+            sh,
+            backup ? "Backup file is too large for stream offsets"
+                   : "File is too large for stream offsets");
+    } else if (err == -EPERM) {
+        shell_error(sh, "File %u is not a configured backup file", instance);
+    } else if (err == -ENOMEM) {
+        shell_error(sh, "Unable to copy file metadata");
+    }
+
+    return err;
+}
+
+static int file_transfer_open(
+    const struct shell *sh, uint32_t instance, struct file_transfer *transfer)
+{
+    int err;
+
+    bacnet_lock();
+    err = file_transfer_capture(instance, transfer);
+    bacnet_unlock();
+
+    return file_transfer_status(sh, instance, err, false);
+}
+
+static int file_backup_open(
+    const struct shell *sh, uint32_t instance, struct file_transfer *transfer)
+{
+    int err;
+
+    bacnet_lock();
+    err = file_transfer_capture(instance, transfer);
+    if ((err == 0) && !Device_Is_Configuration_File(instance)) {
+        file_transfer_release(transfer);
+        err = -EPERM;
+    }
+    bacnet_unlock();
+
+    return file_transfer_status(sh, instance, err, true);
+}
+
+static int file_transfer_read(
+    const struct file_transfer *transfer,
+    uint32_t offset,
+    uint8_t *data,
+    uint32_t requested,
+    uint32_t *bytes_read)
+{
+    int err;
+
+    bacnet_lock();
+    err = file_transfer_revalidate(transfer);
+    if (err == 0) {
+        *bytes_read = bacfile_read_offset(
+            transfer->instance, (int32_t)offset, data, requested);
+    }
+    bacnet_unlock();
+
+    return err;
+}
+
+static int file_instance_number_parse(
+    const struct shell *sh, const char *value, uint32_t *instance)
+{
+    if (!bacnet_string_to_uint32(value, instance)) {
+        shell_error(sh, "Invalid file instance: %s", value);
+        return -EINVAL;
     }
 
     return 0;
@@ -451,25 +648,35 @@ static void file_dump_line(
     shell_print(sh, "|");
 }
 
+static int
+file_transfer_changed(const struct shell *sh, uint32_t instance, int err)
+{
+    if (err == -ENOENT) {
+        shell_error(sh, "File %u changed during transfer", (unsigned)instance);
+    } else {
+        shell_error(sh, "File is too large for stream offsets");
+    }
+
+    return err;
+}
+
 static int cmd_file_dump(const struct shell *sh, size_t argc, char **argv)
 {
+    struct file_transfer transfer;
     uint8_t data[16];
     uint32_t instance;
     uint32_t offset = 0;
-    uint32_t remaining;
-    BACNET_UNSIGNED_INTEGER file_size_max;
-    uint32_t file_size;
+    uint32_t remaining = 0;
     uint32_t requested;
-    uint32_t bytes_read;
+    uint32_t bytes_read = 0;
     bool length_set = false;
-    const char *pathname;
     int err;
 
     if ((argc < 2U) || (argc > 4U)) {
         shell_error(sh, "Usage: bacnet file dump <instance> [offset] [len]");
         return -EINVAL;
     }
-    err = file_instance_parse(sh, argv[1], &instance);
+    err = file_instance_number_parse(sh, argv[1], &instance);
     if (err) {
         return err;
     }
@@ -487,36 +694,32 @@ static int cmd_file_dump(const struct shell *sh, size_t argc, char **argv)
         length_set = true;
     }
 
-    err = file_path_require(sh, instance, &pathname);
+    err = file_transfer_open(sh, instance, &transfer);
     if (err) {
         return err;
     }
-    err = file_stream_require(sh, instance);
-    if (err) {
-        return err;
-    }
-
-    file_size_max = bacfile_file_size(instance);
-    if (file_size_max > INT32_MAX) {
-        shell_error(sh, "File is too large for stream offsets");
-        return -EOVERFLOW;
-    }
-    file_size = (uint32_t)file_size_max;
-    if (offset > file_size) {
+    if (offset > transfer.file_size) {
         shell_error(
-            sh, "Offset %u is past end of file (%u)", offset, file_size);
+            sh, "Offset %u is past end of file (%u)", offset,
+            transfer.file_size);
+        file_transfer_release(&transfer);
         return -EINVAL;
     }
     if (!length_set) {
-        remaining = file_size - offset;
+        remaining = transfer.file_size - offset;
     } else if (remaining > (uint32_t)INT32_MAX - offset) {
         shell_error(sh, "Dump range exceeds the stream offset limit");
+        file_transfer_release(&transfer);
         return -EOVERFLOW;
     }
     while (remaining > 0U) {
         requested = MIN(remaining, sizeof(data));
-        bytes_read =
-            bacfile_read_offset(instance, (int32_t)offset, data, requested);
+        err =
+            file_transfer_read(&transfer, offset, data, requested, &bytes_read);
+        if (err) {
+            file_transfer_release(&transfer);
+            return file_transfer_changed(sh, instance, err);
+        }
         if (bytes_read == 0U) {
             break;
         }
@@ -527,6 +730,7 @@ static int cmd_file_dump(const struct shell *sh, size_t argc, char **argv)
             break;
         }
     }
+    file_transfer_release(&transfer);
 
     return 0;
 }
@@ -830,84 +1034,72 @@ static void file_json_application_values(
 
 static int cmd_file_export(const struct shell *sh, size_t argc, char **argv)
 {
+    struct file_transfer transfer;
     uint8_t data[FILE_CHUNK_SIZE];
     char hex[FILE_HEX_BUFFER_SIZE];
     uint32_t instance;
-    BACNET_UNSIGNED_INTEGER file_size_max;
-    uint32_t file_size;
     uint32_t offset;
     uint32_t requested;
-    uint32_t bytes_read;
+    uint32_t bytes_read = 0;
     uint32_t crc;
-    const char *pathname;
-    const char *name;
-    const char *mime_type;
     int err;
 
     if (argc != 2U) {
         shell_error(sh, "Usage: bacnet file export <instance>");
         return -EINVAL;
     }
-    err = file_instance_parse(sh, argv[1], &instance);
+    err = file_instance_number_parse(sh, argv[1], &instance);
     if (err) {
         return err;
     }
-    err = file_path_require(sh, instance, &pathname);
-    if (err) {
-        return err;
-    }
-    err = file_stream_require(sh, instance);
+    err = file_transfer_open(sh, instance, &transfer);
     if (err) {
         return err;
     }
 
-    file_size_max = bacfile_file_size(instance);
-    if (file_size_max > INT32_MAX) {
-        shell_error(sh, "File is too large for stream offsets");
-        return -EOVERFLOW;
-    }
-    file_size = (uint32_t)file_size_max;
-
-    name = bacfile_name_ansi(instance);
-    mime_type = bacfile_file_type(instance);
     shell_print(sh, "{");
     shell_print(sh, "\"instance\":%u,", (unsigned)instance);
     shell_fprintf(sh, SHELL_NORMAL, "\"name\":");
-    file_json_string(sh, name ? name : "");
+    file_json_string(sh, transfer.name);
     shell_print(sh, ",");
     shell_fprintf(sh, SHELL_NORMAL, "\"mime_type\":");
-    file_json_string(sh, mime_type ? mime_type : "");
+    file_json_string(sh, transfer.mime_type);
     shell_print(sh, ",");
-    shell_print(sh, "\"size\":%u,", (unsigned)file_size);
-    shell_print(
-        sh, "\"read_only\":%s,",
-        bacfile_read_only(instance) ? "true" : "false");
+    shell_print(sh, "\"size\":%u,", (unsigned)transfer.file_size);
+    shell_print(sh, "\"read_only\":%s,", transfer.read_only ? "true" : "false");
     shell_print(sh, "\"data\":[");
 
     crc = 0;
     offset = 0;
-    while (offset < file_size) {
-        requested = MIN(file_size - offset, FILE_CHUNK_SIZE);
-        bytes_read =
-            bacfile_read_offset(instance, (int32_t)offset, data, requested);
+    while (offset < transfer.file_size) {
+        requested = MIN(transfer.file_size - offset, FILE_CHUNK_SIZE);
+        err =
+            file_transfer_read(&transfer, offset, data, requested, &bytes_read);
+        if (err) {
+            file_transfer_release(&transfer);
+            return file_transfer_changed(sh, instance, err);
+        }
         if (bytes_read != requested) {
             shell_error(sh, "Short read while exporting at offset %u", offset);
+            file_transfer_release(&transfer);
             return -EIO;
         }
         crc = crc32_ieee_update(crc, data, bytes_read);
         if (bin2hex(data, bytes_read, hex, sizeof(hex)) != 2U * bytes_read) {
             shell_error(sh, "Unable to encode export data as hex");
+            file_transfer_release(&transfer);
             return -EIO;
         }
         shell_print(
             sh, "{\"instance\":%u,\"offset\":%u,\"data\":\"%s\"}%s",
             (unsigned)instance, (unsigned)offset, hex,
-            (offset + bytes_read < file_size) ? "," : "");
+            (offset + bytes_read < transfer.file_size) ? "," : "");
         offset += bytes_read;
     }
     shell_print(sh, "],");
     shell_print(sh, "\"crc32\":\"%08x\"", (unsigned)crc);
     shell_print(sh, "}");
+    file_transfer_release(&transfer);
 
     return 0;
 }
@@ -1041,50 +1233,42 @@ static void file_json_create_object(
 
 static int cmd_file_decode(const struct shell *sh, size_t argc, char **argv)
 {
+    struct file_transfer transfer;
     uint8_t apdu[MAX_APDU];
     BACNET_CREATE_OBJECT_DATA data = { 0 };
     uint32_t instance;
-    BACNET_UNSIGNED_INTEGER file_size_max;
-    uint32_t file_size;
     uint32_t offset = 0;
-    uint32_t bytes_read;
+    uint32_t requested;
+    uint32_t bytes_read = 0;
     int decoded_len;
-    const char *pathname;
+    bool supported;
     int err;
 
     if (argc != 2U) {
         shell_error(sh, "Usage: bacnet file decode <backup-instance>");
         return -EINVAL;
     }
-    err = file_instance_parse(sh, argv[1], &instance);
+    err = file_instance_number_parse(sh, argv[1], &instance);
     if (err) {
         return err;
     }
-    if (!Device_Is_Configuration_File(instance)) {
-        shell_error(sh, "File %u is not a configured backup file", instance);
-        return -EPERM;
-    }
-    err = file_path_require(sh, instance, &pathname);
-    if (err) {
-        return err;
-    }
-    err = file_stream_require(sh, instance);
+    err = file_backup_open(sh, instance, &transfer);
     if (err) {
         return err;
     }
 
-    file_size_max = bacfile_file_size(instance);
-    if (file_size_max > INT32_MAX) {
-        shell_error(sh, "Backup file is too large for stream offsets");
-        return -EOVERFLOW;
-    }
-    file_size = (uint32_t)file_size_max;
-    while (offset < file_size) {
-        bytes_read =
-            bacfile_read_offset(instance, (int32_t)offset, apdu, sizeof(apdu));
+    while (offset < transfer.file_size) {
+        requested = MIN(transfer.file_size - offset, sizeof(apdu));
+        err =
+            file_transfer_read(&transfer, offset, apdu, requested, &bytes_read);
+        if (err) {
+            file_transfer_release(&transfer);
+            return file_transfer_changed(sh, instance, err);
+        }
         if (bytes_read == 0U) {
             shell_error(
                 sh, "Unable to read backup record at offset %u", offset);
+            file_transfer_release(&transfer);
             return -EIO;
         }
         memset(&data, 0, sizeof(data));
@@ -1094,12 +1278,25 @@ static int cmd_file_decode(const struct shell *sh, size_t argc, char **argv)
             shell_error(
                 sh, "Malformed or truncated CreateObject record at offset %u",
                 offset);
+            file_transfer_release(&transfer);
             return -EBADMSG;
         }
-        if (!Device_Object_Functions_Find(data.object_type)) {
+        bacnet_lock();
+        err = file_transfer_revalidate(&transfer);
+        supported = false;
+        if (err == 0) {
+            supported = Device_Object_Functions_Find(data.object_type) != NULL;
+        }
+        bacnet_unlock();
+        if (err) {
+            file_transfer_release(&transfer);
+            return file_transfer_changed(sh, instance, err);
+        }
+        if (!supported) {
             shell_error(
                 sh, "Unsupported object type %s at offset %u",
                 bactext_object_type_name(data.object_type), offset);
+            file_transfer_release(&transfer);
             return -ENOTSUP;
         }
         err = file_initial_values_validate(&data);
@@ -1107,31 +1304,41 @@ static int cmd_file_decode(const struct shell *sh, size_t argc, char **argv)
             shell_error(
                 sh, "Malformed CreateObject initial values at offset %u",
                 offset);
+            file_transfer_release(&transfer);
             return err;
         }
         file_json_create_object(sh, offset, &data);
         offset += (uint32_t)decoded_len;
     }
+    file_transfer_release(&transfer);
 
     return 0;
 }
 
+BACNET_SHELL_LOCK_HANDLER(cmd_file_list)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_info)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_config)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_read)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_write)
+BACNET_SHELL_LOCK_HANDLER(cmd_file_import)
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     file_sub_cmd,
-    SHELL_CMD(list, NULL, "list BACnet File objects", cmd_file_list),
-    SHELL_CMD(info, NULL, "<instance> show File object details", cmd_file_info),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(list, NULL, "list BACnet File objects", cmd_file_list),
+    BACNET_SHELL_CMD(
+        info, NULL, "<instance> show File object details", cmd_file_info),
+    BACNET_SHELL_CMD(
         config,
         NULL,
         "[<index> <object-type> <instance>] list or set a "
         "Device configuration-files entry",
         cmd_file_config),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         read,
         NULL,
         "<instance> <offset> [len] read a hex chunk",
         cmd_file_read),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         write,
         NULL,
         "<instance> <offset> <hex> write a hex chunk",
@@ -1146,7 +1353,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         NULL,
         "<instance> export a JSON document with chunk data",
         cmd_file_export),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         import, NULL, "'<json>' import one JSON hex chunk", cmd_file_import),
     SHELL_CMD(
         decode,

@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <zephyr/shell/shell.h>
+#include <bacnet_shell/bacnet_shell.h>
 #include <bacnet_settings/bacnet_storage.h>
 #include <stdio.h>
 
@@ -201,20 +202,25 @@ static int cmd_erase(const struct shell *sh, size_t argc, char **argv)
     return 0;
 }
 
+BACNET_SHELL_LOCK_HANDLER(cmd_erase)
+BACNET_SHELL_LOCK_HANDLER(cmd_list)
+BACNET_SHELL_LOCK_HANDLER(cmd_string)
+BACNET_SHELL_LOCK_HANDLER(cmd_delete)
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     sub_bacnet_storage_cmds,
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         erase,
         NULL,
         "erase the whole storage partition (reboot required)",
         cmd_erase),
-    SHELL_CMD(list, NULL, "list BACnet storage strings", cmd_list),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(list, NULL, "list BACnet storage strings", cmd_list),
+    BACNET_SHELL_CMD(
         string,
         NULL,
         "<object type> <object instance> <property id>[array index] [string]",
         cmd_string),
-    SHELL_CMD(
+    BACNET_SHELL_CMD(
         delete,
         NULL,
         "<object type> <object instance> <property id>[array index]",

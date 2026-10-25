@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <zephyr/shell/shell.h>
+#include <bacnet_shell/bacnet_shell.h>
 /* BACnet definitions */
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
@@ -46,5 +47,5 @@ static int cmd_date_time(const struct shell *shell, int argc, char **argv)
     }
 }
 
-SHELL_SUBCMD_ADD(
+BACNET_SHELL_CMD_ADD(
     (bacnet), time, NULL, "BACnet Date Time Command", cmd_date_time, 1, 2);

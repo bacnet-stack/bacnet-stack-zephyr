@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <zephyr/shell/shell.h>
+#include <bacnet_shell/bacnet_shell.h>
 /* BACnet definitions */
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
@@ -685,30 +686,35 @@ static int cmd_lighting_output_blink_warn_relinquish(
     return cmd_lighting_output_blink(shell, argc, argv, operation);
 }
 
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_step_up)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_step_down)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_step_on)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_step_off)
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     lighting_output_step_sub_cmd,
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         up,
         NULL,
         "<up> <instance> "
         "<step increment percent> <priority>",
         cmd_lighting_output_step_up),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         down,
         NULL,
         "<down> <instance> "
         "<step increment percent> <priority>",
         cmd_lighting_output_step_down),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         on,
         NULL,
         "<on> <instance> "
         "<step increment percent> <priority>",
         cmd_lighting_output_step_on),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         off,
         NULL,
@@ -717,23 +723,27 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         cmd_lighting_output_step_off),
     SHELL_SUBCMD_SET_END);
 
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_blink_warn)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_blink_warn_off)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_blink_warn_relinquish)
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     lighting_output_blink_sub_cmd,
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         warn,
         NULL,
         "<instance> <egress seconds> "
         "<interval milliseconds> <off percent> <priority>",
         cmd_lighting_output_blink_warn),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         warn_off,
         NULL,
         "<instance> <egress seconds> "
         "<interval milliseconds> <off percent> <priority>",
         cmd_lighting_output_blink_warn_off),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         warn_relinquish,
         NULL,
@@ -742,47 +752,57 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         cmd_lighting_output_blink_warn_relinquish),
     SHELL_SUBCMD_SET_END);
 
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_list)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_value_get)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_value_set)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_value_relinquish)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_fade)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_ramp)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_stop)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_override)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_track)
+
 SHELL_STATIC_SUBCMD_SET_CREATE(
     lighting_output_sub_cmd,
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         list,
         NULL,
         "list all the lights",
         cmd_lighting_output_list),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         get,
         NULL,
         "<instance>",
         cmd_lighting_output_value_get),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         set,
         NULL,
         "<instance> <level percent> [priority]",
         cmd_lighting_output_value_set),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         relinquish,
         NULL,
         "<instance> [priority]",
         cmd_lighting_output_value_relinquish),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         fade,
         NULL,
         "<instance> <level percent> "
         "[fade milliseconds] [priority]",
         cmd_lighting_output_fade),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         ramp,
         NULL,
         "<instance> <level percent> "
         "[ramp percent] [priority]",
         cmd_lighting_output_ramp),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         stop,
         NULL,
@@ -800,13 +820,13 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         &lighting_output_blink_sub_cmd,
         "<warn|warn_off|warn_relinquish>",
         NULL),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         override,
         NULL,
         "<instance> <clear|ramp <percent> <rate>|<percent> [momentary]",
         cmd_lighting_output_override),
-    SHELL_COND_CMD(
+    BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         track,
         NULL,
