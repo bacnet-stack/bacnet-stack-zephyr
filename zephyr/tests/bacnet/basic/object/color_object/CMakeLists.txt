@@ -21,10 +21,12 @@ get_filename_component(BACNET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 # Update include path for this module
 list(APPEND BACNET_INCLUDE ${BACNET_BASE}/src)
 set(TEST_OBJECT_SRC ${BACNET_BASE}/test/bacnet/basic/object/test)
+list(APPEND TEST_OBJECT_INCLUDE ${TEST_OBJECT_SRC})
 
 if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
-  list(APPEND INCLUDE ${BACNET_INCLUDE})
+  file(RELATIVE_PATH TEST_OBJECT_INCLUDE $ENV{ZEPHYR_BASE} ${TEST_OBJECT_SRC})
+  list(APPEND INCLUDE ${BACNET_INCLUDE} ${TEST_OBJECT_INCLUDE})
   list(APPEND SOURCES
     ${BACNET_BASE}/src/bacnet/basic/object/color_object.c
     ${BACNET_BASE}/src/bacnet/access_rule.c
@@ -67,6 +69,7 @@ if(BOARD STREQUAL unit_testing)
     ${BACNET_BASE}/src/bacnet/secure_connect.c
     ${BACNET_TEST_PATH}/src/main.c
     ${BACNET_BASE}/test/bacnet/basic/object/test/device_mock.c
+    ${BACNET_BASE}/test/bacnet/basic/object/test/property_test.c
     )
 
   set(CONF_FILE "${CONF_FILE};prj.unit_testing.conf")
@@ -76,9 +79,12 @@ else()
   find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
   project(${BACNET_NAME})
 
-  target_include_directories(app PRIVATE ${BACNET_INCLUDE})
+  target_include_directories(app PRIVATE
+    ${BACNET_INCLUDE}
+    ${TEST_OBJECT_INCLUDE})
   target_sources(app PRIVATE
     ${BACNET_TEST_PATH}/src/main.c
+    ${TEST_OBJECT_SRC}/property_test.c
     )
 endif()
 
