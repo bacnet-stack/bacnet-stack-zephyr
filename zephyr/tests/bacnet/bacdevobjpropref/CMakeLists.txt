@@ -74,4 +74,5 @@ endif()
 add_compile_definitions(
   CONFIG_ZTEST_NEW_API
   BACNET_STACK_DEPRECATED_DISABLE
+  MAX_APDU=50
   )
