@@ -9,17 +9,12 @@ string(REGEX REPLACE
   BACNET_BASE
   ${CMAKE_CURRENT_SOURCE_DIR})
 string(REGEX REPLACE
-  "/zephyr/tests/" "/stack/src/"
-  BACNET_SRC_PATH
-  ${CMAKE_CURRENT_SOURCE_DIR})
-string(REGEX REPLACE
   "/zephyr/tests/" "/stack/test/"
   BACNET_TEST_PATH
   ${CMAKE_CURRENT_SOURCE_DIR})
 get_filename_component(BACNET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
 add_definitions(-DMAX_APDU=1476)
-get_filename_component(BACNET_DATALINK_SRC ${BACNET_SRC_PATH} PATH)
 
 if(BOARD STREQUAL unit_testing)
   file(RELATIVE_PATH BACNET_INCLUDE $ENV{ZEPHYR_BASE} ${BACNET_BASE}/src)
@@ -41,7 +36,6 @@ else()
   target_include_directories(app PRIVATE ${BACNET_BASE}/src)
   target_sources(app PRIVATE
     ${BACNET_TEST_PATH}/src/main.c
-    ${BACNET_DATALINK_SRC}/cobs.c
     )
 endif()
 
