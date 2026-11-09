@@ -11,6 +11,14 @@ menuconfig BACNET_DATALINK_SETTINGS
 
 if BACNET_DATALINK_SETTINGS
 
+    config BZLL_RECEIVE_PACKET_COUNT
+        int "BZLL receive packet count"
+        range 1 256
+        default 2
+        help
+          Number of packets in the BZLL receive queue. This value must be a
+          power of 2.
+
     config BZLL_NODE_TIME_TO_LIVE_S
         int "BZLL node time-to-live in the VMAC table"
         default 600
@@ -22,5 +30,22 @@ if BACNET_DATALINK_SETTINGS
         default 3600
         help
            Time interval in seconds between scans of the Zigbee network for BACnet nodes to update the VMAC table.
+
+    config DLMSTP_MAX_INFO_FRAMES
+        int "Maximum number of MS/TP information frames queued"
+        range 1 65535
+        default 1
+        depends on BACDL_MSTP
+        help
+          Maximum number of received MS/TP information frames buffered for
+          the application.
+
+    config DLMSTP_MAX_MASTER
+        int "MS/TP maximum master address"
+        range 0 127
+        default 127
+        depends on BACDL_MSTP
+        help
+          Highest MS/TP master MAC address used by the datalink.
 
 endif # BACNET_DATALINK_SETTINGS
