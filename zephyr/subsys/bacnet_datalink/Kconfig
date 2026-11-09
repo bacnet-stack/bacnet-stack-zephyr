@@ -25,9 +25,9 @@ config BZLL_SCAN_NODES_INTERVAL_S
 
 config DLMSTP_MAX_INFO_FRAMES
     int "Maximum number of MS/TP information frames queued"
-    range 1 128
+    range 1 255
     default 1
     depends on BACDL_MSTP
     help
-      Maximum number of received MS/TP information frames buffered for
-      the application.
+      Controls the outgoing MS/TP queue and the reported
+      Max-Info-Frames limit, not receive buffering.
