@@ -31,11 +31,3 @@ config DLMSTP_MAX_INFO_FRAMES
     help
       Maximum number of received MS/TP information frames buffered for
       the application.
-
-config DLMSTP_MAX_MASTER
-    int "MS/TP maximum master address"
-    range 1 127
-    default 127
-    depends on BACDL_MSTP
-    help
-      Highest MS/TP master MAC address used by the datalink.
