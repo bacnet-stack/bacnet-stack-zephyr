@@ -594,7 +594,7 @@ static int cmd_lighting_output_blink(
     uint32_t instance = 0;
     float off_value = 0.0f;
     uint16_t interval = 0;
-    uint16_t count = 0;
+    uint16_t count = UINT16_MAX;
     uint32_t egress_seconds = 60 * 5;
     unsigned priority = 0;
     unsigned long long_value;
@@ -648,6 +648,15 @@ static int cmd_lighting_output_blink(
             return -EINVAL;
         }
         priority = (unsigned)long_value;
+    }
+    if (argc > 6) {
+        /* [count] - 65535 blinks for the whole egress time */
+        long_value = strtoul(argv[6], &end, 0);
+        if ((end == argv[6]) || (long_value > UINT16_MAX)) {
+            shell_error(shell, "argv[6]=%s invalid count", argv[6]);
+            return -EINVAL;
+        }
+        count = (uint16_t)long_value;
     }
     Lighting_Output_Blink_Warn_Feature_Set(
         instance, off_value, interval, count);
@@ -734,21 +743,21 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         warn,
         NULL,
         "<instance> <egress seconds> "
-        "<interval milliseconds> <off percent> <priority>",
+        "<interval milliseconds> <off percent> <priority> [count]",
         cmd_lighting_output_blink_warn),
     BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         warn_off,
         NULL,
         "<instance> <egress seconds> "
-        "<interval milliseconds> <off percent> <priority>",
+        "<interval milliseconds> <off percent> <priority> [count]",
         cmd_lighting_output_blink_warn_off),
     BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         warn_relinquish,
         NULL,
         "<instance> <egress seconds> "
-        "<interval milliseconds> <off percent> <priority>",
+        "<interval milliseconds> <off percent> <priority> [count]",
         cmd_lighting_output_blink_warn_relinquish),
     SHELL_SUBCMD_SET_END);
 
