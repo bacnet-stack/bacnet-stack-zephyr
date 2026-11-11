@@ -16,6 +16,148 @@
 #include "bacnet/bactext.h"
 #include "bacnet/basic/object/lo.h"
 
+/**
+ * @brief Parse an unsigned integer shell argument with range checking
+ * @param shell [in] shell instance used for error reporting
+ * @param argv [in] shell argument vector
+ * @param index [in] index of the argument to parse
+ * @param max [in] maximum allowed value
+ * @param name [in] argument name used for error reporting
+ * @param value [out] parsed value
+ * @return 0 on success, or negative errno on failure
+ */
+static int cmd_arg_unsigned(
+    const struct shell *shell,
+    char **argv,
+    int index,
+    unsigned long max,
+    const char *name,
+    unsigned long *value)
+{
+    unsigned long long_value;
+    int err = 0;
+
+    long_value = shell_strtoul(argv[index], 0, &err);
+    if ((err == 0) && (long_value > max)) {
+        err = -ERANGE;
+    }
+    if (err != 0) {
+        shell_error(shell, "argv[%d]=%s invalid %s", index, argv[index], name);
+        return err;
+    }
+    *value = long_value;
+
+    return 0;
+}
+
+/**
+ * @brief Parse a floating point shell argument
+ * @param shell [in] shell instance used for error reporting
+ * @param argv [in] shell argument vector
+ * @param index [in] index of the argument to parse
+ * @param name [in] argument name used for error reporting
+ * @param value [out] parsed value
+ * @return 0 on success, or negative errno on failure
+ */
+static int cmd_arg_float(
+    const struct shell *shell,
+    char **argv,
+    int index,
+    const char *name,
+    float *value)
+{
+    double double_value;
+    char *end = NULL;
+    int err = 0;
+
+    /* shell has no strtod helper, so mirror the shell_strtoul checks */
+    errno = 0;
+    double_value = strtod(argv[index], &end);
+    if (errno == ERANGE) {
+        err = -ERANGE;
+    } else if ((errno != 0) || (end == argv[index]) || (*end != '\0')) {
+        err = -EINVAL;
+    }
+    if (err != 0) {
+        shell_error(shell, "argv[%d]=%s invalid %s", index, argv[index], name);
+        return err;
+    }
+    *value = (float)double_value;
+
+    return 0;
+}
+
+/**
+ * @brief Parse a BACnet object instance shell argument
+ * @param shell [in] shell instance used for error reporting
+ * @param argv [in] shell argument vector
+ * @param index [in] index of the argument to parse
+ * @param instance [out] parsed object instance
+ * @return 0 on success, or negative errno on failure
+ */
+static int cmd_arg_instance(
+    const struct shell *shell, char **argv, int index, uint32_t *instance)
+{
+    unsigned long long_value = 0;
+    int err;
+
+    err = cmd_arg_unsigned(
+        shell, argv, index, BACNET_MAX_INSTANCE, "instance", &long_value);
+    if (err == 0) {
+        *instance = (uint32_t)long_value;
+    }
+
+    return err;
+}
+
+/**
+ * @brief Parse a BACnet priority shell argument
+ * @param shell [in] shell instance used for error reporting
+ * @param argv [in] shell argument vector
+ * @param index [in] index of the argument to parse
+ * @param priority [out] parsed priority, 0..16
+ * @return 0 on success, or negative errno on failure
+ */
+static int cmd_arg_priority(
+    const struct shell *shell, char **argv, int index, unsigned *priority)
+{
+    unsigned long long_value = 0;
+    int err;
+
+    err = cmd_arg_unsigned(
+        shell, argv, index, BACNET_MAX_PRIORITY, "priority", &long_value);
+    if (err == 0) {
+        *priority = (unsigned)long_value;
+    }
+
+    return err;
+}
+
+/**
+ * @brief Parse a lighting output instance argument and validate it exists
+ * @param shell [in] shell instance used for error reporting
+ * @param argv [in] shell argument vector
+ * @param index [in] index of the argument to parse
+ * @param instance [out] parsed object instance
+ * @return 0 on success, or negative errno on failure
+ */
+static int cmd_arg_valid_instance(
+    const struct shell *shell, char **argv, int index, uint32_t *instance)
+{
+    int err;
+
+    err = cmd_arg_instance(shell, argv, index, instance);
+    if (err != 0) {
+        return err;
+    }
+    if (Lighting_Output_Valid_Instance(*instance) == false) {
+        shell_error(shell, "argv[%d]=%s invalid instance", index, argv[index]);
+        return -EINVAL;
+    }
+
+    return 0;
+}
+
 static int
 cmd_lighting_output_value_print(const struct shell *shell, uint32_t instance)
 {
@@ -72,64 +214,57 @@ cmd_lighting_output_value_get(const struct shell *shell, int argc, char **argv)
     float priority_array[BACNET_MAX_PRIORITY + 1] = { 0.0f };
     double tracking_value;
     bool is_relinquished[BACNET_MAX_PRIORITY + 1] = { false };
-    unsigned long long_value;
     bool overridden = false;
     bool out_of_service = false;
-    char *end;
+    int err;
 
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
-            return -EINVAL;
-        }
-        instance = (uint32_t)long_value;
-        if (Lighting_Output_Valid_Instance(instance) == false) {
-            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
-            return -EINVAL;
-        }
-        priority_array[BACNET_MAX_PRIORITY] =
-            Lighting_Output_Relinquish_Default(instance);
-        for (priority = BACNET_MIN_PRIORITY; priority <= BACNET_MAX_PRIORITY;
-             priority++) {
-            priority_array[priority - 1] =
-                Lighting_Output_Priority_Array_Value(instance, priority);
-            is_relinquished[priority - 1] =
-                Lighting_Output_Priority_Array_Relinquished(instance, priority);
-        }
-        overridden = Lighting_Output_Overridden_Status(instance);
-        out_of_service = Lighting_Output_Out_Of_Service(instance);
-        tracking_value = (double)Lighting_Output_Tracking_Value(instance);
-        shell_print(
-            shell,
-            "lighting-output-%d %.1f "
-            "{%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,"
-            "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f} %s %s",
-            instance, tracking_value,
-            cmd_priority_array_value(is_relinquished[0], priority_array[0]),
-            cmd_priority_array_value(is_relinquished[1], priority_array[1]),
-            cmd_priority_array_value(is_relinquished[2], priority_array[2]),
-            cmd_priority_array_value(is_relinquished[3], priority_array[3]),
-            cmd_priority_array_value(is_relinquished[4], priority_array[4]),
-            cmd_priority_array_value(is_relinquished[5], priority_array[5]),
-            cmd_priority_array_value(is_relinquished[6], priority_array[6]),
-            cmd_priority_array_value(is_relinquished[7], priority_array[7]),
-            cmd_priority_array_value(is_relinquished[8], priority_array[8]),
-            cmd_priority_array_value(is_relinquished[9], priority_array[9]),
-            cmd_priority_array_value(is_relinquished[10], priority_array[10]),
-            cmd_priority_array_value(is_relinquished[11], priority_array[11]),
-            cmd_priority_array_value(is_relinquished[12], priority_array[12]),
-            cmd_priority_array_value(is_relinquished[13], priority_array[13]),
-            cmd_priority_array_value(is_relinquished[14], priority_array[14]),
-            cmd_priority_array_value(is_relinquished[15], priority_array[15]),
-            (double)priority_array[BACNET_MAX_PRIORITY],
-            (overridden ? "overridden" : "tracking"),
-            (out_of_service ? "out-of-service" : "in-service"));
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
     }
+    /* <instance> */
+    err = cmd_arg_valid_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
+    priority_array[BACNET_MAX_PRIORITY] =
+        Lighting_Output_Relinquish_Default(instance);
+    for (priority = BACNET_MIN_PRIORITY; priority <= BACNET_MAX_PRIORITY;
+         priority++) {
+        priority_array[priority - 1] =
+            Lighting_Output_Priority_Array_Value(instance, priority);
+        is_relinquished[priority - 1] =
+            Lighting_Output_Priority_Array_Relinquished(instance, priority);
+    }
+    overridden = Lighting_Output_Overridden_Status(instance);
+    out_of_service = Lighting_Output_Out_Of_Service(instance);
+    tracking_value = (double)Lighting_Output_Tracking_Value(instance);
+    shell_print(
+        shell,
+        "lighting-output-%d %.1f "
+        "{%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,"
+        "%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f} %s %s",
+        instance, tracking_value,
+        cmd_priority_array_value(is_relinquished[0], priority_array[0]),
+        cmd_priority_array_value(is_relinquished[1], priority_array[1]),
+        cmd_priority_array_value(is_relinquished[2], priority_array[2]),
+        cmd_priority_array_value(is_relinquished[3], priority_array[3]),
+        cmd_priority_array_value(is_relinquished[4], priority_array[4]),
+        cmd_priority_array_value(is_relinquished[5], priority_array[5]),
+        cmd_priority_array_value(is_relinquished[6], priority_array[6]),
+        cmd_priority_array_value(is_relinquished[7], priority_array[7]),
+        cmd_priority_array_value(is_relinquished[8], priority_array[8]),
+        cmd_priority_array_value(is_relinquished[9], priority_array[9]),
+        cmd_priority_array_value(is_relinquished[10], priority_array[10]),
+        cmd_priority_array_value(is_relinquished[11], priority_array[11]),
+        cmd_priority_array_value(is_relinquished[12], priority_array[12]),
+        cmd_priority_array_value(is_relinquished[13], priority_array[13]),
+        cmd_priority_array_value(is_relinquished[14], priority_array[14]),
+        cmd_priority_array_value(is_relinquished[15], priority_array[15]),
+        (double)priority_array[BACNET_MAX_PRIORITY],
+        (overridden ? "overridden" : "tracking"),
+        (out_of_service ? "out-of-service" : "in-service"));
+
     return 0;
 }
 
@@ -137,28 +272,21 @@ static int
 cmd_lighting_output_track(const struct shell *shell, int argc, char **argv)
 {
     uint32_t instance = 0;
-    unsigned long long_value;
-    char *end;
+    int err;
 
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
-            return -EINVAL;
-        }
-        instance = (uint32_t)long_value;
-        if (Lighting_Output_Valid_Instance(instance) == false) {
-            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
-            return -EINVAL;
-        }
-        shell_print(
-            shell, "lighting-output-%d %.1f", instance,
-            (double)Lighting_Output_Tracking_Value(instance));
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
     }
+    /* <instance> */
+    err = cmd_arg_valid_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
+    shell_print(
+        shell, "lighting-output-%d %.1f", instance,
+        (double)Lighting_Output_Tracking_Value(instance));
+
     return 0;
 }
 
@@ -166,28 +294,19 @@ static int
 cmd_lighting_output_override(const struct shell *shell, int argc, char **argv)
 {
     uint32_t instance = 0;
-    unsigned long long_value;
     float float_value = 0.0f;
-    double double_value;
     float ramp_value = 0.0f;
-    char *end;
+    int err;
 
     /* <instance> <clear|ramp <percent> <rate>|<percent> [momentary] */
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
-            return -EINVAL;
-        }
-        instance = (uint32_t)long_value;
-        if (Lighting_Output_Valid_Instance(instance) == false) {
-            shell_error(shell, "argv[1]=%s invalid instance", argv[1]);
-            return -EINVAL;
-        }
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
+    }
+    /* <instance> */
+    err = cmd_arg_valid_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
     }
     if (argc > 2) {
         if (bacnet_strnicmp(argv[2], "clear", 5) == 0) {
@@ -195,30 +314,28 @@ cmd_lighting_output_override(const struct shell *shell, int argc, char **argv)
             Lighting_Output_Overridden_Clear(instance);
             return cmd_lighting_output_value_print(shell, instance);
         } else if (bacnet_strnicmp(argv[2], "ramp", 4) == 0) {
+            if (argc < 5) {
+                shell_help(shell);
+                return -EINVAL;
+            }
             /* <level in percent>*/
-            double_value = strtod(argv[3], &end);
-            if (end == argv[3]) {
-                shell_error(shell, "argv[3]=%s invalid percentage", argv[3]);
-                return -EINVAL;
+            err = cmd_arg_float(shell, argv, 3, "percentage", &float_value);
+            if (err != 0) {
+                return err;
             }
-            float_value = (float)double_value;
             /* <ramp in percent per second>*/
-            double_value = strtod(argv[4], &end);
-            if (end == argv[4]) {
-                shell_error(shell, "argv[4]=%s invalid ramp rate", argv[4]);
-                return -EINVAL;
+            err = cmd_arg_float(shell, argv, 4, "ramp rate", &ramp_value);
+            if (err != 0) {
+                return err;
             }
-            ramp_value = (float)double_value;
             /* ramp the override */
             Lighting_Output_Overridden_Ramp(instance, float_value, ramp_value);
         } else {
             /* <level in percent>*/
-            double_value = strtod(argv[2], &end);
-            if (end == argv[2]) {
-                shell_error(shell, "argv[2]=%s invalid percentage", argv[2]);
-                return -EINVAL;
+            err = cmd_arg_float(shell, argv, 2, "percentage", &float_value);
+            if (err != 0) {
+                return err;
             }
-            float_value = (float)double_value;
             if (argc > 3) {
                 if (bacnet_strnicmp(argv[3], "momentary", 9) == 0) {
                     /* momentarily override the value */
@@ -242,44 +359,35 @@ cmd_lighting_output_value_set(const struct shell *shell, int argc, char **argv)
     uint32_t instance = 0;
     unsigned priority = 0;
     float float_value = 0.0f;
-    double double_value;
-    unsigned long long_value;
     bool relinquish = false;
-    char *end;
+    int err;
 
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance number", argv[1]);
-            return -EINVAL;
-        }
-        instance = long_value;
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
+    }
+    /* <instance> */
+    err = cmd_arg_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
     }
     if (argc > 2) {
         if (bacnet_strnicmp(argv[2], "NULL", 4) == 0) {
             relinquish = true;
         } else {
             /* <level in percent>*/
-            double_value = strtod(argv[2], &end);
-            if (end == argv[2]) {
-                shell_error(shell, "argv[2]=%s invalid percentage", argv[2]);
-                return -EINVAL;
+            err = cmd_arg_float(shell, argv, 2, "percentage", &float_value);
+            if (err != 0) {
+                return err;
             }
-            float_value = (float)double_value;
         }
         priority = Lighting_Output_Default_Priority(instance);
         if (argc > 3) {
             /* [priority] */
-            long_value = strtoul(argv[3], &end, 0);
-            if (end == argv[3]) {
-                shell_error(shell, "argv[3]=%s invalid priority", argv[3]);
-                return -EINVAL;
+            err = cmd_arg_priority(shell, argv, 3, &priority);
+            if (err != 0) {
+                return err;
             }
-            priority = (unsigned)long_value;
         }
         if (relinquish) {
             Lighting_Output_Present_Value_Relinquish(instance, priority);
@@ -295,30 +403,24 @@ static int cmd_lighting_output_value_relinquish(
 {
     uint32_t instance = 0;
     unsigned priority = 0;
-    unsigned long long_value;
-    char *end;
+    int err;
 
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance number", argv[1]);
-            return -EINVAL;
-        }
-        instance = long_value;
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
+    }
+    /* <instance> */
+    err = cmd_arg_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
     }
     priority = Lighting_Output_Default_Priority(instance);
     if (argc > 2) {
         /* [priority] */
-        long_value = strtoul(argv[2], &end, 0);
-        if (end == argv[2]) {
-            shell_error(shell, "argv[2]=%s invalid priority", argv[2]);
-            return -EINVAL;
+        err = cmd_arg_priority(shell, argv, 2, &priority);
+        if (err != 0) {
+            return err;
         }
-        priority = (unsigned)long_value;
     }
     Lighting_Output_Present_Value_Relinquish(instance, priority);
     return cmd_lighting_output_value_print(shell, instance);
@@ -331,56 +433,45 @@ cmd_lighting_output_fade(const struct shell *shell, int argc, char **argv)
     uint32_t instance = 0;
     float float_value = 0.0f;
     unsigned priority = 0;
-    double double_value;
-    uint32_t fade_time = 0;
-    unsigned long long_value;
-    char *end;
+    unsigned long long_value = 0;
+    int err;
 
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance number", argv[1]);
-            return -EINVAL;
-        }
-        instance = long_value;
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
     }
+    /* <instance> */
+    err = cmd_arg_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
     if (argc > 2) {
         /* <level in percent>*/
-        double_value = strtod(argv[2], &end);
-        if (end == argv[2]) {
-            shell_error(shell, "argv[2]=%s invalid percentage", argv[2]);
-            return -EINVAL;
+        err = cmd_arg_float(shell, argv, 2, "percentage", &float_value);
+        if (err != 0) {
+            return err;
         }
-        float_value = (float)double_value;
         /* [fade in milliseconds] */
         if (argc > 3) {
-            long_value = strtoul(argv[3], &end, 0);
-            if (end == argv[3]) {
-                shell_error(shell, "argv[3]=%s invalid fade time", argv[2]);
-                return -EINVAL;
+            err = cmd_arg_unsigned(
+                shell, argv, 3, UINT32_MAX, "fade time", &long_value);
+            if (err != 0) {
+                return err;
             }
-            fade_time = (uint32_t)long_value;
         }
         if (argc > 4) {
             /* [priority] */
-            long_value = strtoul(argv[4], &end, 0);
-            if (end == argv[4]) {
-                shell_error(shell, "argv[4]=%s invalid priority", argv[4]);
-                return -EINVAL;
+            err = cmd_arg_priority(shell, argv, 4, &priority);
+            if (err != 0) {
+                return err;
             }
-            priority = (unsigned)long_value;
         }
         data.operation = BACNET_LIGHTS_FADE_TO;
         data.use_fade_time = true;
-        data.fade_time = fade_time;
+        data.fade_time = (uint32_t)long_value;
         data.use_target_level = true;
         data.target_level = float_value;
-        if ((priority >= BACNET_MIN_PRIORITY) &&
-            (priority <= BACNET_MAX_PRIORITY)) {
+        if (priority >= BACNET_MIN_PRIORITY) {
             data.priority = priority;
             data.use_priority = true;
         }
@@ -397,47 +488,36 @@ cmd_lighting_output_ramp(const struct shell *shell, int argc, char **argv)
     float float_value = 0.0f;
     float ramp_rate = 100.0f;
     unsigned priority = 0;
-    double double_value;
-    unsigned long long_value;
-    char *end;
+    int err;
 
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance number", argv[1]);
-            return -EINVAL;
-        }
-        instance = long_value;
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
     }
+    /* <instance> */
+    err = cmd_arg_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
     if (argc > 2) {
         /* <level in percent>*/
-        double_value = strtod(argv[2], &end);
-        if (end == argv[2]) {
-            shell_error(shell, "argv[2]=%s invalid percentage", argv[2]);
-            return -EINVAL;
+        err = cmd_arg_float(shell, argv, 2, "percentage", &float_value);
+        if (err != 0) {
+            return err;
         }
-        float_value = (float)double_value;
         /* [ramp percent] */
         if (argc > 3) {
-            double_value = strtod(argv[3], &end);
-            if (end == argv[3]) {
-                shell_error(shell, "argv[3]=%s invalid percentage", argv[3]);
-                return -EINVAL;
+            err = cmd_arg_float(shell, argv, 3, "ramp rate", &ramp_rate);
+            if (err != 0) {
+                return err;
             }
-            ramp_rate = (float)double_value;
         }
         if (argc > 4) {
             /* [priority] */
-            long_value = strtoul(argv[4], &end, 0);
-            if (end == argv[4]) {
-                shell_error(shell, "argv[4]=%s invalid priority", argv[4]);
-                return -EINVAL;
+            err = cmd_arg_priority(shell, argv, 4, &priority);
+            if (err != 0) {
+                return err;
             }
-            priority = (unsigned)long_value;
         }
         data.operation = BACNET_LIGHTS_RAMP_TO;
         if (isgreater(ramp_rate, 0.0f)) {
@@ -446,8 +526,7 @@ cmd_lighting_output_ramp(const struct shell *shell, int argc, char **argv)
         }
         data.use_target_level = true;
         data.target_level = float_value;
-        if ((priority >= BACNET_MIN_PRIORITY) &&
-            (priority <= BACNET_MAX_PRIORITY)) {
+        if (priority >= BACNET_MIN_PRIORITY) {
             data.priority = priority;
             data.use_priority = true;
         }
@@ -462,38 +541,31 @@ cmd_lighting_output_stop(const struct shell *shell, int argc, char **argv)
     BACNET_LIGHTING_COMMAND data = { 0 };
     uint32_t instance = 0;
     unsigned priority = 0;
-    unsigned long long_value;
-    char *end;
+    int err;
 
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance number", argv[1]);
-            return -EINVAL;
-        }
-        instance = long_value;
-        if (argc > 2) {
-            /* [priority] */
-            long_value = strtoul(argv[2], &end, 0);
-            if (end == argv[2]) {
-                shell_error(shell, "argv[2]=%s invalid priority", argv[2]);
-                return -EINVAL;
-            }
-            priority = (unsigned)long_value;
-        }
-        data.operation = BACNET_LIGHTS_STOP;
-        if ((priority >= BACNET_MIN_PRIORITY) &&
-            (priority <= BACNET_MAX_PRIORITY)) {
-            data.priority = priority;
-            data.use_priority = true;
-        }
-        (void)Lighting_Output_Lighting_Command_Set(instance, &data);
-        return cmd_lighting_output_value_print(shell, instance);
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
     }
+    /* <instance> */
+    err = cmd_arg_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
+    if (argc > 2) {
+        /* [priority] */
+        err = cmd_arg_priority(shell, argv, 2, &priority);
+        if (err != 0) {
+            return err;
+        }
+    }
+    data.operation = BACNET_LIGHTS_STOP;
+    if (priority >= BACNET_MIN_PRIORITY) {
+        data.priority = priority;
+        data.use_priority = true;
+    }
+    (void)Lighting_Output_Lighting_Command_Set(instance, &data);
+    return cmd_lighting_output_value_print(shell, instance);
 }
 
 static int cmd_lighting_output_step(
@@ -504,46 +576,36 @@ static int cmd_lighting_output_step(
 {
     uint32_t instance = 0;
     unsigned priority = 0;
-    unsigned long long_value;
-    double double_value;
-    char *end;
-    float step_increment;
+    float step_increment = 0.0f;
     BACNET_LIGHTING_COMMAND data = { 0 };
+    int err;
 
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance number", argv[1]);
-            return -EINVAL;
-        }
-        instance = long_value;
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
     }
+    /* <instance> */
+    err = cmd_arg_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
     if (argc > 2) {
         /* <level in percent>*/
-        double_value = strtod(argv[2], &end);
-        if (end == argv[2]) {
-            shell_error(shell, "argv[2]=%s invalid percentage", argv[2]);
-            return -EINVAL;
+        err = cmd_arg_float(shell, argv, 2, "percentage", &step_increment);
+        if (err != 0) {
+            return err;
         }
-        step_increment = (float)double_value;
         if (argc > 3) {
             /* [priority] */
-            long_value = strtoul(argv[3], &end, 0);
-            if (end == argv[3]) {
-                shell_error(shell, "argv[3]=%s invalid priority", argv[3]);
-                return -EINVAL;
+            err = cmd_arg_priority(shell, argv, 3, &priority);
+            if (err != 0) {
+                return err;
             }
-            priority = (unsigned)long_value;
         }
         data.operation = operation;
         data.use_step_increment = true;
         data.step_increment = step_increment;
-        if ((priority >= BACNET_MIN_PRIORITY) &&
-            (priority <= BACNET_MAX_PRIORITY)) {
+        if (priority >= BACNET_MIN_PRIORITY) {
             data.priority = priority;
             data.use_priority = true;
         }
@@ -597,64 +659,56 @@ static int cmd_lighting_output_blink(
     uint16_t count = UINT16_MAX;
     uint32_t egress_seconds = 60 * 5;
     unsigned priority = 0;
-    unsigned long long_value;
-    double double_value;
-    char *end;
+    unsigned long long_value = 0;
+    int err;
 
-    if (argc > 1) {
-        /* <instance> */
-        long_value = strtoul(argv[1], &end, 0);
-        if (end == argv[1]) {
-            shell_error(shell, "argv[1]=%s invalid instance number", argv[1]);
-            return -EINVAL;
-        }
-        instance = long_value;
-    } else {
+    if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
     }
+    /* <instance> */
+    err = cmd_arg_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
     if (argc > 2) {
         /* <egress seconds> */
-        long_value = strtoul(argv[2], &end, 0);
-        if (end == argv[2]) {
-            shell_error(shell, "argv[2]=%s invalid egress seconds", argv[2]);
-            return -EINVAL;
+        err = cmd_arg_unsigned(
+            shell, argv, 2, UINT32_MAX, "egress seconds", &long_value);
+        if (err != 0) {
+            return err;
         }
-        egress_seconds = long_value;
+        egress_seconds = (uint32_t)long_value;
     }
     if (argc > 3) {
         /* <interval milliseconds> */
-        long_value = strtoul(argv[3], &end, 0);
-        if (end == argv[3]) {
-            shell_error(shell, "argv[3]=%s invalid interval ms", argv[3]);
-            return -EINVAL;
+        err = cmd_arg_unsigned(
+            shell, argv, 3, UINT16_MAX, "interval ms", &long_value);
+        if (err != 0) {
+            return err;
         }
-        interval = long_value;
+        interval = (uint16_t)long_value;
     }
     if (argc > 4) {
         /* <off percent> */
-        double_value = strtod(argv[4], &end);
-        if (end == argv[4]) {
-            shell_error(shell, "argv[4]=%s invalid off percentage", argv[4]);
-            return -EINVAL;
+        err = cmd_arg_float(shell, argv, 4, "off percentage", &off_value);
+        if (err != 0) {
+            return err;
         }
-        off_value = (float)double_value;
     }
     if (argc > 5) {
         /* <priority> */
-        long_value = strtoul(argv[5], &end, 0);
-        if (end == argv[5]) {
-            shell_error(shell, "argv[5]=%s invalid priority", argv[5]);
-            return -EINVAL;
+        err = cmd_arg_priority(shell, argv, 5, &priority);
+        if (err != 0) {
+            return err;
         }
-        priority = (unsigned)long_value;
     }
     if (argc > 6) {
         /* [count] - 65535 blinks for the whole egress time */
-        long_value = strtoul(argv[6], &end, 0);
-        if ((end == argv[6]) || (long_value > UINT16_MAX)) {
-            shell_error(shell, "argv[6]=%s invalid count", argv[6]);
-            return -EINVAL;
+        err =
+            cmd_arg_unsigned(shell, argv, 6, UINT16_MAX, "count", &long_value);
+        if (err != 0) {
+            return err;
         }
         count = (uint16_t)long_value;
     }
@@ -662,8 +716,7 @@ static int cmd_lighting_output_blink(
         instance, off_value, interval, count);
     Lighting_Output_Egress_Time_Set(instance, egress_seconds);
     data.operation = operation;
-    if ((priority >= BACNET_MIN_PRIORITY) &&
-        (priority <= BACNET_MAX_PRIORITY)) {
+    if (priority >= BACNET_MIN_PRIORITY) {
         data.priority = priority;
         data.use_priority = true;
     }
