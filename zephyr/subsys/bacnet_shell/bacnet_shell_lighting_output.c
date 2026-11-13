@@ -13,6 +13,7 @@
 /* BACnet definitions */
 #include "bacnet/bacdef.h"
 #include "bacnet/bacdcode.h"
+#include "bacnet/bacstr.h"
 #include "bacnet/bactext.h"
 #include "bacnet/basic/object/lo.h"
 
@@ -646,6 +647,11 @@ cmd_lighting_output_step_off(const struct shell *shell, int argc, char **argv)
     return cmd_lighting_output_step(shell, argc, argv, operation);
 }
 
+/**
+ * @brief Command a blink-warn lighting operation using the configured
+ *  blink and egress properties
+ * @note <instance> [priority]
+ */
 static int cmd_lighting_output_blink(
     const struct shell *shell,
     int argc,
@@ -654,67 +660,23 @@ static int cmd_lighting_output_blink(
 {
     BACNET_LIGHTING_COMMAND data = { 0 };
     uint32_t instance = 0;
-    float off_value = 0.0f;
-    uint16_t interval = 0;
-    uint16_t count = UINT16_MAX;
-    uint32_t egress_seconds = 60 * 5;
     unsigned priority = 0;
-    unsigned long long_value = 0;
     int err;
 
     if (argc < 2) {
         shell_help(shell);
         return -EINVAL;
     }
-    /* <instance> */
-    err = cmd_arg_instance(shell, argv, 1, &instance);
+    err = cmd_arg_valid_instance(shell, argv, 1, &instance);
     if (err != 0) {
         return err;
     }
     if (argc > 2) {
-        /* <egress seconds> */
-        err = cmd_arg_unsigned(
-            shell, argv, 2, UINT32_MAX, "egress seconds", &long_value);
-        if (err != 0) {
-            return err;
-        }
-        egress_seconds = (uint32_t)long_value;
-    }
-    if (argc > 3) {
-        /* <interval milliseconds> */
-        err = cmd_arg_unsigned(
-            shell, argv, 3, UINT16_MAX, "interval ms", &long_value);
-        if (err != 0) {
-            return err;
-        }
-        interval = (uint16_t)long_value;
-    }
-    if (argc > 4) {
-        /* <off percent> */
-        err = cmd_arg_float(shell, argv, 4, "off percentage", &off_value);
+        err = cmd_arg_priority(shell, argv, 2, &priority);
         if (err != 0) {
             return err;
         }
     }
-    if (argc > 5) {
-        /* <priority> */
-        err = cmd_arg_priority(shell, argv, 5, &priority);
-        if (err != 0) {
-            return err;
-        }
-    }
-    if (argc > 6) {
-        /* [count] - 65535 blinks for the whole egress time */
-        err =
-            cmd_arg_unsigned(shell, argv, 6, UINT16_MAX, "count", &long_value);
-        if (err != 0) {
-            return err;
-        }
-        count = (uint16_t)long_value;
-    }
-    Lighting_Output_Blink_Warn_Feature_Set(
-        instance, off_value, interval, count);
-    Lighting_Output_Egress_Time_Set(instance, egress_seconds);
     data.operation = operation;
     if (priority >= BACNET_MIN_PRIORITY) {
         data.priority = priority;
@@ -722,6 +684,184 @@ static int cmd_lighting_output_blink(
     }
     (void)Lighting_Output_Lighting_Command_Set(instance, &data);
     return cmd_lighting_output_value_print(shell, instance);
+}
+
+static int
+cmd_lighting_output_blink_print(const struct shell *shell, uint32_t instance)
+{
+    float off_value = 0.0f;
+    uint16_t interval = 0;
+    uint16_t count = 0;
+
+    (void)Lighting_Output_Blink_Warn_Feature(
+        instance, &off_value, &interval, &count);
+    shell_print(
+        shell,
+        "lighting-output-%u blink-warn %s off=%.1f%% interval=%ums count=%u",
+        instance, Lighting_Output_Blink_Warn_Enable(instance) ? "on" : "off",
+        (double)off_value, interval, count);
+
+    return 0;
+}
+
+/**
+ * @brief Set the blink-warn off value, interval, and count
+ * @note <instance> <off percent> <interval milliseconds> [count]
+ */
+static int
+cmd_lighting_output_blink_set(const struct shell *shell, int argc, char **argv)
+{
+    uint32_t instance = 0;
+    float off_value = 0.0f;
+    uint16_t interval = 0;
+    uint16_t count = UINT16_MAX;
+    unsigned long long_value = 0;
+    int err;
+
+    if (argc < 4) {
+        shell_help(shell);
+        return -EINVAL;
+    }
+    err = cmd_arg_valid_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
+    err = cmd_arg_float(shell, argv, 2, "off percentage", &off_value);
+    if (err != 0) {
+        return err;
+    }
+    err = cmd_arg_unsigned(
+        shell, argv, 3, UINT16_MAX, "interval ms", &long_value);
+    if (err != 0) {
+        return err;
+    }
+    interval = (uint16_t)long_value;
+    if (argc > 4) {
+        /* 65535 blinks for the whole egress time */
+        err =
+            cmd_arg_unsigned(shell, argv, 4, UINT16_MAX, "count", &long_value);
+        if (err != 0) {
+            return err;
+        }
+        count = (uint16_t)long_value;
+    }
+    (void)Lighting_Output_Blink_Warn_Feature_Set(
+        instance, off_value, interval, count);
+
+    return cmd_lighting_output_blink_print(shell, instance);
+}
+
+/**
+ * @note <instance>
+ */
+static int
+cmd_lighting_output_blink_get(const struct shell *shell, int argc, char **argv)
+{
+    uint32_t instance = 0;
+    int err;
+
+    if (argc < 2) {
+        shell_help(shell);
+        return -EINVAL;
+    }
+    err = cmd_arg_valid_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
+
+    return cmd_lighting_output_blink_print(shell, instance);
+}
+
+/**
+ * @brief Get or set the blink-warn-enable property
+ * @note <instance> [on|off]
+ */
+static int cmd_lighting_output_blink_enable(
+    const struct shell *shell, int argc, char **argv)
+{
+    uint32_t instance = 0;
+    int err;
+
+    if (argc < 2) {
+        shell_help(shell);
+        return -EINVAL;
+    }
+    err = cmd_arg_valid_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
+    if (argc > 2) {
+        if (bacnet_stricmp(argv[2], "on") == 0) {
+            (void)Lighting_Output_Blink_Warn_Enable_Set(instance, true);
+        } else if (bacnet_stricmp(argv[2], "off") == 0) {
+            (void)Lighting_Output_Blink_Warn_Enable_Set(instance, false);
+        } else {
+            shell_error(shell, "argv[2]=%s invalid enable", argv[2]);
+            return -EINVAL;
+        }
+    }
+
+    return cmd_lighting_output_blink_print(shell, instance);
+}
+
+static int
+cmd_lighting_output_egress_print(const struct shell *shell, uint32_t instance)
+{
+    shell_print(
+        shell, "lighting-output-%u egress-time=%us egress-active=%s", instance,
+        Lighting_Output_Egress_Time(instance),
+        Lighting_Output_Egress_Active(instance) ? "true" : "false");
+
+    return 0;
+}
+
+/**
+ * @note <instance> <egress seconds>
+ */
+static int
+cmd_lighting_output_egress_set(const struct shell *shell, int argc, char **argv)
+{
+    uint32_t instance = 0;
+    unsigned long long_value = 0;
+    int err;
+
+    if (argc < 3) {
+        shell_help(shell);
+        return -EINVAL;
+    }
+    err = cmd_arg_valid_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
+    err = cmd_arg_unsigned(
+        shell, argv, 2, UINT32_MAX, "egress seconds", &long_value);
+    if (err != 0) {
+        return err;
+    }
+    (void)Lighting_Output_Egress_Time_Set(instance, (uint32_t)long_value);
+
+    return cmd_lighting_output_egress_print(shell, instance);
+}
+
+/**
+ * @note <instance>
+ */
+static int
+cmd_lighting_output_egress_get(const struct shell *shell, int argc, char **argv)
+{
+    uint32_t instance = 0;
+    int err;
+
+    if (argc < 2) {
+        shell_help(shell);
+        return -EINVAL;
+    }
+    err = cmd_arg_valid_instance(shell, argv, 1, &instance);
+    if (err != 0) {
+        return err;
+    }
+
+    return cmd_lighting_output_egress_print(shell, instance);
 }
 
 static int
@@ -785,6 +925,9 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         cmd_lighting_output_step_off),
     SHELL_SUBCMD_SET_END);
 
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_blink_set)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_blink_get)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_blink_enable)
 BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_blink_warn)
 BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_blink_warn_off)
 BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_blink_warn_relinquish)
@@ -793,25 +936,59 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
     lighting_output_blink_sub_cmd,
     BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
+        set,
+        NULL,
+        "<instance> <off percent> <interval milliseconds> [count]",
+        cmd_lighting_output_blink_set),
+    BACNET_SHELL_COND_CMD(
+        CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
+        get,
+        NULL,
+        "<instance>",
+        cmd_lighting_output_blink_get),
+    BACNET_SHELL_COND_CMD(
+        CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
+        enable,
+        NULL,
+        "<instance> [on|off]",
+        cmd_lighting_output_blink_enable),
+    BACNET_SHELL_COND_CMD(
+        CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         warn,
         NULL,
-        "<instance> <egress seconds> "
-        "<interval milliseconds> <off percent> <priority> [count]",
+        "<instance> [priority]",
         cmd_lighting_output_blink_warn),
     BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         warn_off,
         NULL,
-        "<instance> <egress seconds> "
-        "<interval milliseconds> <off percent> <priority> [count]",
+        "<instance> [priority]",
         cmd_lighting_output_blink_warn_off),
     BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         warn_relinquish,
         NULL,
-        "<instance> <egress seconds> "
-        "<interval milliseconds> <off percent> <priority> [count]",
+        "<instance> [priority]",
         cmd_lighting_output_blink_warn_relinquish),
+    SHELL_SUBCMD_SET_END);
+
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_egress_set)
+BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_egress_get)
+
+SHELL_STATIC_SUBCMD_SET_CREATE(
+    lighting_output_egress_sub_cmd,
+    BACNET_SHELL_COND_CMD(
+        CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
+        set,
+        NULL,
+        "<instance> <egress seconds>",
+        cmd_lighting_output_egress_set),
+    BACNET_SHELL_COND_CMD(
+        CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
+        get,
+        NULL,
+        "<instance>",
+        cmd_lighting_output_egress_get),
     SHELL_SUBCMD_SET_END);
 
 BACNET_SHELL_LOCK_HANDLER(cmd_lighting_output_list)
@@ -880,7 +1057,13 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
         blink,
         &lighting_output_blink_sub_cmd,
-        "<warn|warn_off|warn_relinquish>",
+        "<set|get|enable|warn|warn_off|warn_relinquish>",
+        NULL),
+    SHELL_COND_CMD(
+        CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
+        egress,
+        &lighting_output_egress_sub_cmd,
+        "<set|get>",
         NULL),
     BACNET_SHELL_COND_CMD(
         CONFIG_BACNET_BASIC_OBJECT_LIGHTING_OUTPUT,
